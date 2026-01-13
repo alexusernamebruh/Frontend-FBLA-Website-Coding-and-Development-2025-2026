@@ -11,7 +11,11 @@
   "dependencies": {
     "next": "16.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "@headlessui/react": "^2.2.0",
+    "@heroicons/react": "^2.2.0",
+    "axios": "^1.7.9",
+    "dayjs": "^1.11.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

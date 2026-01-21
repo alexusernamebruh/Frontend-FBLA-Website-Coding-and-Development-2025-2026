@@ -27,20 +27,15 @@ const HomePage = () => {
   }, []);
 
   const createSubmissionForm = async () => {
+    console.log('what');
     const { data: response } = await a.post('/submissionForms', {
       itemName: newItemName,
-      itemDescription: newItemDescription,
+      description: newItemDescription,
       userId: JSON.parse(localStorage.getItem('user') || '{}').id,
     });
-    if (response) {
-      setCreateSubmissionFormSuccess(true);
-      const timer = setTimeout(() => {
-        setCreateSubmissionFormSuccess(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
 
     const formData = new FormData();
+    console.log(selectedPhotos + 'fejifjeif');
     if (selectedPhotos !== null) {
       for (let i = 0; i < selectedPhotos?.length; i++) {
         formData.append('photos', selectedPhotos[i]);
@@ -52,8 +47,16 @@ const HomePage = () => {
         },
       });
     }
-
     setSelectedPhotos(null);
+    setNewItemDescription('');
+    setNewItemName('');
+    if (response) {
+      setCreateSubmissionFormSuccess(true);
+      const timer = setTimeout(() => {
+        setCreateSubmissionFormSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
   };
 
   return (
@@ -129,7 +132,9 @@ const HomePage = () => {
                     </div>
                     <div className='text-black text-xs font-semibold mt-1'>
                       Selected photos:{' '}
-                      {selectedPhotos?.map((file) => file.name).join(', ')}
+                      {selectedPhotos?.length
+                        ? selectedPhotos?.map((file) => file.name).join(', ')
+                        : 'None'}
                     </div>
                   </div>
                 </div>
@@ -143,7 +148,6 @@ const HomePage = () => {
             </div>
           </div>
         )}
-        {/* create submissionForm */}
       </div>
     </div>
   );

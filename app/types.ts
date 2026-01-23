@@ -10,7 +10,7 @@ interface IUser {
   email: string;
   password?: string;
   submissions: ISubmission[];
-  claims: IClaim[];
+  claims: IClaimForm[];
   sentMessages: IMessage[];
   chats: IChat[];
   createdItems: IItem[];
@@ -25,7 +25,7 @@ interface IItem {
   author: IUser;
   createdAt: Date;
   claimed: boolean;
-  claims: IClaim[];
+  claims: IClaimForm[];
 }
 
 interface IPhoto {
@@ -49,7 +49,7 @@ interface ISubmission {
   approvalStatus: ApprovalStatus;
 }
 
-interface IClaim {
+interface IClaimForm {
   id: number;
   userId: number;
   user: IUser;

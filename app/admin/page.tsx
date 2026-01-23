@@ -7,6 +7,7 @@ import SideNav from '../components/sidenav';
 import { truncate } from '../helpers';
 import dayjs from 'dayjs';
 import Success from '../components/success';
+import Modal from '../components/modal';
 
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -33,6 +34,10 @@ export default function Home() {
   const [editItemName, setEditItemName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editRemovePhotoIds, setEditRemovePhotoIds] = useState<number[]>([]);
+
+  // Image modal state
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageData, setSelectedImageData] = useState<string>('');
 
   const authenticate = async () => {
     if (password === 'password') {
@@ -439,24 +444,21 @@ export default function Home() {
                                   {selectedPending.photos.map((photo) => (
                                     <div
                                       key={photo.id}
-                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md'
+                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                      onClick={() => {
+                                        setSelectedImageData(
+                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                        );
+                                        setShowImageModal(true);
+                                      }}
                                     >
-                                      <Image
+                                      <img
                                         src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
                                         alt='photo'
-                                        width={48}
-                                        height={48}
+                                        className='max-h-96 rounded-md'
                                       />
-                                      <div className='w-16 h-16 bg-indigo-100 rounded flex items-center justify-center'>
-                                        <span className='text-xs font-semibold text-indigo-600'>
-                                          ID: {photo.id}
-                                        </span>
-                                      </div>
-                                      <p className='text-xs text-gray-600 text-center'>
-                                        Uploaded{' '}
-                                        {dayjs(photo.createdAt).format(
-                                          'M/D/YY',
-                                        )}
+                                      <p className='text-xs text-gray-500'>
+                                        ID: {photo.id}
                                       </p>
                                     </div>
                                   ))}
@@ -475,7 +477,7 @@ export default function Home() {
               </div>
             )}
 
-            {currentPage === 'Approved Submissions' && (
+            {currentPage === 'Approved Reports' && (
               <div className='flex flex-col w-full h-full p-8 space-x-4'>
                 <div className='flex w-full h-full p-8 space-x-4'>
                   <div className='flex flex-col space-y-4 overflow-auto'>
@@ -558,13 +560,22 @@ export default function Home() {
                                   {selectedApproved.photos.map((photo) => (
                                     <div
                                       key={photo.id}
-                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md'
+                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                      onClick={() => {
+                                        setSelectedImageData(
+                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                        );
+                                        setShowImageModal(true);
+                                      }}
                                     >
-                                      <div className='w-16 h-16 bg-indigo-100 rounded flex items-center justify-center'>
-                                        <span className='text-xs font-semibold text-indigo-600'>
-                                          ID: {photo.id}
-                                        </span>
-                                      </div>
+                                      <img
+                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        alt='photo'
+                                        className='max-h-96 rounded-md'
+                                      />
+                                      <p className='text-xs text-gray-500'>
+                                        ID: {photo.id}
+                                      </p>
                                       <p className='text-xs text-gray-600 text-center'>
                                         Uploaded{' '}
                                         {dayjs(photo.createdAt).format(
@@ -584,7 +595,7 @@ export default function Home() {
               </div>
             )}
 
-            {currentPage === 'Rejected Submissions' && (
+            {currentPage === 'Declined Reports' && (
               <div className='flex flex-col w-full h-full p-8 space-x-4'>
                 <div className='flex w-full h-full p-8 space-x-4'>
                   <div className='flex flex-col space-y-4 overflow-auto'>
@@ -617,7 +628,7 @@ export default function Home() {
                       })
                     ) : (
                       <div className='font-semibold'>
-                        No rejected submissions found
+                        No rejected reports found
                       </div>
                     )}
                   </div>
@@ -667,13 +678,22 @@ export default function Home() {
                                   {selectedRejected.photos.map((photo) => (
                                     <div
                                       key={photo.id}
-                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md'
+                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                      onClick={() => {
+                                        setSelectedImageData(
+                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                        );
+                                        setShowImageModal(true);
+                                      }}
                                     >
-                                      <div className='w-16 h-16 bg-indigo-100 rounded flex items-center justify-center'>
-                                        <span className='text-xs font-semibold text-indigo-600'>
-                                          ID: {photo.id}
-                                        </span>
-                                      </div>
+                                      <img
+                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        alt='photo'
+                                        className='max-h-96 rounded-md'
+                                      />
+                                      <p className='text-xs text-gray-500'>
+                                        ID: {photo.id}
+                                      </p>
                                       <p className='text-xs text-gray-600 text-center'>
                                         Uploaded{' '}
                                         {dayjs(photo.createdAt).format(
@@ -694,6 +714,29 @@ export default function Home() {
             )}
           </div>
           {/* Desktop Ends here */}
+
+          {/* Modals */}
+          <div>
+            <Modal open={showImageModal} setOpen={setShowImageModal}>
+              <div className='flex flex-col items-center justify-center space-y-4'>
+                {selectedImageData && (
+                  <>
+                    <img
+                      src={selectedImageData}
+                      alt='Enlarged view'
+                      className='max-w-full max-h-[70vh] rounded-lg'
+                    />
+                    <button
+                      onClick={() => setShowImageModal(false)}
+                      className='px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-md transition-colors'
+                    >
+                      Close
+                    </button>
+                  </>
+                )}
+              </div>
+            </Modal>
+          </div>
         </div>
       )}
     </div>

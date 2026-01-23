@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 
 const userLayout = [
   {
-    name: 'All Reports',
+    name: 'All Items',
     icon: BriefcaseIcon,
     highlighted:
       'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
@@ -93,6 +93,22 @@ const adminLayout = [
     notHighlighted:
       'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
   },
+  {
+    name: 'Approved Reports',
+    icon: XCircleIcon,
+    highlighted:
+      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+    notHighlighted:
+      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+  },
+  {
+    name: 'Approved Claims',
+    icon: XCircleIcon,
+    highlighted:
+      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+    notHighlighted:
+      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+  },
 ];
 
 export default function SideNav({
@@ -142,7 +158,7 @@ export default function SideNav({
                   <div className='w-5 h-5'>
                     <Icon />
                   </div>
-                  <p>{item.name}</p>
+                  <p className='w-fit'>{item.name}</p>
                 </div>
               );
             })}

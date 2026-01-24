@@ -119,7 +119,6 @@ const HomePage = () => {
     });
 
     const formData = new FormData();
-    console.log(selectedPhotos + 'fejifjeif');
     if (selectedPhotos !== null) {
       for (let i = 0; i < selectedPhotos?.length; i++) {
         formData.append('photos', selectedPhotos[i]);
@@ -153,6 +152,7 @@ const HomePage = () => {
       });
       setClaimComment('');
       setSelectedItemForClaim(null);
+      setClaimSearchQuery('');
       if (response) {
         setCreateClaimSuccess(true);
         const timer = setTimeout(() => {

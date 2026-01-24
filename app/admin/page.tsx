@@ -16,6 +16,8 @@ export default function Home() {
   const [approveSuccess, setApproveSuccess] = useState(false);
   const [rejectSuccess, setRejectSuccess] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
+  const [claimApprovalSuccess, setClaimApprovalSuccess] = useState(false);
+  const [claimDeleteSuccess, setClaimDeleteSuccess] = useState(false);
   const [pendingSubmissions, setPendingSubmissions] = useState<ISubmission[]>(
     [],
   );
@@ -25,9 +27,15 @@ export default function Home() {
   const [rejectedSubmissions, setRejectedSubmissions] = useState<ISubmission[]>(
     [],
   );
+  const [pendingClaims, setPendingClaims] = useState<IClaimForm[]>([]);
+  const [approvedClaims, setApprovedClaims] = useState<IClaimForm[]>([]);
   const [selectedPending, setSelectedPending] = useState<ISubmission>();
   const [selectedApproved, setSelectedApproved] = useState<ISubmission>();
   const [selectedRejected, setSelectedRejected] = useState<ISubmission>();
+  const [selectedPendingClaim, setSelectedPendingClaim] =
+    useState<IClaimForm>();
+  const [selectedApprovedClaim, setSelectedApprovedClaim] =
+    useState<IClaimForm>();
 
   // Edit state
   const [isEditing, setIsEditing] = useState(false);
@@ -42,6 +50,66 @@ export default function Home() {
   const authenticate = async () => {
     if (password === 'password') {
       setAuthenticated(true);
+    }
+  };
+
+  const getPendingClaims = async () => {
+    try {
+      const { data: response } = await a.get('/claimForms/getOpenClaimForms');
+      const pending = response.filter((c: IClaimForm) => c.isOpen === true);
+      setPendingClaims(pending);
+      if (pending.length > 0) {
+        setSelectedPendingClaim(pending[0]);
+      }
+      console.log(pending);
+    } catch (error) {
+      console.error('Error fetching pending claims:', error);
+    }
+  };
+
+  const getApprovedClaims = async () => {
+    try {
+      const { data: response } = await a.get(
+        '/claimForms/getApprovedClaimForms',
+      );
+      const approved = response.filter((c: IClaimForm) => c.isOpen === false);
+      setApprovedClaims(approved);
+      if (approved.length > 0) setSelectedApprovedClaim(approved[0]);
+    } catch (error) {
+      console.error('Error fetching approved claims:', error);
+    }
+  };
+
+  const approveClaim = async (claimId: number) => {
+    try {
+      const { data: response } = await a.put(`/claimForms/claim/${claimId}`);
+      if (response) {
+        getPendingClaims();
+        getApprovedClaims();
+        setClaimApprovalSuccess(true);
+        const timer = setTimeout(() => setClaimApprovalSuccess(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Error approving claim:', error);
+    }
+  };
+
+  const deleteClaim = async (claimId: number) => {
+    try {
+      const { data: response } = await a.delete(
+        `/claimForms/delete/${claimId}`,
+      );
+      if (response) {
+        getPendingClaims();
+        getApprovedClaims();
+        setSelectedPendingClaim(undefined);
+        setClaimDeleteSuccess(true);
+        const timer = setTimeout(() => setClaimDeleteSuccess(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Error deleting claim:', error);
     }
   };
 
@@ -174,6 +242,8 @@ export default function Home() {
       await getPendingSubmissions();
       await getApprovedSubmissions();
       await getRejectedSubmissions();
+      await getPendingClaims();
+      await getApprovedClaims();
     })();
   }, []);
 
@@ -237,6 +307,18 @@ export default function Home() {
               description={'Successfully edited the submission form'}
               show={editSuccess}
               setShow={setEditSuccess}
+            />
+            <Success
+              title={'Success'}
+              description={'Successfully approved a claim.'}
+              show={claimApprovalSuccess}
+              setShow={setClaimApprovalSuccess}
+            />
+            <Success
+              title={'Success'}
+              description={'Successfully deleted a claim.'}
+              show={claimDeleteSuccess}
+              setShow={setClaimDeleteSuccess}
             />
           </div>
 
@@ -477,6 +559,160 @@ export default function Home() {
               </div>
             )}
 
+            {currentPage === 'Pending Claims' && (
+              <div className='flex flex-col w-full h-full p-8 space-x-4'>
+                <div className='flex w-full h-full p-8 space-x-4'>
+                  <div className='flex flex-col space-y-4 overflow-auto'>
+                    {pendingClaims.length ? (
+                      pendingClaims.map((c: IClaimForm, i) => {
+                        return (
+                          <div key={i} className='group'>
+                            <div
+                              onClick={() => {
+                                setSelectedPendingClaim(c);
+                              }}
+                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                            >
+                              <div className='group-hover:cursor-pointer'>
+                                <p className='font-bold group-hover:underline'>
+                                  {c.item?.itemName || 'Unknown Item'}
+                                </p>
+                                <p className='font-medium mt-2 text-sm/6'>
+                                  {truncate(c.comment, 50)}
+                                </p>
+                                <p className='font-medium text-xs mt-2 text-gray-500'>
+                                  By: {c.user?.name || 'Unknown User'}
+                                </p>
+                                <p className='font-medium text-xs mt-1 text-gray-500'>
+                                  Created on{' '}
+                                  {dayjs(c.createdAt).format('MM/DD/YYYY')}{' '}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className='font-semibold'>No pending claims</div>
+                    )}
+                  </div>
+                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                    {selectedPendingClaim ? (
+                      <>
+                        <div className='border-b border-gray-300 h-fit'>
+                          <div className='px-6 py-6'>
+                            <p className='font-bold text-2xl'>
+                              {selectedPendingClaim.item?.itemName ||
+                                'Unknown Item'}
+                            </p>
+                            <p className='font-medium text-gray-600 mt-1 text-sm'>
+                              Claimed by:{' '}
+                              {selectedPendingClaim.user?.name ||
+                                'Unknown User'}
+                            </p>
+                            <p className='font-medium text-gray-600 mt-1 text-sm'>
+                              Item owner:{' '}
+                              {selectedPendingClaim.item?.author?.name ||
+                                'Unknown User'}
+                            </p>
+                            <div className='space-x-2 flex flex-wrap'>
+                              <div
+                                onClick={() =>
+                                  selectedPendingClaim?.id !== undefined &&
+                                  approveClaim(selectedPendingClaim.id)
+                                }
+                                className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white font-bold text-center'
+                              >
+                                Approve Claim
+                              </div>
+                              <div
+                                onClick={() =>
+                                  selectedPendingClaim?.id !== undefined &&
+                                  deleteClaim(selectedPendingClaim.id)
+                                }
+                                className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
+                              >
+                                Delete Claim
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className=''>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Date Submitted</p>
+                            <p className='text-sm text-gray-600'>
+                              On{' '}
+                              {dayjs(selectedPendingClaim.createdAt).format(
+                                'dddd',
+                              )}
+                              {', '}
+                              {dayjs(selectedPendingClaim.createdAt).format(
+                                'MM/DD/YYYY',
+                              )}{' '}
+                              at{' '}
+                              {dayjs(selectedPendingClaim.createdAt).format(
+                                'h:mm a',
+                              )}
+                            </p>
+                          </div>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Claim Comment</p>
+                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                              {selectedPendingClaim.comment}
+                            </p>
+                          </div>
+                          {selectedPendingClaim.item?.photos &&
+                            selectedPendingClaim.item.photos.length > 0 && (
+                              <div className='space-y-3 px-6 py-8'>
+                                <p className='text-lg font-bold'>
+                                  Item Photos (
+                                  {selectedPendingClaim.item.photos.length})
+                                </p>
+                                <div className='grid grid-cols-3 gap-3'>
+                                  {selectedPendingClaim.item.photos.map(
+                                    (photo) => (
+                                      <div
+                                        key={photo.id}
+                                        className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                        onClick={() => {
+                                          setSelectedImageData(
+                                            `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                          );
+                                          setShowImageModal(true);
+                                        }}
+                                      >
+                                        <img
+                                          src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                          alt='photo'
+                                          className='max-h-96 rounded-md'
+                                        />
+                                        <p className='text-xs text-gray-500'>
+                                          ID: {photo.id}
+                                        </p>
+                                        <p className='text-xs text-gray-600 text-center'>
+                                          Uploaded{' '}
+                                          {dayjs(photo.createdAt).format(
+                                            'M/D/YY',
+                                          )}
+                                        </p>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className='p-8 text-gray-500 text-center'>
+                        Select a pending claim to view details
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {currentPage === 'Approved Reports' && (
               <div className='flex flex-col w-full h-full p-8 space-x-4'>
                 <div className='flex w-full h-full p-8 space-x-4'>
@@ -707,6 +943,143 @@ export default function Home() {
                             )}
                         </div>
                       </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {currentPage === 'Approved Claims' && (
+              <div className='flex flex-col w-full h-full p-8 space-x-4'>
+                <div className='flex w-full h-full p-8 space-x-4'>
+                  <div className='flex flex-col space-y-4 overflow-auto'>
+                    {approvedClaims.length ? (
+                      approvedClaims.map((c: IClaimForm, i) => {
+                        return (
+                          <div key={i} className='group'>
+                            <div
+                              onClick={() => {
+                                setSelectedApprovedClaim(c);
+                              }}
+                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                            >
+                              <div className='group-hover:cursor-pointer'>
+                                <p className='font-bold group-hover:underline'>
+                                  {c.item?.itemName || 'Unknown Item'}
+                                </p>
+                                <p className='font-medium mt-2 text-sm/6'>
+                                  {truncate(c.comment, 50)}
+                                </p>
+                                <p className='font-medium text-xs mt-2 text-gray-500'>
+                                  By: {c.user?.name || 'Unknown User'}
+                                </p>
+                                <p className='font-medium text-xs mt-1 text-gray-500'>
+                                  Created on{' '}
+                                  {dayjs(c.createdAt).format('MM/DD/YYYY')}{' '}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className='font-semibold'>No approved claims</div>
+                    )}
+                  </div>
+                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                    {selectedApprovedClaim ? (
+                      <>
+                        <div className='border-b border-gray-300 h-fit'>
+                          <div className='px-6 py-6'>
+                            <p className='font-bold text-2xl'>
+                              {selectedApprovedClaim.item?.itemName ||
+                                'Unknown Item'}
+                            </p>
+                            <p className='font-medium text-gray-600 mt-1 text-sm'>
+                              Claimed by:{' '}
+                              {selectedApprovedClaim.user?.name ||
+                                'Unknown User'}
+                            </p>
+                            <p className='font-medium text-gray-600 mt-1 text-sm'>
+                              Item owner:{' '}
+                              {selectedApprovedClaim.item?.author?.name ||
+                                'Unknown User'}
+                            </p>
+                            <p className='font-medium text-green-600 mt-2 text-sm'>
+                              ✓ Claim Approved
+                            </p>
+                          </div>
+                        </div>
+                        <div className=''>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Date Submitted</p>
+                            <p className='text-sm text-gray-600'>
+                              On{' '}
+                              {dayjs(selectedApprovedClaim.createdAt).format(
+                                'dddd',
+                              )}
+                              {', '}
+                              {dayjs(selectedApprovedClaim.createdAt).format(
+                                'MM/DD/YYYY',
+                              )}{' '}
+                              at{' '}
+                              {dayjs(selectedApprovedClaim.createdAt).format(
+                                'h:mm a',
+                              )}
+                            </p>
+                          </div>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Claim Comment</p>
+                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                              {selectedApprovedClaim.comment}
+                            </p>
+                          </div>
+                          {selectedApprovedClaim.item?.photos &&
+                            selectedApprovedClaim.item.photos.length > 0 && (
+                              <div className='space-y-3 px-6 py-8'>
+                                <p className='text-lg font-bold'>
+                                  Item Photos (
+                                  {selectedApprovedClaim.item.photos.length})
+                                </p>
+                                <div className='grid grid-cols-3 gap-3'>
+                                  {selectedApprovedClaim.item.photos.map(
+                                    (photo) => (
+                                      <div
+                                        key={photo.id}
+                                        className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                        onClick={() => {
+                                          setSelectedImageData(
+                                            `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                          );
+                                          setShowImageModal(true);
+                                        }}
+                                      >
+                                        <img
+                                          src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                          alt='photo'
+                                          className='max-h-96 rounded-md'
+                                        />
+                                        <p className='text-xs text-gray-500'>
+                                          ID: {photo.id}
+                                        </p>
+                                        <p className='text-xs text-gray-600 text-center'>
+                                          Uploaded{' '}
+                                          {dayjs(photo.createdAt).format(
+                                            'M/D/YY',
+                                          )}
+                                        </p>
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className='p-8 text-gray-500 text-center'>
+                        Select an approved claim to view details
+                      </div>
                     )}
                   </div>
                 </div>

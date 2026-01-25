@@ -66,6 +66,8 @@ interface IChat {
   title: string;
   messages: IMessage[];
   createdAt: Date;
+  item: IItem;
+  itemId: number;
 }
 
 interface IMessage {

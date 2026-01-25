@@ -12,12 +12,14 @@ import Modal from '../components/modal';
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [currentPage, setCurrentPage] = useState('Pending Reports');
+  const [currentPage, setCurrentPage] = useState('All Items');
   const [approveSuccess, setApproveSuccess] = useState(false);
   const [rejectSuccess, setRejectSuccess] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
   const [claimApprovalSuccess, setClaimApprovalSuccess] = useState(false);
   const [claimDeleteSuccess, setClaimDeleteSuccess] = useState(false);
+  const [itemDeleteSuccess, setItemDeleteSuccess] = useState(false);
+  const [itemEditSuccess, setItemEditSuccess] = useState(false);
   const [pendingSubmissions, setPendingSubmissions] = useState<ISubmission[]>(
     [],
   );
@@ -29,6 +31,7 @@ export default function Home() {
   );
   const [pendingClaims, setPendingClaims] = useState<IClaimForm[]>([]);
   const [approvedClaims, setApprovedClaims] = useState<IClaimForm[]>([]);
+  const [allItems, setAllItems] = useState<IItem[]>([]);
   const [selectedPending, setSelectedPending] = useState<ISubmission>();
   const [selectedApproved, setSelectedApproved] = useState<ISubmission>();
   const [selectedRejected, setSelectedRejected] = useState<ISubmission>();
@@ -36,6 +39,7 @@ export default function Home() {
     useState<IClaimForm>();
   const [selectedApprovedClaim, setSelectedApprovedClaim] =
     useState<IClaimForm>();
+  const [selectedItem, setSelectedItem] = useState<IItem>();
 
   // Edit state
   const [isEditing, setIsEditing] = useState(false);
@@ -237,6 +241,59 @@ export default function Home() {
     setEditRemovePhotoIds([]);
   };
 
+  const getAllItemsData = async () => {
+    try {
+      const { data: response } = await a.get('/items/all');
+      setAllItems(response);
+      if (response.length > 0) {
+        setSelectedItem(response[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching all items:', error);
+    }
+  };
+
+  const updateItemData = async (itemId: number) => {
+    try {
+      const { data: response } = await a.put(`/items/update/${itemId}`, {
+        itemName: editItemName,
+        description: editDescription,
+        removePhotoIds: editRemovePhotoIds,
+      });
+      if (response) {
+        getAllItemsData();
+        setIsEditing(false);
+        setItemEditSuccess(true);
+        const timer = setTimeout(() => setItemEditSuccess(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Error updating item:', error);
+    }
+  };
+
+  const deleteItemData = async (itemId: number) => {
+    try {
+      const { data: response } = await a.delete(`/items/delete/${itemId}`);
+      if (response) {
+        getAllItemsData();
+        setSelectedItem(undefined);
+        setItemDeleteSuccess(true);
+        const timer = setTimeout(() => setItemDeleteSuccess(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
+  const startEditItem = (item: IItem) => {
+    setEditItemName(item.itemName);
+    setEditDescription(item.description);
+    setEditRemovePhotoIds([]);
+    setIsEditing(true);
+  };
+
   useEffect(() => {
     (async () => {
       await getPendingSubmissions();
@@ -244,6 +301,7 @@ export default function Home() {
       await getRejectedSubmissions();
       await getPendingClaims();
       await getApprovedClaims();
+      await getAllItemsData();
     })();
   }, []);
 
@@ -320,6 +378,18 @@ export default function Home() {
               show={claimDeleteSuccess}
               setShow={setClaimDeleteSuccess}
             />
+            <Success
+              title={'Success'}
+              description={'Successfully updated the item.'}
+              show={itemEditSuccess}
+              setShow={setItemEditSuccess}
+            />
+            <Success
+              title={'Success'}
+              description={'Successfully deleted the item.'}
+              show={itemDeleteSuccess}
+              setShow={setItemDeleteSuccess}
+            />
           </div>
 
           {/* Desktop Starts here */}
@@ -331,6 +401,240 @@ export default function Home() {
                 type={'admin'}
               />
             </div>
+
+            {currentPage === 'All Items' && (
+              <div className='flex flex-col w-full h-full p-8 space-x-4'>
+                <div className='flex w-full h-full p-8 space-x-4'>
+                  <div className='flex flex-col space-y-4 overflow-auto'>
+                    {allItems.length ? (
+                      allItems.map((v: IItem, i) => {
+                        return (
+                          <div key={i} className='group'>
+                            <div
+                              onClick={() => {
+                                setSelectedItem(v);
+                                setIsEditing(false);
+                              }}
+                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                            >
+                              <div className='group-hover:cursor-pointer'>
+                                <p className='font-bold group-hover:underline'>
+                                  {v.itemName}
+                                </p>
+                                <p className='font-medium mt-2 text-sm/6'>
+                                  {truncate(v.description, 50)}
+                                </p>
+                                <p className='font-medium text-xs mt-2 text-gray-500'>
+                                  By: {v.author?.name || 'Unknown User'}
+                                </p>
+                                <p className='font-medium text-xs mt-1 text-gray-500'>
+                                  Created on{' '}
+                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className='font-semibold'>No items found</div>
+                    )}
+                  </div>
+                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                    {selectedItem ? (
+                      <>
+                        <div className='border-b border-gray-300 h-fit'>
+                          <div className='px-6 py-6'>
+                            {isEditing ? (
+                              <div className='space-y-4'>
+                                <div>
+                                  <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                    Item Name
+                                  </label>
+                                  <input
+                                    type='text'
+                                    value={editItemName}
+                                    onChange={(e) =>
+                                      setEditItemName(e.target.value)
+                                    }
+                                    className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                  />
+                                </div>
+                                <div>
+                                  <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                    Description
+                                  </label>
+                                  <textarea
+                                    value={editDescription}
+                                    onChange={(e) =>
+                                      setEditDescription(e.target.value)
+                                    }
+                                    rows={4}
+                                    className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                  />
+                                </div>
+                                {selectedItem.photos &&
+                                  selectedItem.photos.length > 0 && (
+                                    <div>
+                                      <label className='block text-sm font-bold text-gray-900 mb-3'>
+                                        Photos - Check to remove
+                                      </label>
+                                      <div className='grid grid-cols-2 gap-3'>
+                                        {selectedItem.photos.map((photo) => (
+                                          <div
+                                            key={photo.id}
+                                            className='flex items-center space-x-2 p-3 border border-gray-300 rounded-md'
+                                          >
+                                            <input
+                                              type='checkbox'
+                                              id={`photo-${photo.id}`}
+                                              checked={editRemovePhotoIds.includes(
+                                                photo.id,
+                                              )}
+                                              onChange={() =>
+                                                togglePhotoRemoval(photo.id)
+                                              }
+                                              className='w-4 h-4 text-indigo-500 rounded focus:ring-indigo-500'
+                                            />
+                                            <label
+                                              htmlFor={`photo-${photo.id}`}
+                                              className='text-sm text-gray-600 cursor-pointer flex-1'
+                                            >
+                                              Photo ID: {photo.id}
+                                            </label>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                <div className='space-x-2 flex'>
+                                  <div
+                                    onClick={() =>
+                                      selectedItem?.id !== undefined &&
+                                      updateItemData(selectedItem.id)
+                                    }
+                                    className='w-fit h-fit px-4 py-2 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                  >
+                                    Save Changes
+                                  </div>
+                                  <div
+                                    onClick={() => cancelEdit()}
+                                    className='w-fit h-fit px-4 py-2 rounded-md bg-gray-400 hover:cursor-pointer hover:bg-gray-500 text-white font-bold text-center'
+                                  >
+                                    Cancel
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <p className='font-bold text-2xl'>
+                                  {selectedItem.itemName}
+                                </p>
+                                <p className='font-medium text-gray-600 mt-1 text-sm'>
+                                  Submitted by:{' '}
+                                  {selectedItem.author?.name || 'Unknown User'}
+                                </p>
+                                <div className='space-x-2 flex flex-wrap'>
+                                  <div
+                                    onClick={() => startEditItem(selectedItem)}
+                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                  >
+                                    Edit
+                                  </div>
+                                  <div
+                                    onClick={() =>
+                                      selectedItem?.id !== undefined &&
+                                      deleteItemData(selectedItem.id)
+                                    }
+                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
+                                  >
+                                    Delete
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className=''>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Date Created</p>
+                            <p className='text-sm text-gray-600'>
+                              On {dayjs(selectedItem.createdAt).format('dddd')}
+                              {', '}
+                              {dayjs(selectedItem.createdAt).format(
+                                'MM/DD/YYYY',
+                              )}{' '}
+                              at{' '}
+                              {dayjs(selectedItem.createdAt).format('h:mm a')}
+                            </p>
+                          </div>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Description</p>
+                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                              {selectedItem.description}
+                            </p>
+                          </div>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Author</p>
+                            <p className='text-sm text-gray-600'>
+                              {selectedItem.author?.name || 'Unknown User'} (
+                              {selectedItem.author?.email})
+                            </p>
+                          </div>
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Status</p>
+                            <p className='text-sm text-gray-600'>
+                              {selectedItem.claimed ? 'Claimed' : 'Unclaimed'}
+                            </p>
+                          </div>
+                          {selectedItem.photos &&
+                            selectedItem.photos.length > 0 && (
+                              <div className='space-y-3 px-6 py-8'>
+                                <p className='text-lg font-bold'>
+                                  Photos ({selectedItem.photos.length})
+                                </p>
+                                <div className='grid grid-cols-3 gap-3'>
+                                  {selectedItem.photos.map((photo) => (
+                                    <div
+                                      key={photo.id}
+                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                      onClick={() => {
+                                        setSelectedImageData(
+                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                        );
+                                        setShowImageModal(true);
+                                      }}
+                                    >
+                                      <img
+                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        alt='photo'
+                                        className='max-h-96 rounded-md'
+                                      />
+                                      <p className='text-xs text-gray-500'>
+                                        ID: {photo.id}
+                                      </p>
+                                      <p className='text-xs text-gray-600 text-center'>
+                                        Uploaded{' '}
+                                        {dayjs(photo.createdAt).format(
+                                          'M/D/YY',
+                                        )}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className='p-8 text-gray-500 text-center'>
+                        Select an item to view details
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {currentPage === 'Pending Reports' && (
               <div className='flex flex-col w-full h-full p-8 space-x-4'>

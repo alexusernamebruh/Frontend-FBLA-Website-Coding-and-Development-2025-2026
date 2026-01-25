@@ -51,6 +51,7 @@ const HomePage = () => {
       if (response.length > 0) {
         setSelectedItem(response[0]);
       }
+      console.log(response[0]);
     } catch (error) {
       console.error('Error fetching unclaimed items:', error);
     }
@@ -278,7 +279,7 @@ const HomePage = () => {
                                   }}
                                 >
                                   <img
-                                    src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                    src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                     alt='photo'
                                     className='max-h-96 rounded-md'
                                   />

@@ -62,6 +62,14 @@ const userLayout = [
 
 const adminLayout = [
   {
+    name: 'All Items',
+    icon: BriefcaseIcon,
+    highlighted:
+      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+    notHighlighted:
+      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+  },
+  {
     name: 'Pending Reports',
     icon: BriefcaseIcon,
     highlighted:

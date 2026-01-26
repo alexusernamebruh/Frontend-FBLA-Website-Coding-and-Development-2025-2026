@@ -64,9 +64,6 @@ export default function UserGuide() {
                   <p>
                     Users can report found items and also search for lost items
                   </p>
-                  <p className='ml-4'>
-                    AI assisted searching is used for keyword matching
-                  </p>
                 </div>
                 <div className='flex-col'>
                   <p className=''>
@@ -81,13 +78,20 @@ export default function UserGuide() {
                     All item claims will be reviewed and approved by an admin
                   </p>
                 </div>
-                <p>
-                  There are also chats for users to request information about an
-                  item
-                </p>
+                <div>
+                  <p>
+                    There are also chats for users to request information about
+                    an item
+                  </p>
+                  <p className='ml-4'>
+                    Chats can be created about an item and should only be used
+                    to talk about an item
+                  </p>
+                </div>
                 <div className='flex flex-col'>
                   <p>
-                    Users can submit a claim which will be approved by an admin
+                    Users can submit a claim to an item, which will be approved
+                    by an admin
                   </p>
                 </div>
               </div>
@@ -96,7 +100,7 @@ export default function UserGuide() {
         )}
         {selected === 'Admins' && (
           <div className='bg-grid p-8 min-h-screen w-full h-full space-y-8 overflow-auto'>
-            <div className='rounded-md shadow border w-full h-full bg-white flex flex-col'>
+            <div className='rounded-md shadow border border-gray-300 w-full h-full bg-white flex flex-col'>
               <div className='border-b p-4'>
                 <p className='text-2xl font-semibold text-black'>
                   Required approval

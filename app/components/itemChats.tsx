@@ -148,7 +148,6 @@ export default function ItemChats() {
       getAvailableItems();
       getChats();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -166,8 +165,8 @@ export default function ItemChats() {
   }, [selectedChat?.id]);
 
   return (
-    <div className='w-full h-full flex flex-col'>
-      <div className='absolute top-0 right-0 pointer-events-none'>
+    <div className='w-full h-full flex flex-1 flex-col'>
+      <div className='absolute top-0 flex-1 right-0 pointer-events-none'>
         <Success
           title={'Success!'}
           description={'Chat started successfully.'}
@@ -281,7 +280,7 @@ export default function ItemChats() {
                   </p>
                   <div className='grid grid-cols-3 gap-2'>
                     {selectedChat.item.photos.map((photo) => {
-                      const photoSrc = `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`;
+                      const photoSrc = `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`;
                       return (
                         <img
                           key={photo.id}
@@ -314,7 +313,7 @@ export default function ItemChats() {
 
       <div className='rounded-lg border border-gray-300 bg-white w-full flex-1 flex'>
         {/* Sidebar */}
-        <div className='max-w-[20rem] flex flex-col w-fit h-full border-r border-gray-300'>
+        <div className='max-w-[20rem] min-h-full flex flex-col w-fit h-full border-r border-gray-300'>
           <div className='px-4 py-4 border-b border-gray-300 w-full'>
             <button
               onClick={() => setShowStartChat(true)}

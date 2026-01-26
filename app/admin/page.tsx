@@ -294,6 +294,10 @@ export default function Home() {
     setIsEditing(true);
   };
 
+  const handleCurrentPageChange = (newPage: string) => {
+    setCurrentPage(newPage);
+  };
+
   useEffect(() => {
     (async () => {
       await getPendingSubmissions();
@@ -393,11 +397,11 @@ export default function Home() {
           </div>
 
           {/* Desktop Starts here */}
-          <div className={`bg-grid flex text-black h-full w-full`}>
+          <div className={`hidden lg:flex bg-grid text-black h-full w-full`}>
             <div className='bg-indigo-500 w-fit h-full min-h-screen'>
               <SideNav
                 current={currentPage}
-                setCurrent={setCurrentPage}
+                setCurrent={handleCurrentPageChange}
                 type={'admin'}
               />
             </div>
@@ -600,13 +604,13 @@ export default function Home() {
                                       className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
                                       onClick={() => {
                                         setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
                                         );
                                         setShowImageModal(true);
                                       }}
                                     >
                                       <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                         alt='photo'
                                         className='max-h-96 rounded-md'
                                       />
@@ -833,13 +837,13 @@ export default function Home() {
                                       className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
                                       onClick={() => {
                                         setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
                                         );
                                         setShowImageModal(true);
                                       }}
                                     >
                                       <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                         alt='photo'
                                         className='max-h-96 rounded-md'
                                       />
@@ -980,13 +984,13 @@ export default function Home() {
                                         className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
                                         onClick={() => {
                                           setSelectedImageData(
-                                            `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                            `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
                                           );
                                           setShowImageModal(true);
                                         }}
                                       >
                                         <img
-                                          src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                          src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                           alt='photo'
                                           className='max-h-96 rounded-md'
                                         />
@@ -1103,13 +1107,13 @@ export default function Home() {
                                       className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
                                       onClick={() => {
                                         setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
                                         );
                                         setShowImageModal(true);
                                       }}
                                     >
                                       <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                         alt='photo'
                                         className='max-h-96 rounded-md'
                                       />
@@ -1221,13 +1225,13 @@ export default function Home() {
                                       className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
                                       onClick={() => {
                                         setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
                                         );
                                         setShowImageModal(true);
                                       }}
                                     >
                                       <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                         alt='photo'
                                         className='max-h-96 rounded-md'
                                       />
@@ -1353,13 +1357,13 @@ export default function Home() {
                                         className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
                                         onClick={() => {
                                           setSelectedImageData(
-                                            `data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`,
+                                            `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
                                           );
                                           setShowImageModal(true);
                                         }}
                                       >
                                         <img
-                                          src={`data:image/jpeg;base64,${Buffer.from(photo.data).toString('base64')}`}
+                                          src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
                                           alt='photo'
                                           className='max-h-96 rounded-md'
                                         />
@@ -1391,6 +1395,458 @@ export default function Home() {
             )}
           </div>
           {/* Desktop Ends here */}
+
+          {/* Mobile Version */}
+          <div className='lg:hidden bg-white min-h-screen pb-20 text-black'>
+            <div className='absolute pointer-events-none z-50'>
+              <Success
+                title={'Success!'}
+                description={'Successfully approved a submission form.'}
+                show={approveSuccess}
+                setShow={setApproveSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully rejected a submission form.'}
+                show={rejectSuccess}
+                setShow={setRejectSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully edited the submission form'}
+                show={editSuccess}
+                setShow={setEditSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully approved a claim.'}
+                show={claimApprovalSuccess}
+                setShow={setClaimApprovalSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully deleted a claim.'}
+                show={claimDeleteSuccess}
+                setShow={setClaimDeleteSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully updated the item.'}
+                show={itemEditSuccess}
+                setShow={setItemEditSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully deleted the item.'}
+                show={itemDeleteSuccess}
+                setShow={setItemDeleteSuccess}
+              />
+            </div>
+
+            {/* Mobile Header */}
+            <div className='bg-indigo-600 text-white p-4 shadow-lg'>
+              <h1 className='text-xl font-bold'>Admin - {currentPage}</h1>
+            </div>
+
+            {/* Mobile Content */}
+            <div className='p-4'>
+              {currentPage === 'All Items' && (
+                <div className='space-y-4'>
+                  {allItems.length ? (
+                    allItems.map((item: IItem, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <h3 className='font-bold text-lg text-black'>
+                          {item.itemName}
+                        </h3>
+                        <p className='text-sm text-gray-600 mt-2'>
+                          {truncate(item.description, 100)}
+                        </p>
+                        <div className='flex justify-between items-center mt-3'>
+                          <div>
+                            <p className='text-xs text-gray-500'>
+                              By: {item.author?.name || 'Unknown'}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {dayjs(item.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {item.claimed ? 'Claimed' : 'Unclaimed'}
+                            </p>
+                          </div>
+                          <div className='flex space-x-2'>
+                            <button
+                              onClick={() => startEditItem(item)}
+                              className='bg-indigo-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => item.id && deleteItemData(item.id)}
+                              className='bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No items found
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Pending Reports' && (
+                <div className='space-y-4'>
+                  {pendingSubmissions.length ? (
+                    pendingSubmissions.map((submission: ISubmission, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <h3 className='font-bold text-lg text-black'>
+                          {submission.itemName}
+                        </h3>
+                        <p className='text-sm text-gray-600 mt-2'>
+                          {truncate(submission.description, 80)}
+                        </p>
+                        <div className='flex justify-between items-center mt-3'>
+                          <div>
+                            <p className='text-xs text-gray-500'>
+                              By: {submission.user?.name || 'Unknown'}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {dayjs(submission.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                          </div>
+                          <div className='flex space-x-2'>
+                            <button
+                              onClick={() =>
+                                submission.id &&
+                                approveSubmission(submission.id)
+                              }
+                              className='bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() =>
+                                submission.id && rejectSubmission(submission.id)
+                              }
+                              className='bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No pending reports
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Pending Claims' && (
+                <div className='space-y-4'>
+                  {pendingClaims.length ? (
+                    pendingClaims.map((claim: IClaimForm, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <h3 className='font-bold text-lg text-black'>
+                          {claim.item?.itemName || 'Unknown Item'}
+                        </h3>
+                        <p className='text-sm text-gray-600 mt-2'>
+                          {truncate(claim.comment, 80)}
+                        </p>
+                        <div className='flex justify-between items-center mt-3'>
+                          <div>
+                            <p className='text-xs text-gray-500'>
+                              By: {claim.user?.name || 'Unknown'}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {dayjs(claim.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                          </div>
+                          <div className='flex space-x-2'>
+                            <button
+                              onClick={() => claim.id && approveClaim(claim.id)}
+                              className='bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => claim.id && deleteClaim(claim.id)}
+                              className='bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No pending claims
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Approved Reports' && (
+                <div className='space-y-4'>
+                  {approvedSubmissions.length ? (
+                    approvedSubmissions.map((submission: ISubmission, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <div className='flex justify-between items-start'>
+                          <div className='flex-1'>
+                            <h3 className='font-bold text-black'>
+                              {submission.itemName}
+                            </h3>
+                            <p className='text-sm text-gray-600 mt-1'>
+                              {truncate(submission.description, 80)}
+                            </p>
+                            <p className='text-xs text-gray-500 mt-2'>
+                              By: {submission.user?.name || 'Unknown'}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {dayjs(submission.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                          </div>
+                          <div className='px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800'>
+                            APPROVED
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No approved reports
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Declined Reports' && (
+                <div className='space-y-4'>
+                  {rejectedSubmissions.length ? (
+                    rejectedSubmissions.map((submission: ISubmission, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <div className='flex justify-between items-start'>
+                          <div className='flex-1'>
+                            <h3 className='font-bold text-black'>
+                              {submission.itemName}
+                            </h3>
+                            <p className='text-sm text-gray-600 mt-1'>
+                              {truncate(submission.description, 80)}
+                            </p>
+                            <p className='text-xs text-gray-500 mt-2'>
+                              By: {submission.user?.name || 'Unknown'}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {dayjs(submission.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                          </div>
+                          <div className='px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-800'>
+                            REJECTED
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No rejected reports
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Approved Claims' && (
+                <div className='space-y-4'>
+                  {approvedClaims.length ? (
+                    approvedClaims.map((claim: IClaimForm, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <div className='flex justify-between items-start'>
+                          <div className='flex-1'>
+                            <h3 className='font-bold text-black'>
+                              {claim.item?.itemName || 'Unknown Item'}
+                            </h3>
+                            <p className='text-sm text-gray-600 mt-1'>
+                              {truncate(claim.comment, 80)}
+                            </p>
+                            <p className='text-xs text-gray-500 mt-2'>
+                              By: {claim.user?.name || 'Unknown'}
+                            </p>
+                            <p className='text-xs text-gray-500'>
+                              {dayjs(claim.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                          </div>
+                          <div className='px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800'>
+                            APPROVED
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No approved claims
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Bottom Navigation */}
+            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2'>
+              <div className='flex justify-around'>
+                {[
+                  {
+                    name: 'All Items',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
+                        />
+                      </svg>
+                    ),
+                  },
+                  {
+                    name: 'Pending Reports',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                        />
+                      </svg>
+                    ),
+                  },
+                  {
+                    name: 'Pending Claims',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+                        />
+                      </svg>
+                    ),
+                  },
+                  {
+                    name: 'Approved Reports',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M5 13l4 4L19 7'
+                        />
+                      </svg>
+                    ),
+                  },
+                  {
+                    name: 'Declined Reports',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M6 18L18 6M6 6l12 12'
+                        />
+                      </svg>
+                    ),
+                  },
+                  {
+                    name: 'Approved Claims',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
+                        />
+                      </svg>
+                    ),
+                  },
+                ].map((tab) => (
+                  <button
+                    key={tab.name}
+                    onClick={() => handleCurrentPageChange(tab.name)}
+                    className={`flex flex-col items-center py-1 px-1 rounded ${
+                      currentPage === tab.name
+                        ? 'text-indigo-600'
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    <div className='mb-1'>{tab.icon}</div>
+                    <div className='text-xs font-medium text-center leading-tight'>
+                      {tab.name.split(' ').map((word, i) => (
+                        <div key={i}>{word}</div>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* Modals */}
           <div>

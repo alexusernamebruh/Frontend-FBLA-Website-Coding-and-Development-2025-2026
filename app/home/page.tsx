@@ -798,7 +798,7 @@ const HomePage = () => {
                         </div>
                         <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
                           <p className='text-lg font-bold text-black'>
-                            Your Claim
+                            Comment
                           </p>
                           <p className='text-sm text-gray-600 whitespace-pre-wrap'>
                             {selectedClaim.comment}

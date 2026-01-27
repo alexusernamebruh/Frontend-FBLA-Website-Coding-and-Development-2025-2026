@@ -8,7 +8,7 @@ export default function Citations() {
             <div className='flex w-full h-full p-8'>
               <div className='w-full h-full overflow-auto bg-white rounded-lg border border-gray-300 shadow-md p-8'>
                 <h1 className='text-2xl font-bold text-black mb-8'>
-                  Media Citations
+                  Citations
                 </h1>
                 <div className='space-y-6'>
                   {/* Media Citations */}
@@ -41,7 +41,35 @@ export default function Citations() {
                     </p>
                     <p className='text-sm text-gray-500'>By lil artsy</p>
                   </div>
-
+                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+                    <h3 className='font-bold text-lg text-black mb-2'>
+                      Miscellaneous
+                    </h3>
+                    <p className='text-sm text-gray-600 mb-1'>
+                      https://m.media-amazon.com/images/I/81rSqsn357L._AC_UY1000_.jpg
+                    </p>
+                    <p className='text-sm text-gray-500 mb-1'>
+                      https://covenantsecurityequipment.com/cdn/shop/files/CSE-AS-ExtraKeys_700x700.png?v=1713479233
+                    </p>
+                    <p className='text-sm text-gray-500 mb-1'>
+                      https://m.media-amazon.com/images/I/41tp0JPPlmL.jpg
+                    </p>
+                    <p className='text-sm text-gray-500 mb-1'>
+                      https://cdn.arstechnica.net/wp-content/uploads/2019/09/iPhone-11-back-hand-scaled.jpg
+                    </p>
+                    <p className='text-sm text-gray-500'>
+                      https://m.media-amazon.com/images/I/61BygHH-M2L._AC_UY1000_.jpg
+                    </p>
+                  </div>
+                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+                    <h3 className='font-bold text-lg text-black mb-2'>
+                      Presentation Citations
+                    </h3>
+                    <p className='text-sm text-gray-600 mb-1'>Color Theory</p>
+                    <p className='text-sm text-gray-500'>
+                      https://octet.design/journal/indigo-color-meaning/
+                    </p>
+                  </div>
                   {/* Library Citations */}
                   <div className='mt-8'>
                     <h2 className='text-2xl font-bold text-black mb-6'>
@@ -206,7 +234,6 @@ export default function Citations() {
                           </div>
                         </div>
                       </div>
-
                       <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
                         <h4 className='font-bold text-black mb-2'>
                           Acknowledgments

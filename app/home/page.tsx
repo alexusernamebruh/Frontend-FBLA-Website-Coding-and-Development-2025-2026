@@ -175,6 +175,7 @@ const HomePage = () => {
     setNewItemDescription('');
     setNewItemName('');
     if (response) {
+      await getUserReports();
       setCreateSubmissionFormSuccess(true);
       const timer = setTimeout(() => {
         setCreateSubmissionFormSuccess(false);
@@ -195,6 +196,7 @@ const HomePage = () => {
       setSelectedItemForClaim(null);
       setClaimSearchQuery('');
       if (response) {
+        await getUserClaims();
         setCreateClaimSuccess(true);
         const timer = setTimeout(() => {
           setCreateClaimSuccess(false);
@@ -210,7 +212,7 @@ const HomePage = () => {
     <div className='w-full h-screen'>
       {/* Desktop Version */}
       <div className='hidden lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
-        <div className='absolute pointer-events-none'>
+        <div className='absolute top-0 right-0 pointer-events-none'>
           <Success
             title={'Success!'}
             description={'Submission form created'}
@@ -286,7 +288,7 @@ const HomePage = () => {
                 <div className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'>
                   {selectedItem ? (
                     <>
-                      <div className='border-b h-fit'>
+                      <div className='border-b border-gray-300 h-fit'>
                         <div className='px-6 py-6'>
                           <p className='font-bold text-2xl text-black'>
                             {selectedItem.itemName}
@@ -392,7 +394,7 @@ const HomePage = () => {
           {current === 'Submit Reports' && (
             <div className='w-full h-full'>
               <div className='m-8 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
-                <div className='border-b h-fit'>
+                <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
                     <p className='font-bold text-2xl text-black'>
                       Create a submission form to report an item
@@ -439,7 +441,7 @@ const HomePage = () => {
                           <input
                             onChange={handleFileChange}
                             type='file'
-                            accept='.png, .jpg, .jpeg'
+                            accept='.png, .jpg, .jpeg, .webp'
                             hidden
                             multiple
                           />
@@ -469,7 +471,7 @@ const HomePage = () => {
           {current === 'Submit Claims' && (
             <div className='w-full h-full'>
               <div className='m-8 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
-                <div className='border-b h-fit'>
+                <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
                     <p className='font-bold text-2xl text-black'>
                       Submit a claim for an item
@@ -617,7 +619,7 @@ const HomePage = () => {
                 <div className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'>
                   {selectedUserReport ? (
                     <>
-                      <div className='border-b h-fit'>
+                      <div className='border-b border-gray-300 h-fit'>
                         <div className='px-6 py-6'>
                           <p className='font-bold text-2xl text-black'>
                             {selectedUserReport.itemName}
@@ -757,7 +759,7 @@ const HomePage = () => {
                 <div className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'>
                   {selectedClaim ? (
                     <>
-                      <div className='border-b h-fit'>
+                      <div className='border-b border-gray-300 h-fit'>
                         <div className='px-6 py-6'>
                           <p className='font-bold text-2xl text-black'>
                             {selectedClaim.item?.itemName}

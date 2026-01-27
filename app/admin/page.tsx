@@ -64,6 +64,8 @@ export default function Home() {
       setPendingClaims(pending);
       if (pending.length > 0) {
         setSelectedPendingClaim(pending[0]);
+      } else {
+        setSelectedPendingClaim(undefined);
       }
       console.log(pending);
     } catch (error) {
@@ -88,9 +90,13 @@ export default function Home() {
     try {
       const { data: response } = await a.put(`/claimForms/claim/${claimId}`);
       if (response) {
-        getPendingClaims();
-        getApprovedClaims();
-        getAllItemsData();
+        await getPendingClaims();
+        await getApprovedClaims();
+        await getAllItemsData();
+        // Reset selected pending claim if it was the one that got approved
+        if (selectedPendingClaim?.id === claimId) {
+          setSelectedPendingClaim(undefined);
+        }
         setClaimApprovalSuccess(true);
         const timer = setTimeout(() => setClaimApprovalSuccess(false), 3000);
         return () => clearTimeout(timer);
@@ -106,10 +112,9 @@ export default function Home() {
         `/claimForms/delete/${claimId}`,
       );
       if (response) {
-        getPendingClaims();
-        getApprovedClaims();
-        getAllItemsData();
-        setSelectedPendingClaim(undefined);
+        await getPendingClaims();
+        await getApprovedClaims();
+        await getAllItemsData();
         setClaimDeleteSuccess(true);
         const timer = setTimeout(() => setClaimDeleteSuccess(false), 3000);
         return () => clearTimeout(timer);
@@ -128,6 +133,8 @@ export default function Home() {
       setPendingSubmissions(pending);
       if (pending.length > 0) {
         setSelectedPending(pending[0]);
+      } else {
+        setSelectedPending(undefined);
       }
       console.log(pending);
     } catch (error) {
@@ -167,10 +174,10 @@ export default function Home() {
         `/submissionForms/approve/${submissionId}`,
       );
       if (response) {
-        getPendingSubmissions();
-        getApprovedSubmissions();
-        getRejectedSubmissions();
-        getAllItemsData();
+        await getPendingSubmissions();
+        await getApprovedSubmissions();
+        await getRejectedSubmissions();
+        await getAllItemsData();
         setApproveSuccess(true);
         const timer = setTimeout(() => setApproveSuccess(false), 3000);
         return () => clearTimeout(timer);
@@ -186,9 +193,9 @@ export default function Home() {
         `/submissionForms/reject/${submissionId}`,
       );
       if (response) {
-        getPendingSubmissions();
-        getApprovedSubmissions();
-        getRejectedSubmissions();
+        await getPendingSubmissions();
+        await getApprovedSubmissions();
+        await getRejectedSubmissions();
         setRejectSuccess(true);
         const timer = setTimeout(() => setRejectSuccess(false), 3000);
         return () => clearTimeout(timer);
@@ -346,6 +353,10 @@ export default function Home() {
             </div>
             <div
               onClick={() => authenticate()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') authenticate();
+                console.log('pressed');
+              }}
               className='bg-indigo-500 text-center mt-2 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold rounded-md px-3 py-2'
             >
               Submit
@@ -428,8 +439,8 @@ export default function Home() {
                                 <p className='font-bold group-hover:underline'>
                                   {v.itemName}
                                 </p>
-                                <p className='font-medium mt-2 text-sm/6'>
-                                  {truncate(v.description, 50)}
+                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                  {truncate(v.description, 12)}
                                 </p>
                                 <p className='font-medium text-xs mt-2 text-gray-500'>
                                   By: {v.author?.name || 'Unknown User'}
@@ -662,8 +673,8 @@ export default function Home() {
                                 <p className='font-bold group-hover:underline'>
                                   {v.itemName}
                                 </p>
-                                <p className='font-medium mt-2 text-sm/6'>
-                                  {truncate(v.description, 50)}
+                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                  {truncate(v.description, 12)}
                                 </p>
                                 <p className='font-medium text-xs mt-2 text-gray-500'>
                                   By: {v.user?.name || 'Unknown User'}
@@ -888,8 +899,8 @@ export default function Home() {
                                 <p className='font-bold group-hover:underline'>
                                   {c.item?.itemName || 'Unknown Item'}
                                 </p>
-                                <p className='font-medium mt-2 text-sm/6'>
-                                  {truncate(c.comment, 50)}
+                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                  {truncate(c.comment, 12)}
                                 </p>
                                 <p className='font-medium text-xs mt-2 text-gray-500'>
                                   By: {c.user?.name || 'Unknown User'}
@@ -1040,8 +1051,8 @@ export default function Home() {
                                 <p className='font-bold group-hover:underline'>
                                   {v.itemName}
                                 </p>
-                                <p className='font-medium mt-2 text-sm/6'>
-                                  {truncate(v.description, 50)}
+                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                  {truncate(v.description, 12)}
                                 </p>
                                 <p className='font-medium text-xs mt-2 text-gray-500'>
                                   Name: {v.user.name}
@@ -1158,8 +1169,8 @@ export default function Home() {
                                 <p className='font-bold group-hover:underline'>
                                   {v.itemName}
                                 </p>
-                                <p className='font-medium mt-2 text-sm/6'>
-                                  {truncate(v.description, 50)}
+                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                  {truncate(v.description, 12)}
                                 </p>
                                 <p className='font-medium text-xs mt-2 text-gray-500'>
                                   {v.user.name}
@@ -1278,8 +1289,8 @@ export default function Home() {
                                 <p className='font-bold group-hover:underline'>
                                   {c.item?.itemName || 'Unknown Item'}
                                 </p>
-                                <p className='font-medium mt-2 text-sm/6'>
-                                  {truncate(c.comment, 50)}
+                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                  {truncate(c.comment, 12)}
                                 </p>
                                 <p className='font-medium text-xs mt-2 text-gray-500'>
                                   By: {c.user?.name || 'Unknown User'}

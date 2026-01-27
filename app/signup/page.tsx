@@ -29,7 +29,7 @@ export default function Signup() {
           <div className='mx-auto max-w-120 h-full w-full my-auto'>
             <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
               <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
-                <h2 className='mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900'>
+                <h2 className='hover:cursor-pointer mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900'>
                   Sign Up
                 </h2>
               </div>
@@ -97,7 +97,7 @@ export default function Signup() {
                   <div>
                     <button
                       onClick={() => signup()}
-                      className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                      className='flex w-full hover:cursor-pointer justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-600'
                     >
                       Sign Up
                     </button>

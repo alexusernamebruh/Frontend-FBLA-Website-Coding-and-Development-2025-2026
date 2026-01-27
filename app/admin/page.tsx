@@ -90,6 +90,7 @@ export default function Home() {
       if (response) {
         getPendingClaims();
         getApprovedClaims();
+        getAllItemsData();
         setClaimApprovalSuccess(true);
         const timer = setTimeout(() => setClaimApprovalSuccess(false), 3000);
         return () => clearTimeout(timer);
@@ -107,6 +108,7 @@ export default function Home() {
       if (response) {
         getPendingClaims();
         getApprovedClaims();
+        getAllItemsData();
         setSelectedPendingClaim(undefined);
         setClaimDeleteSuccess(true);
         const timer = setTimeout(() => setClaimDeleteSuccess(false), 3000);
@@ -168,6 +170,7 @@ export default function Home() {
         getPendingSubmissions();
         getApprovedSubmissions();
         getRejectedSubmissions();
+        getAllItemsData();
         setApproveSuccess(true);
         const timer = setTimeout(() => setApproveSuccess(false), 3000);
         return () => clearTimeout(timer);

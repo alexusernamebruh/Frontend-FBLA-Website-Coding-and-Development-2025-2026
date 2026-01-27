@@ -70,6 +70,10 @@ export default function ItemChats() {
       setChats(response);
       if (response.length > 0 && !selectedChat) {
         setSelectedChat(response[0]);
+      } else if (selectedChat) {
+        setSelectedChat(
+          response.find((chat: ItemChat) => chat.id === selectedChat.id),
+        );
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -115,6 +119,8 @@ export default function ItemChats() {
           senderId: user.id,
         },
       );
+      setMessage('');
+      getChats();
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -165,8 +171,8 @@ export default function ItemChats() {
   }, [selectedChat?.id]);
 
   return (
-    <div className='w-full h-full flex flex-1 flex-col'>
-      <div className='absolute top-0 flex-1 right-0 pointer-events-none'>
+    <div className='w-full h-full flex flex-col'>
+      <div className='absolute top-0 right-0 pointer-events-none'>
         <Success
           title={'Success!'}
           description={'Chat started successfully.'}
@@ -311,7 +317,7 @@ export default function ItemChats() {
         </div>
       </Modal>
 
-      <div className='rounded-lg border border-gray-300 bg-white w-full flex-1 flex'>
+      <div className='h-full rounded-lg border border-gray-300 bg-white w-full flex'>
         {/* Sidebar */}
         <div className='max-w-[20rem] min-h-full flex flex-col w-fit h-full border-r border-gray-300'>
           <div className='px-4 py-4 border-b border-gray-300 w-full'>
@@ -326,7 +332,7 @@ export default function ItemChats() {
             </p>
           </div>
 
-          <div className='flex flex-col overflow-auto flex-1'>
+          <div className='flex flex-col overflow-auto h-full'>
             {chats.length > 0 ? (
               chats.map((chat, i) => (
                 <div
@@ -354,7 +360,7 @@ export default function ItemChats() {
         <div className='flex flex-col w-full h-full'>
           {selectedChat ? (
             <>
-              <div className='border-b border-gray-300 p-4 flex justify-between items-start'>
+              <div className='h-fit border-b border-gray-300 p-4 flex justify-between items-start'>
                 <div>
                   <p className='font-semibold text-lg text-gray-900'>
                     {selectedChat.item.itemName}
@@ -373,10 +379,10 @@ export default function ItemChats() {
                 </button>
               </div>
 
-              <div className='flex-1 overflow-auto text-black p-6 space-y-4'>
+              <div className='h-full flex-1 w-full overflow-auto text-black p-6 space-y-4'>
                 {selectedChat.messages && selectedChat.messages.length > 0 ? (
                   selectedChat.messages.map((msg, i) => (
-                    <div key={i} className='flex flex-col'>
+                    <div key={i} className='flex h-fit flex-col'>
                       <div
                         className={`max-w-[75%] py-2 px-3 rounded-md text-base font-medium whitespace-pre-wrap ${
                           msg.senderId === currentUser?.id
@@ -403,7 +409,7 @@ export default function ItemChats() {
                 <div ref={chatEndRef} />
               </div>
 
-              <div className='p-6 border-t border-gray-300'>
+              <div className='h-fit p-6 border-t border-gray-300'>
                 <div className='border border-gray-300 rounded-md'>
                   <div className='flex items-start w-full'>
                     <div className='mt-[1.15rem] mb-4 ml-3'>

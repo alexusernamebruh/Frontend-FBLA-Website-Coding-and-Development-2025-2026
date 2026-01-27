@@ -16,6 +16,7 @@ const HomePage = () => {
     return 'Reports';
   });
   const [showItemModal, setShowItemModal] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
   const [createSubmissionFormSuccess, setCreateSubmissionFormSuccess] =
@@ -106,6 +107,12 @@ const HomePage = () => {
     } catch (error) {
       console.error('Error fetching user claims:', error);
     }
+  };
+
+  const hasUserClaimedItem = (itemId: number) => {
+    return userClaims.some(
+      (claim) => claim.item?.id === itemId && claim.isOpen,
+    );
   };
 
   const handleCurrentChange = (newCurrent: string) => {
@@ -200,7 +207,7 @@ const HomePage = () => {
   };
 
   return (
-    <div className='h-screen'>
+    <div className='w-full h-screen'>
       {/* Desktop Version */}
       <div className='hidden lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
         <div className='absolute pointer-events-none'>
@@ -224,7 +231,7 @@ const HomePage = () => {
             type={'user'}
           />
         </div>
-        <div className='w-full h-screen overflow-hidden'>
+        <div className='w-full h-screen'>
           {current === 'All Items' && (
             <div className='w-full h-full flex flex-col'>
               <div className='flex w-full h-full p-8 space-x-4'>
@@ -287,6 +294,35 @@ const HomePage = () => {
                           <p className='font-medium text-gray-600 mt-1 text-sm'>
                             Posted by: {selectedItem.author?.name || 'Unknown'}
                           </p>
+                          <div className='mt-4'>
+                            {selectedItem.author?.id ===
+                            JSON.parse(localStorage.getItem('user') || '{}')
+                              .id ? (
+                              <button
+                                disabled
+                                className='bg-gray-400 text-white font-bold px-4 py-2 rounded-md cursor-not-allowed'
+                              >
+                                Your Item
+                              </button>
+                            ) : hasUserClaimedItem(selectedItem.id) ? (
+                              <button
+                                disabled
+                                className='bg-gray-400 text-white font-bold px-4 py-2 rounded-md cursor-not-allowed'
+                              >
+                                Claim Pending
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setSelectedItemForClaim(selectedItem);
+                                  setShowClaimModal(true);
+                                }}
+                                className='bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-bold px-4 py-2 rounded-md'
+                              >
+                                Claim This Item
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div>
@@ -446,7 +482,10 @@ const HomePage = () => {
                       <label className='block text-sm/6 font-bold text-gray-900'>
                         Select an item*
                       </label>
-                      <div className='mt-2 relative' ref={claimSearchRef}>
+                      <div
+                        className='mt-2 relative border border-gray-300 rounded-md'
+                        ref={claimSearchRef}
+                      >
                         <input
                           type='text'
                           placeholder='Search items...'
@@ -521,7 +560,7 @@ const HomePage = () => {
                           onChange={(v) => setClaimComment(v.target.value)}
                           value={claimComment}
                           placeholder='Explain why this item belongs to you...'
-                          className='block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                          className='block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 sm:text-sm/6'
                         />
                       </div>
                     </div>
@@ -814,7 +853,7 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Chats' && (
-            <div className='p-8 w-full h-full'>
+            <div className='p-8 w-full h-screen'>
               <ItemChats />
             </div>
           )}
@@ -959,7 +998,7 @@ const HomePage = () => {
                         <input
                           onChange={handleFileChange}
                           type='file'
-                          accept='.png, .jpg, .jpeg'
+                          accept='.png, .jpg, .jpeg, .webp'
                           hidden
                           multiple
                         />
@@ -1275,6 +1314,49 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* Claim Modal */}
+      <Modal open={showClaimModal} setOpen={setShowClaimModal}>
+        <div className='max-w-md mx-auto bg-white rounded-lg p-6'>
+          <h2 className='text-xl font-bold text-black mb-4'>
+            Claim Item: {selectedItemForClaim?.itemName}
+          </h2>
+          <div className='space-y-4'>
+            <div>
+              <label className='block text-sm font-bold text-black mb-2'>
+                Claim explanation*
+              </label>
+              <textarea
+                onChange={(v) => setClaimComment(v.target.value)}
+                value={claimComment}
+                rows={4}
+                placeholder='Explain why this item belongs to you...'
+                className='w-full placeholder-gray-400 text-black rounded-md border border-gray-300 px-3 py-2 text-sm'
+              />
+            </div>
+            <div className='flex space-x-3'>
+              <button
+                onClick={() => {
+                  createClaimForm();
+                  setShowClaimModal(false);
+                }}
+                className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white py-2 rounded-md font-semibold'
+              >
+                Submit Claim
+              </button>
+              <button
+                onClick={() => {
+                  setShowClaimModal(false);
+                  setClaimComment('');
+                }}
+                className='flex-1 bg-gray-400 hover:bg-gray-500 hover:cursor-pointer text-white py-2 rounded-md font-semibold'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
       {/* Mobile Item Modal */}
       <Modal open={showItemModal} setOpen={setShowItemModal}>
         {selectedItem && (
@@ -1284,30 +1366,24 @@ const HomePage = () => {
             </h2>
             <div className='space-y-4'>
               <div>
-                <p className='text-sm font-semibold text-gray-700'>
-                  Description:
-                </p>
-                <p className='text-sm text-gray-600'>
-                  {selectedItem.description}
-                </p>
+                <p className='text-sm font-semibold text-black'>Description:</p>
+                <p className='text-sm text-black'>{selectedItem.description}</p>
               </div>
               <div>
-                <p className='text-sm font-semibold text-gray-700'>
-                  Posted by:
-                </p>
-                <p className='text-sm text-gray-600'>
+                <p className='text-sm font-semibold text-black'>Posted by:</p>
+                <p className='text-sm text-black'>
                   {selectedItem.author?.name || 'Unknown'}
                 </p>
               </div>
               <div>
-                <p className='text-sm font-semibold text-gray-700'>Date:</p>
-                <p className='text-sm text-gray-600'>
+                <p className='text-sm font-semibold text-black'>Date:</p>
+                <p className='text-sm text-black'>
                   {dayjs(selectedItem.createdAt).format('MM/DD/YYYY h:mm a')}
                 </p>
               </div>
               {selectedItem.photos && selectedItem.photos.length > 0 && (
                 <div>
-                  <p className='text-sm font-semibold text-gray-700 mb-2'>
+                  <p className='text-sm font-semibold text-black mb-2'>
                     Photos ({selectedItem.photos.length}):
                   </p>
                   <div className='grid grid-cols-2 gap-2'>

@@ -1,115 +1,78 @@
 'use client';
 import {
   BriefcaseIcon,
+  ChatBubbleLeftEllipsisIcon,
   CheckBadgeIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  DocumentIcon,
+  DocumentMagnifyingGlassIcon,
+  DocumentPlusIcon,
+  DocumentTextIcon,
   EnvelopeIcon,
+  MagnifyingGlassCircleIcon,
+  MagnifyingGlassIcon,
+  MagnifyingGlassPlusIcon,
+  MapPinIcon,
   MegaphoneIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const userLayout = [
+type NavItem = { name: string; icon: React.ElementType };
+type NavGroup = { group: string; icon: React.ElementType; children: NavItem[] };
+type NavEntry = NavItem | NavGroup;
+
+const isGroup = (entry: NavEntry): entry is NavGroup => 'children' in entry;
+
+const userLayout: NavEntry[] = [
+  { name: 'All Items', icon: BriefcaseIcon },
   {
-    name: 'All Items',
-    icon: BriefcaseIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+    group: 'Reports',
+    icon: DocumentIcon,
+    children: [
+      { name: 'Your Reports', icon: DocumentTextIcon },
+      { name: 'Submit Reports', icon: DocumentPlusIcon },
+    ],
   },
   {
-    name: 'Your Reports',
+    group: 'Claims',
+    icon: MagnifyingGlassIcon,
+    children: [
+      { name: 'Your Claims', icon: DocumentMagnifyingGlassIcon },
+      { name: 'Submit Claims', icon: MagnifyingGlassPlusIcon },
+    ],
+  },
+  { name: 'Item Lookouts', icon: MapPinIcon },
+  { name: 'Chats', icon: ChatBubbleLeftEllipsisIcon },
+];
+
+const adminLayout: NavEntry[] = [
+  { name: 'All Items', icon: BriefcaseIcon },
+  {
+    group: 'Reports',
     icon: EnvelopeIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+    children: [
+      { name: 'Pending Reports', icon: DocumentTextIcon },
+      { name: 'Declined Reports', icon: XCircleIcon },
+      { name: 'Approved Reports', icon: CheckBadgeIcon },
+    ],
   },
   {
-    name: 'Submit Reports',
-    icon: BriefcaseIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Your Claims',
-    icon: BriefcaseIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Submit Claims',
-    icon: BriefcaseIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Chats',
-    icon: MegaphoneIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
+    group: 'Claims',
+    icon: CheckBadgeIcon,
+    children: [
+      { name: 'Pending Claims', icon: DocumentTextIcon },
+      { name: 'Approved Claims', icon: CheckBadgeIcon },
+    ],
   },
 ];
 
-const adminLayout = [
-  {
-    name: 'All Items',
-    icon: BriefcaseIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Pending Reports',
-    icon: BriefcaseIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Pending Claims',
-    icon: CheckBadgeIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Declined Reports',
-    icon: XCircleIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Approved Reports',
-    icon: XCircleIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-  {
-    name: 'Approved Claims',
-    icon: XCircleIcon,
-    highlighted:
-      'bg-indigo-600 hover:cursor-pointer text-white space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-    notHighlighted:
-      'bg-indigo-500 hover:cursor-pointer text-indigo-200 hover:text-white hover:bg-indigo-600 space-x-2 px-2 py-2.5 items-center rounded-md text-left flex',
-  },
-];
+const itemCls =
+  'flex font-semibold items-center gap-2 px-2 py-2 rounded-md cursor-pointer text-sm font-medium w-full text-left';
+const activeCls = 'bg-indigo-600 text-white';
+const inactiveCls = 'text-indigo-200 hover:bg-indigo-600 hover:text-white';
 
 export default function SideNav({
   current,
@@ -121,7 +84,8 @@ export default function SideNav({
   type: string | undefined | null;
 }) {
   const router = useRouter();
-  const [name, setName] = useState<string>('Loading...');
+  const [name, setName] = useState('Loading...');
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -133,81 +97,100 @@ export default function SideNav({
     }
   }, []);
 
-  return (
-    <div className='flex bg-indigo-500 flex-col text-indigo-600 space-y-2 items-center px-4 h-full py-8'>
-      <p className='font-bold mb-2 text-white'>Home</p>
-      <div className='flex flex-col space-y-1 font-semibold text-sm w-[15rem]'>
-        {type === 'user' && (
-          <div className='space-y-1'>
-            {userLayout.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.name}
-                  className={
-                    current === item.name
-                      ? item.highlighted
-                      : item.notHighlighted
-                  }
-                  onClick={() => {
-                    if (current !== item.name) {
-                      setCurrent(item.name);
-                    }
-                  }}
-                >
-                  <div className='w-5 h-5'>
-                    <Icon />
-                  </div>
-                  <p className='w-fit'>{item.name}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {type === 'admin' && (
-          <div className='space-y-1'>
-            {adminLayout.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.name}
-                  className={
-                    current === item.name
-                      ? item.highlighted
-                      : item.notHighlighted
-                  }
-                  onClick={() => {
-                    if (current !== item.name) {
-                      setCurrent(item.name);
-                    }
-                  }}
-                >
-                  <div className='w-5 h-5'>
-                    <Icon />
-                  </div>
-                  <p>{item.name}</p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+  // Auto-open the group that contains the active item
+  useEffect(() => {
+    const layout = type === 'admin' ? adminLayout : userLayout;
+    layout.forEach((entry) => {
+      if (isGroup(entry) && entry.children.some((c) => c.name === current)) {
+        setOpenGroups((prev) =>
+          prev.includes(entry.group) ? prev : [...prev, entry.group],
+        );
+      }
+    });
+  }, [current, type]);
 
-      <div className='flex flex-col items-center mb-6 h-full space-y-2'>
-        <div className='font-bold mt-auto text-white'>
-          {type === 'user' && name}
-          {type === 'admin' && 'Admin'}
-        </div>
+  const toggleGroup = (group: string) =>
+    setOpenGroups((prev) =>
+      prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group],
+    );
+
+  const layout = type === 'admin' ? adminLayout : userLayout;
+
+  return (
+    <div className='flex flex-col bg-indigo-500 h-full py-6 px-4 w-60'>
+      <p className='font-bold text-white text-sm mb-4 px-1'>Home</p>
+
+      <nav className='flex flex-col gap-0.5 flex-1'>
+        {layout.map((entry) => {
+          if (isGroup(entry)) {
+            const Icon = entry.icon;
+            const isOpen = openGroups.includes(entry.group);
+            const hasActive = entry.children.some((c) => c.name === current);
+            return (
+              <div key={entry.group}>
+                <button
+                  onClick={() => toggleGroup(entry.group)}
+                  className={`${itemCls} ${hasActive && !isOpen ? activeCls : inactiveCls} justify-between`}
+                >
+                  <span className='flex items-center gap-2'>
+                    <Icon className='w-4 h-4 shrink-0' />
+                    {entry.group}
+                  </span>
+                  {isOpen ? (
+                    <ChevronDownIcon className='w-3 h-3' />
+                  ) : (
+                    <ChevronRightIcon className='w-3 h-3' />
+                  )}
+                </button>
+                {isOpen && (
+                  <div className='ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-indigo-400 pl-2'>
+                    {entry.children.map((child) => {
+                      const CIcon = child.icon;
+                      return (
+                        <button
+                          key={child.name}
+                          onClick={() => setCurrent(child.name)}
+                          className={`${itemCls} ${current === child.name ? activeCls : inactiveCls}`}
+                        >
+                          <CIcon className='w-4 h-4 shrink-0' />
+                          {child.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          const Icon = entry.icon;
+          return (
+            <button
+              key={entry.name}
+              onClick={() => setCurrent(entry.name)}
+              className={`${itemCls} ${current === entry.name ? activeCls : inactiveCls}`}
+            >
+              <Icon className='w-4 h-4 shrink-0' />
+              {entry.name}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className='mt-auto flex flex-col items-center gap-2 pt-4'>
+        <p className='font-bold text-white text-sm'>
+          {type === 'admin' ? 'Admin' : name}
+        </p>
         {type !== 'admin' && (
-          <div
+          <button
             onClick={() => {
               localStorage.removeItem('user');
               router.push('/login');
             }}
-            className='font-bold text-white hover:text-red-500 hover:border-red-500 hover:cursor-pointer border border-white px-3 py-1 rounded-md w-full text-center'
+            className='w-full text-center text-sm font-bold text-white border border-white px-3 py-1 rounded-md hover:text-red-400 hover:border-red-400'
           >
             Logout
-          </div>
+          </button>
         )}
       </div>
     </div>

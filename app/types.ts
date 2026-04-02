@@ -26,6 +26,7 @@ interface IItem {
   createdAt: Date;
   claimed: boolean;
   claims: IClaimForm[];
+  similarity?: number;
 }
 
 interface IPhoto {
@@ -77,4 +78,16 @@ interface IMessage {
   content: string;
   createdAt: Date;
   chat: IChat[];
+}
+
+interface IItemLookout {
+  id: number;
+  userId: number;
+  user: IUser;
+  description: string;
+  textEmbedding?: number[];
+  photos: IPhoto[];
+  items: IItem[];
+  createdAt: Date;
+  status?: 'OPEN' | 'CLOSED';
 }

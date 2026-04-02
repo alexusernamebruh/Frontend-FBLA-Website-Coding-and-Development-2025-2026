@@ -8,6 +8,8 @@ import Success from '../components/success';
 import { truncate } from '../helpers';
 import dayjs from 'dayjs';
 import Modal from '../components/modal';
+import { DocumentTextIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import ItemLookouts from '../components/itemLookouts';
 
 const HomePage = () => {
   const [current, setCurrent] = useState('All Items');
@@ -28,6 +30,10 @@ const HomePage = () => {
   const [selectedItem, setSelectedItem] = useState<IItem>();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredItems, setFilteredItems] = useState<IItem[]>([]);
+  const [searchType, setSearchType] = useState<'text' | 'image'>('text');
+  const [selectedSearchImage, setSelectedSearchImage] =
+    useState<string>('None');
+  const imageSearchRef = useRef<HTMLInputElement>(null);
 
   // Submit Claims state
   const [selectedItemForClaim, setSelectedItemForClaim] =
@@ -38,10 +44,12 @@ const HomePage = () => {
   const [claimSearchQuery, setClaimSearchQuery] = useState('');
   const claimSearchRef = useRef<HTMLDivElement>(null);
 
-  // Your Reports state
   const [userReports, setUserReports] = useState<ISubmission[]>([]);
   const [selectedUserReport, setSelectedUserReport] = useState<ISubmission>();
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showCreateItemLookout, setShowCreateItemLookout] = useState(false);
+  const [createItemLookoutSuccess, setCreateItemLookoutSuccess] =
+    useState(false);
   const [selectedImageData, setSelectedImageData] = useState<string>('');
 
   // Your Claims state
@@ -66,19 +74,38 @@ const HomePage = () => {
     }
   };
 
-  const searchItems = async (query: string) => {
+  const searchItemByText = async (query: string) => {
     if (!query.trim()) {
       setFilteredItems(unclaimedItems);
       return;
     }
     try {
-      const { data: response } = await a.get('/items/search', {
-        params: { itemName: query, description: query },
+      const { data: response } = await a.post('/items/search/text', {
+        query: query,
       });
+      console.log(response);
       const unclaimedOnly = response.filter((item: IItem) => !item.claimed);
       setFilteredItems(unclaimedOnly);
     } catch (error) {
       console.error('Error searching items:', error);
+    }
+  };
+
+  const searchItemsByImage = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data: response } = await a.post('/items/search/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(response);
+      const unclaimedOnly = response.filter((item: IItem) => !item.claimed);
+      setFilteredItems(unclaimedOnly);
+    } catch (error) {
+      console.error('Error searching items by image:', error);
     }
   };
 
@@ -238,18 +265,76 @@ const HomePage = () => {
             <div className='w-full h-full flex flex-col'>
               <div className='flex w-full h-full p-8 space-x-4'>
                 <div className='flex flex-col space-y-4 overflow-auto text-black'>
-                  <div className='mb-4'>
-                    <input
-                      type='text'
-                      placeholder='Search items...'
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        searchItems(e.target.value);
+                  <div className='flex space-x-2'>
+                    <button
+                      onClick={() => {
+                        setSearchType('text');
+                        setSearchQuery('');
+                        setFilteredItems(unclaimedItems);
                       }}
-                      className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
-                    />
+                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
+                        searchType === 'text'
+                          ? 'bg-indigo-500'
+                          : 'bg-gray-400 hover:bg-gray-500'
+                      }`}
+                    >
+                      <DocumentTextIcon className='w-5 h-5 text-gray-100' />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSearchType('image');
+                        setSelectedSearchImage('None');
+                        if (imageSearchRef.current) {
+                          imageSearchRef.current.value = '';
+                        }
+                      }}
+                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
+                        searchType === 'image'
+                          ? 'bg-indigo-500'
+                          : 'bg-gray-400 hover:bg-gray-500'
+                      }`}
+                    >
+                      <PhotoIcon className='w-5 h-5 text-gray-100' />
+                    </button>
                   </div>
+                  <div className='mb-4'>
+                    {searchType === 'text' ? (
+                      <input
+                        type='text'
+                        placeholder='Search items...'
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          searchItemByText(e.target.value);
+                        }}
+                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                      />
+                    ) : (
+                      <div className='flex flex-col gap-2'>
+                        <label>
+                          <input
+                            ref={imageSearchRef}
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) {
+                                setSelectedSearchImage(e.target.files[0].name);
+                                searchItemsByImage(e.target.files[0]);
+                              }
+                            }}
+                            type='file'
+                            accept='.png, .jpg, .jpeg, .webp'
+                            hidden
+                          />
+                          <div className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center cursor-pointer hover:bg-indigo-600 transition-colors'>
+                            Search by Image
+                          </div>
+                        </label>
+                        <div className='text-black text-xs font-semibold'>
+                          Selected Image: {selectedSearchImage}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {filteredItems.length ? (
                     filteredItems.map((item: IItem, i) => {
                       return (
@@ -854,6 +939,11 @@ const HomePage = () => {
               </div>
             </div>
           )}
+          {current === 'Item Lookouts' && (
+            <div className='w-full h-full'>
+              <ItemLookouts />
+            </div>
+          )}
           {current === 'Chats' && (
             <div className='p-8 w-full h-screen'>
               <ItemChats />
@@ -895,7 +985,7 @@ const HomePage = () => {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    searchItems(e.target.value);
+                    searchItemByText(e.target.value);
                   }}
                   className='w-full outline-none rounded-md border border-gray-300 px-3 py-2 text-sm'
                 />
@@ -1430,7 +1520,7 @@ const HomePage = () => {
               />
               <button
                 onClick={() => setShowImageModal(false)}
-                className='px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-md'
+                className='px-4 hover:cursor-pointer py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-md'
               >
                 Close
               </button>

@@ -15,6 +15,7 @@ import {
   MagnifyingGlassPlusIcon,
   MapPinIcon,
   MegaphoneIcon,
+  PlusCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
@@ -65,6 +66,14 @@ const adminLayout: NavEntry[] = [
     children: [
       { name: 'Pending Claims', icon: DocumentTextIcon },
       { name: 'Approved Claims', icon: CheckBadgeIcon },
+    ],
+  },
+  {
+    group: 'Locations',
+    icon: MapPinIcon,
+    children: [
+      { name: 'All Locations', icon: MapPinIcon },
+      { name: 'Add Location', icon: PlusCircleIcon },
     ],
   },
 ];
@@ -118,7 +127,7 @@ export default function SideNav({
 
   return (
     <div className='flex flex-col bg-indigo-500 h-full py-6 px-4 w-60'>
-      <p className='font-bold text-white text-sm mb-4 px-1'>Home</p>
+      <p className='font-bold text-white text-sm mb-4 px-1'>Lost and Found</p>
 
       <nav className='flex flex-col gap-0.5 flex-1'>
         {layout.map((entry) => {

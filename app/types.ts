@@ -14,6 +14,7 @@ interface IUser {
   sentMessages: IMessage[];
   chats: IChat[];
   createdItems: IItem[];
+  itemLookouts: IItemLookout[];
 }
 
 interface IItem {
@@ -27,6 +28,8 @@ interface IItem {
   claimed: boolean;
   claims: IClaimForm[];
   similarity?: number;
+  location: ILocation;
+  locationId: number;
 }
 
 interface IPhoto {
@@ -48,6 +51,8 @@ interface ISubmission {
   photos: IPhoto[];
   createdAt: Date;
   approvalStatus: ApprovalStatus;
+  location: ILocation;
+  locationId: number;
 }
 
 interface IClaimForm {
@@ -90,4 +95,12 @@ interface IItemLookout {
   items: IItem[];
   createdAt: Date;
   status?: 'OPEN' | 'CLOSED';
+}
+
+interface ILocation {
+  id: number;
+  name: string;
+  teacher?: string;
+  items: IItem[];
+  submissions: ISubmission[];
 }

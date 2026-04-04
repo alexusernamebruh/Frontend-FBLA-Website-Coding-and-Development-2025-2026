@@ -150,9 +150,9 @@ const ItemLookouts = () => {
 
       {/* Desktop Version */}
       <div className='hidden lg:flex h-screen w-full overflow-hidden'>
-        <div className='w-full h-screen flex flex-col'>
+        <div className='w-full h-screen flex flex-col space-y-8 p-8'>
           {/* Header */}
-          <div className='m-8 bg-white rounded-lg border border-gray-300 shadow-md'>
+          <div className='bg-white rounded-lg border border-gray-300 shadow-md'>
             <div className='border-b border-gray-300 px-6 py-6 flex justify-between items-center'>
               <p className='font-bold text-2xl text-black'>My Item Lookouts</p>
               <button
@@ -165,7 +165,7 @@ const ItemLookouts = () => {
           </div>
 
           {/* Main Content */}
-          <div className='flex flex-1 gap-4 m-8 overflow-hidden'>
+          <div className='flex flex-1 gap-4 overflow-hidden'>
             {/* Lookouts List */}
             <div className='w-1/3 bg-white rounded-lg border border-gray-300 shadow-md overflow-y-auto'>
               {userLookouts && userLookouts.length > 0 ? (

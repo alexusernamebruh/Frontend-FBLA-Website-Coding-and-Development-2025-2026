@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { a } from '../config';
 import SideNav from '../components/sidenav';
@@ -8,6 +8,8 @@ import { truncate } from '../helpers';
 import dayjs from 'dayjs';
 import Success from '../components/success';
 import Modal from '../components/modal';
+import { DocumentTextIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -40,6 +42,27 @@ export default function Home() {
   const [selectedApprovedClaim, setSelectedApprovedClaim] =
     useState<IClaimForm>();
   const [selectedItem, setSelectedItem] = useState<IItem>();
+
+  // Locations state
+  const [locations, setLocations] = useState<ILocation[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<ILocation>();
+  const [locationFilter, setLocationFilter] = useState<number | null>(null);
+  const [filterSearchQuery, setFilterSearchQuery] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [searchType, setSearchType] = useState<'text' | 'image' | 'location'>(
+    'text',
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSearchImage, setSelectedSearchImage] =
+    useState<string>('None');
+  const imageSearchRef = useRef<HTMLInputElement>(null);
+  const [filteredItems, setFilteredItems] = useState<IItem[]>([]);
+  const [newLocationName, setNewLocationName] = useState('');
+  const [newLocationTeacher, setNewLocationTeacher] = useState('');
+  const [editLocationName, setEditLocationName] = useState('');
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [locationCreateSuccess, setLocationCreateSuccess] = useState(false);
+  const [locationEditSuccess, setLocationEditSuccess] = useState(false);
 
   // Edit state
   const [isEditing, setIsEditing] = useState(false);
@@ -255,6 +278,7 @@ export default function Home() {
     try {
       const { data: response } = await a.get('/items/all');
       setAllItems(response);
+      setFilteredItems(response);
       if (response.length > 0) {
         setSelectedItem(response[0]);
       }
@@ -282,6 +306,39 @@ export default function Home() {
     }
   };
 
+  const searchItemByText = async (query: string) => {
+    if (!query.trim()) {
+      setFilteredItems(allItems);
+      return;
+    }
+
+    try {
+      const { data: response } = await a.post('/items/search/text', {
+        query,
+      });
+      setFilteredItems(response);
+    } catch (error) {
+      console.error('Error searching items:', error);
+    }
+  };
+
+  const searchItemsByImage = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data: response } = await a.post('/items/search/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      setFilteredItems(response);
+      setSelectedSearchImage(file.name);
+    } catch (error) {
+      console.error('Error searching items by image:', error);
+    }
+  };
+
   const deleteItemData = async (itemId: number) => {
     try {
       const { data: response } = await a.delete(`/items/delete/${itemId}`);
@@ -297,6 +354,65 @@ export default function Home() {
     }
   };
 
+  const getLocations = async () => {
+    try {
+      const { data: response } = await a.get('/locations');
+      setLocations(response);
+      if (response.length > 0) {
+        setSelectedLocation(response[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+    }
+  };
+
+  const createLocation = async () => {
+    try {
+      const { data: response } = await a.post('/locations', {
+        name: newLocationName,
+        teacher: newLocationTeacher,
+      });
+      if (response) {
+        getLocations();
+        setNewLocationName('');
+        setNewLocationTeacher('');
+        setLocationCreateSuccess(true);
+        const timer = setTimeout(() => setLocationCreateSuccess(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Error creating location:', error);
+    }
+  };
+
+  const editLocation = async (locationId: number) => {
+    try {
+      const { data: response } = await a.put(`/locations/${locationId}`, {
+        name: editLocationName,
+      });
+      if (response) {
+        getLocations();
+        setIsEditingLocation(false);
+        setEditLocationName('');
+        setLocationEditSuccess(true);
+        const timer = setTimeout(() => setLocationEditSuccess(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.error('Error editing location:', error);
+    }
+  };
+
+  const startEditLocation = (location: ILocation) => {
+    setEditLocationName(location.name);
+    setIsEditingLocation(true);
+  };
+
+  const cancelEditLocation = () => {
+    setIsEditingLocation(false);
+    setEditLocationName('');
+  };
+
   const startEditItem = (item: IItem) => {
     setEditItemName(item.itemName);
     setEditDescription(item.description);
@@ -306,6 +422,8 @@ export default function Home() {
 
   const handleCurrentPageChange = (newPage: string) => {
     setCurrentPage(newPage);
+    setLocationFilter(null);
+    setFilterSearchQuery('');
   };
 
   useEffect(() => {
@@ -316,6 +434,7 @@ export default function Home() {
       await getPendingClaims();
       await getApprovedClaims();
       await getAllItemsData();
+      await getLocations();
     })();
   }, []);
 
@@ -346,6 +465,9 @@ export default function Home() {
                   type='password'
                   required
                   onChange={(v) => setPassword(v.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') authenticate();
+                  }}
                   value={password}
                   className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
                 />
@@ -353,10 +475,6 @@ export default function Home() {
             </div>
             <div
               onClick={() => authenticate()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') authenticate();
-                console.log('pressed');
-              }}
               className='bg-indigo-500 text-center mt-2 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold rounded-md px-3 py-2'
             >
               Submit
@@ -408,6 +526,18 @@ export default function Home() {
               show={itemDeleteSuccess}
               setShow={setItemDeleteSuccess}
             />
+            <Success
+              title={'Success'}
+              description={'Successfully created a new location.'}
+              show={locationCreateSuccess}
+              setShow={setLocationCreateSuccess}
+            />
+            <Success
+              title={'Success'}
+              description={'Successfully edited the location.'}
+              show={locationEditSuccess}
+              setShow={setLocationEditSuccess}
+            />
           </div>
 
           {/* Desktop Starts here */}
@@ -421,819 +551,1062 @@ export default function Home() {
             </div>
 
             {currentPage === 'All Items' && (
-              <div className='flex flex-col w-full h-full p-8 space-x-4'>
-                <div className='flex w-full h-full p-8 space-x-4'>
-                  <div className='flex flex-col space-y-4 overflow-auto'>
-                    {allItems.length ? (
-                      allItems.map((v: IItem, i) => {
-                        return (
-                          <div key={i} className='group'>
-                            <div
-                              onClick={() => {
-                                setSelectedItem(v);
-                                setIsEditing(false);
-                              }}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                            >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline'>
-                                  {v.itemName}
-                                </p>
-                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                  {truncate(v.description, 12)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  By: {v.author?.name || 'Unknown User'}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Created on{' '}
-                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
-                                </p>
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='w-fit min-w-44 flex flex-col space-y-4 overflow-y-auto text-black'>
+                  <div className='flex space-x-2'>
+                    <button
+                      onClick={() => {
+                        setSearchType('text');
+                        setSearchQuery('');
+                        setLocationFilter(null);
+                        getAllItemsData();
+                      }}
+                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
+                        searchType === 'text'
+                          ? 'bg-indigo-500'
+                          : 'bg-gray-400 hover:bg-gray-500'
+                      }`}
+                    >
+                      <DocumentTextIcon className='w-5 h-5 text-gray-100' />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSearchType('image');
+                        setSelectedSearchImage('None');
+                        setLocationFilter(null);
+                        getAllItemsData();
+                        if (imageSearchRef.current) {
+                          imageSearchRef.current.value = '';
+                        }
+                      }}
+                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
+                        searchType === 'image'
+                          ? 'bg-indigo-500'
+                          : 'bg-gray-400 hover:bg-gray-500'
+                      }`}
+                    >
+                      <PhotoIcon className='w-5 h-5 text-gray-100' />
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setSearchType('location');
+                        getAllItemsData();
+                      }}
+                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
+                        searchType === 'location'
+                          ? 'bg-indigo-500'
+                          : 'bg-gray-400 hover:bg-gray-500'
+                      }`}
+                    >
+                      <MapPinIcon className='w-5 h-5 text-gray-100' />
+                    </button>
+                  </div>
+                  <div className='mb-4'>
+                    {searchType === 'text' && (
+                      <div className='flex gap-2'>
+                        <input
+                          type='text'
+                          placeholder='Search items...'
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            searchItemByText(e.target.value);
+                          }}
+                          className='flex-1 w-fit rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                        />
+                      </div>
+                    )}
+                    {searchType === 'image' && (
+                      <div className='flex flex-col gap-2'>
+                        <label>
+                          <input
+                            ref={imageSearchRef}
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) {
+                                setSelectedSearchImage(e.target.files[0].name);
+                                searchItemsByImage(e.target.files[0]);
+                              }
+                            }}
+                            type='file'
+                            accept='.png, .jpg, .jpeg, .webp'
+                            hidden
+                          />
+                          <div className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'>
+                            Select Image
+                          </div>
+                        </label>
+                        <div className='text-black text-xs font-semibold'>
+                          Selected Image: {selectedSearchImage}
+                        </div>
+                      </div>
+                    )}
+                    {searchType === 'location' && (
+                      <div className='flex flex-col gap-2'>
+                        <div
+                          onClick={() => setShowFilterModal(true)}
+                          className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'
+                        >
+                          Select Location
+                        </div>
+                        <div className='text-black text-xs font-semibold'>
+                          Selected Location:{' '}
+                          {locationFilter === null
+                            ? 'None'
+                            : (locations.find(
+                                (loc) => loc.id === locationFilter,
+                              )?.name ?? 'None')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className='w-full h-full overflow-auto'>
+                    {filteredItems.filter(
+                      (v) =>
+                        locationFilter === null ||
+                        v.location?.id === locationFilter,
+                    ).length ? (
+                      filteredItems
+                        .filter(
+                          (v) =>
+                            locationFilter === null ||
+                            v.location?.id === locationFilter,
+                        )
+                        .map((v: IItem, i) => {
+                          return (
+                            <div key={i} className='group'>
+                              <div
+                                onClick={() => {
+                                  setSelectedItem(v);
+                                  setIsEditing(false);
+                                }}
+                                className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                              >
+                                <div className='group-hover:cursor-pointer'>
+                                  <p className='font-bold group-hover:underline'>
+                                    {v.itemName}
+                                  </p>
+                                  <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                    {truncate(v.description, 12)}
+                                  </p>
+                                  <p className='font-medium text-xs mt-2 text-gray-500'>
+                                    By: {v.author?.name || 'Unknown User'}
+                                  </p>
+                                  <p className='font-medium text-xs mt-1 text-gray-500'>
+                                    Created on{' '}
+                                    {dayjs(v.createdAt).format('MM/DD/YYYY')}
+                                  </p>
+                                  {v.location && (
+                                    <p className='font-medium text-xs mt-1 text-gray-500'>
+                                      {v.location.name}
+                                      {v.location.teacher
+                                        ? ` — ${v.location.teacher}`
+                                        : ''}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })
+                          );
+                        })
                     ) : (
                       <div className='font-semibold'>No items found</div>
                     )}
                   </div>
-                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
-                    {selectedItem ? (
-                      <>
-                        <div className='border-b border-gray-300 h-fit'>
-                          <div className='px-6 py-6'>
-                            {isEditing ? (
-                              <div className='space-y-4'>
-                                <div>
-                                  <label className='block text-sm font-bold text-gray-900 mb-2'>
-                                    Item Name
-                                  </label>
-                                  <input
-                                    type='text'
-                                    value={editItemName}
-                                    onChange={(e) =>
-                                      setEditItemName(e.target.value)
-                                    }
-                                    className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-                                  />
-                                </div>
-                                <div>
-                                  <label className='block text-sm font-bold text-gray-900 mb-2'>
-                                    Description
-                                  </label>
-                                  <textarea
-                                    value={editDescription}
-                                    onChange={(e) =>
-                                      setEditDescription(e.target.value)
-                                    }
-                                    rows={4}
-                                    className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-                                  />
-                                </div>
-                                {selectedItem.photos &&
-                                  selectedItem.photos.length > 0 && (
-                                    <div>
-                                      <label className='block text-sm font-bold text-gray-900 mb-3'>
-                                        Photos - Check to remove
-                                      </label>
-                                      <div className='grid grid-cols-2 gap-3'>
-                                        {selectedItem.photos.map((photo) => (
-                                          <div
-                                            key={photo.id}
-                                            className='flex items-center space-x-2 p-3 border border-gray-300 rounded-md'
+                </div>
+
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedItem ? (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          {isEditing ? (
+                            <div className='space-y-4'>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Item Name
+                                </label>
+                                <input
+                                  type='text'
+                                  value={editItemName}
+                                  onChange={(e) =>
+                                    setEditItemName(e.target.value)
+                                  }
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                />
+                              </div>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Description
+                                </label>
+                                <textarea
+                                  value={editDescription}
+                                  onChange={(e) =>
+                                    setEditDescription(e.target.value)
+                                  }
+                                  rows={4}
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                />
+                              </div>
+                              {selectedItem.photos &&
+                                selectedItem.photos.length > 0 && (
+                                  <div>
+                                    <label className='block text-sm font-bold text-gray-900 mb-3'>
+                                      Photos - Check to remove
+                                    </label>
+                                    <div className='grid grid-cols-2 gap-3'>
+                                      {selectedItem.photos.map((photo) => (
+                                        <div
+                                          key={photo.id}
+                                          className='flex items-center space-x-2 p-3 border border-gray-300 rounded-md'
+                                        >
+                                          <input
+                                            type='checkbox'
+                                            id={`photo-${photo.id}`}
+                                            checked={editRemovePhotoIds.includes(
+                                              photo.id,
+                                            )}
+                                            onChange={() =>
+                                              togglePhotoRemoval(photo.id)
+                                            }
+                                            className='w-4 h-4 text-indigo-500 rounded focus:ring-indigo-500'
+                                          />
+                                          <label
+                                            htmlFor={`photo-${photo.id}`}
+                                            className='text-sm text-gray-600 cursor-pointer flex-1'
                                           >
-                                            <input
-                                              type='checkbox'
-                                              id={`photo-${photo.id}`}
-                                              checked={editRemovePhotoIds.includes(
-                                                photo.id,
-                                              )}
-                                              onChange={() =>
-                                                togglePhotoRemoval(photo.id)
-                                              }
-                                              className='w-4 h-4 text-indigo-500 rounded focus:ring-indigo-500'
-                                            />
-                                            <label
-                                              htmlFor={`photo-${photo.id}`}
-                                              className='text-sm text-gray-600 cursor-pointer flex-1'
-                                            >
-                                              Photo ID: {photo.id}
-                                            </label>
-                                          </div>
-                                        ))}
-                                      </div>
+                                            Photo ID: {photo.id}
+                                          </label>
+                                        </div>
+                                      ))}
                                     </div>
-                                  )}
-                                <div className='space-x-2 flex'>
-                                  <div
-                                    onClick={() =>
-                                      selectedItem?.id !== undefined &&
-                                      updateItemData(selectedItem.id)
-                                    }
-                                    className='w-fit h-fit px-4 py-2 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
-                                  >
-                                    Save Changes
                                   </div>
-                                  <div
-                                    onClick={() => cancelEdit()}
-                                    className='w-fit h-fit px-4 py-2 rounded-md bg-gray-400 hover:cursor-pointer hover:bg-gray-500 text-white font-bold text-center'
-                                  >
-                                    Cancel
-                                  </div>
+                                )}
+                              <div className='space-x-2 flex'>
+                                <div
+                                  onClick={() =>
+                                    selectedItem?.id !== undefined &&
+                                    updateItemData(selectedItem.id)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                >
+                                  Save Changes
+                                </div>
+                                <div
+                                  onClick={() => cancelEdit()}
+                                  className='w-fit h-fit px-4 py-2 rounded-md bg-gray-400 hover:cursor-pointer hover:bg-gray-500 text-white font-bold text-center'
+                                >
+                                  Cancel
                                 </div>
                               </div>
-                            ) : (
-                              <>
-                                <p className='font-bold text-2xl'>
-                                  {selectedItem.itemName}
-                                </p>
-                                <p className='font-medium text-gray-600 mt-1 text-sm'>
-                                  Submitted by:{' '}
-                                  {selectedItem.author?.name || 'Unknown User'}
-                                </p>
-                                <div className='space-x-2 flex flex-wrap'>
-                                  <div
-                                    onClick={() => startEditItem(selectedItem)}
-                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
-                                  >
-                                    Edit
-                                  </div>
-                                  <div
-                                    onClick={() =>
-                                      selectedItem?.id !== undefined &&
-                                      deleteItemData(selectedItem.id)
-                                    }
-                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
-                                  >
-                                    Delete
-                                  </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className='font-bold text-2xl'>
+                                {selectedItem.itemName}
+                              </p>
+                              <p className='font-medium text-gray-600 mt-1 text-sm'>
+                                Submitted by:{' '}
+                                {selectedItem.author?.name || 'Unknown User'}
+                              </p>
+                              <div className='space-x-2 flex flex-wrap'>
+                                <div
+                                  onClick={() => startEditItem(selectedItem)}
+                                  className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                >
+                                  Edit
                                 </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className=''>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Date Created</p>
-                            <p className='text-sm text-gray-600'>
-                              On {dayjs(selectedItem.createdAt).format('dddd')}
-                              {', '}
-                              {dayjs(selectedItem.createdAt).format(
-                                'MM/DD/YYYY',
-                              )}{' '}
-                              at{' '}
-                              {dayjs(selectedItem.createdAt).format('h:mm a')}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Description</p>
-                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
-                              {selectedItem.description}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Author</p>
-                            <p className='text-sm text-gray-600'>
-                              {selectedItem.author?.name || 'Unknown User'} (
-                              {selectedItem.author?.email})
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Status</p>
-                            <p className='text-sm text-gray-600'>
-                              {selectedItem.claimed ? 'Claimed' : 'Unclaimed'}
-                            </p>
-                          </div>
-                          {selectedItem.photos &&
-                            selectedItem.photos.length > 0 && (
-                              <div className='space-y-3 px-6 py-8'>
-                                <p className='text-lg font-bold'>
-                                  Photos ({selectedItem.photos.length})
-                                </p>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  {selectedItem.photos.map((photo) => (
-                                    <div
-                                      key={photo.id}
-                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
-                                      onClick={() => {
-                                        setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
-                                        );
-                                        setShowImageModal(true);
-                                      }}
-                                    >
-                                      <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                        alt='photo'
-                                        className='max-h-96 rounded-md'
-                                      />
-                                      <p className='text-xs text-gray-500'>
-                                        ID: {photo.id}
-                                      </p>
-                                      <p className='text-xs text-gray-600 text-center'>
-                                        Uploaded{' '}
-                                        {dayjs(photo.createdAt).format(
-                                          'M/D/YY',
-                                        )}
-                                      </p>
-                                    </div>
-                                  ))}
+                                <div
+                                  onClick={() =>
+                                    selectedItem?.id !== undefined &&
+                                    deleteItemData(selectedItem.id)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
+                                >
+                                  Delete
                                 </div>
                               </div>
-                            )}
+                            </>
+                          )}
                         </div>
-                      </>
-                    ) : (
-                      <div className='p-8 text-gray-500 text-center'>
-                        Select an item to view details
                       </div>
-                    )}
-                  </div>
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Date Created</p>
+                          <p className='text-sm text-gray-600'>
+                            On {dayjs(selectedItem.createdAt).format('dddd')}
+                            {', '}
+                            {dayjs(selectedItem.createdAt).format(
+                              'MM/DD/YYYY',
+                            )}{' '}
+                            at {dayjs(selectedItem.createdAt).format('h:mm a')}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Description</p>
+                          <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                            {selectedItem.description}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Author</p>
+                          <p className='text-sm text-gray-600'>
+                            {selectedItem.author?.name || 'Unknown User'} (
+                            {selectedItem.author?.email})
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Status</p>
+                          <p className='text-sm text-gray-600'>
+                            {selectedItem.claimed ? 'Claimed' : 'Unclaimed'}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Location</p>
+                          <p className='text-sm text-gray-600'>
+                            {selectedItem.location?.name || 'Unknown'}
+                            {selectedItem.location?.teacher && (
+                              <span className='text-gray-500'>
+                                {' '}
+                                &mdash; {selectedItem.location.teacher}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        {selectedItem.photos &&
+                          selectedItem.photos.length > 0 && (
+                            <div className='space-y-3 px-6 py-8'>
+                              <p className='text-lg font-bold'>
+                                Photos ({selectedItem.photos.length})
+                              </p>
+                              <div className='grid grid-cols-3 gap-3'>
+                                {selectedItem.photos.map((photo) => (
+                                  <div
+                                    key={photo.id}
+                                    className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                    onClick={() => {
+                                      setSelectedImageData(
+                                        `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                      );
+                                      setShowImageModal(true);
+                                    }}
+                                  >
+                                    <img
+                                      src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                      alt='photo'
+                                      className='max-h-96 rounded-md'
+                                    />
+                                    <p className='text-xs text-gray-500'>
+                                      ID: {photo.id}
+                                    </p>
+                                    <p className='text-xs text-gray-600 text-center'>
+                                      Uploaded{' '}
+                                      {dayjs(photo.createdAt).format('M/D/YY')}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className='p-8 text-gray-500 text-center'>
+                      Select an item to view details
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {currentPage === 'Pending Reports' && (
-              <div className='flex flex-col w-full h-full p-8 space-x-4'>
-                <div className='flex w-full h-full p-8 space-x-4'>
-                  <div className='flex flex-col space-y-4 overflow-auto'>
-                    {pendingSubmissions.length ? (
-                      pendingSubmissions.map((v: ISubmission, i) => {
-                        return (
-                          <div key={i} className='group'>
-                            <div
-                              onClick={() => {
-                                setSelectedPending(v);
-                                setIsEditing(false);
-                              }}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                            >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline'>
-                                  {v.itemName}
-                                </p>
-                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                  {truncate(v.description, 12)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  By: {v.user?.name || 'Unknown User'}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Created on{' '}
-                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
-                                </p>
-                              </div>
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='flex flex-col space-y-4 overflow-auto'>
+                  {pendingSubmissions.length ? (
+                    pendingSubmissions.map((v: ISubmission, i) => {
+                      return (
+                        <div key={i} className='group'>
+                          <div
+                            onClick={() => {
+                              setSelectedPending(v);
+                              setIsEditing(false);
+                            }}
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                          >
+                            <div className='group-hover:cursor-pointer'>
+                              <p className='font-bold group-hover:underline'>
+                                {v.itemName}
+                              </p>
+                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                {truncate(v.description, 12)}
+                              </p>
+                              <p className='font-medium text-xs mt-2 text-gray-500'>
+                                By: {v.user?.name || 'Unknown User'}
+                              </p>
+                              <p className='font-medium text-xs mt-1 text-gray-500'>
+                                Created on{' '}
+                                {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <div className='font-semibold'>No pending reports</div>
-                    )}
-                  </div>
-                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
-                    {selectedPending ? (
-                      <>
-                        <div className='border-b border-gray-300 h-fit'>
-                          <div className='px-6 py-6'>
-                            {isEditing ? (
-                              <div className='space-y-4'>
-                                <div>
-                                  <label className='block text-sm font-bold text-gray-900 mb-2'>
-                                    Item Name
-                                  </label>
-                                  <input
-                                    type='text'
-                                    value={editItemName}
-                                    onChange={(e) =>
-                                      setEditItemName(e.target.value)
-                                    }
-                                    className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-                                  />
-                                </div>
-                                <div>
-                                  <label className='block text-sm font-bold text-gray-900 mb-2'>
-                                    Description
-                                  </label>
-                                  <textarea
-                                    value={editDescription}
-                                    onChange={(e) =>
-                                      setEditDescription(e.target.value)
-                                    }
-                                    rows={4}
-                                    className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-                                  />
-                                </div>
-                                {selectedPending.photos &&
-                                  selectedPending.photos.length > 0 && (
-                                    <div>
-                                      <label className='block text-sm font-bold text-gray-900 mb-3'>
-                                        Photos - Check to remove
-                                      </label>
-                                      <div className='grid grid-cols-2 gap-3'>
-                                        {selectedPending.photos.map((photo) => (
-                                          <div
-                                            key={photo.id}
-                                            className='flex items-center space-x-2 p-3 border border-gray-300 rounded-md'
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className='font-semibold'>No pending reports</div>
+                  )}
+                </div>
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedPending ? (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          {isEditing ? (
+                            <div className='space-y-4'>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Item Name
+                                </label>
+                                <input
+                                  type='text'
+                                  value={editItemName}
+                                  onChange={(e) =>
+                                    setEditItemName(e.target.value)
+                                  }
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                />
+                              </div>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Description
+                                </label>
+                                <textarea
+                                  value={editDescription}
+                                  onChange={(e) =>
+                                    setEditDescription(e.target.value)
+                                  }
+                                  rows={4}
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                />
+                              </div>
+                              {selectedPending.photos &&
+                                selectedPending.photos.length > 0 && (
+                                  <div>
+                                    <label className='block text-sm font-bold text-gray-900 mb-3'>
+                                      Photos - Check to remove
+                                    </label>
+                                    <div className='grid grid-cols-2 gap-3'>
+                                      {selectedPending.photos.map((photo) => (
+                                        <div
+                                          key={photo.id}
+                                          className='flex items-center space-x-2 p-3 border border-gray-300 rounded-md'
+                                        >
+                                          <input
+                                            type='checkbox'
+                                            id={`photo-${photo.id}`}
+                                            checked={editRemovePhotoIds.includes(
+                                              photo.id,
+                                            )}
+                                            onChange={() =>
+                                              togglePhotoRemoval(photo.id)
+                                            }
+                                            className='w-4 h-4 text-indigo-500 rounded focus:ring-indigo-500'
+                                          />
+                                          <label
+                                            htmlFor={`photo-${photo.id}`}
+                                            className='text-sm text-gray-600 cursor-pointer flex-1'
                                           >
-                                            <input
-                                              type='checkbox'
-                                              id={`photo-${photo.id}`}
-                                              checked={editRemovePhotoIds.includes(
-                                                photo.id,
-                                              )}
-                                              onChange={() =>
-                                                togglePhotoRemoval(photo.id)
-                                              }
-                                              className='w-4 h-4 text-indigo-500 rounded focus:ring-indigo-500'
-                                            />
-                                            <label
-                                              htmlFor={`photo-${photo.id}`}
-                                              className='text-sm text-gray-600 cursor-pointer flex-1'
-                                            >
-                                              Photo ID: {photo.id}
-                                            </label>
-                                          </div>
-                                        ))}
-                                      </div>
+                                            Photo ID: {photo.id}
+                                          </label>
+                                        </div>
+                                      ))}
                                     </div>
-                                  )}
-                                <div className='space-x-2 flex'>
-                                  <div
-                                    onClick={() =>
-                                      selectedPending?.id !== undefined &&
-                                      editSubmission(selectedPending.id)
-                                    }
-                                    className='w-fit h-fit px-4 py-2 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
-                                  >
-                                    Save Changes
                                   </div>
-                                  <div
-                                    onClick={() => cancelEdit()}
-                                    className='w-fit h-fit px-4 py-2 rounded-md bg-gray-400 hover:cursor-pointer hover:bg-gray-500 text-white font-bold text-center'
-                                  >
-                                    Cancel
-                                  </div>
+                                )}
+                              <div className='space-x-2 flex'>
+                                <div
+                                  onClick={() =>
+                                    selectedPending?.id !== undefined &&
+                                    editSubmission(selectedPending.id)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                >
+                                  Save Changes
+                                </div>
+                                <div
+                                  onClick={() => cancelEdit()}
+                                  className='w-fit h-fit px-4 py-2 rounded-md bg-gray-400 hover:cursor-pointer hover:bg-gray-500 text-white font-bold text-center'
+                                >
+                                  Cancel
                                 </div>
                               </div>
-                            ) : (
-                              <>
-                                <p className='font-bold text-2xl'>
-                                  {selectedPending.itemName}
-                                </p>
-                                <p className='font-medium text-gray-600 mt-1 text-sm'>
-                                  Submitted by:{' '}
-                                  {selectedPending.user?.name || 'Unknown User'}
-                                </p>
-                                <div className='space-x-2 flex flex-wrap'>
-                                  <div
-                                    onClick={() =>
-                                      selectedPending?.id !== undefined &&
-                                      approveSubmission(selectedPending.id)
-                                    }
-                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white font-bold text-center'
-                                  >
-                                    Approve
-                                  </div>
-                                  <div
-                                    onClick={() =>
-                                      selectedPending?.id !== undefined &&
-                                      rejectSubmission(selectedPending.id)
-                                    }
-                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
-                                  >
-                                    Reject
-                                  </div>
-                                  <div
-                                    onClick={() => startEdit(selectedPending)}
-                                    className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
-                                  >
-                                    Edit
-                                  </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className='font-bold text-2xl'>
+                                {selectedPending.itemName}
+                              </p>
+                              <p className='font-medium text-gray-600 mt-1 text-sm'>
+                                Submitted by:{' '}
+                                {selectedPending.user?.name || 'Unknown User'}
+                              </p>
+                              <div className='space-x-2 flex flex-wrap'>
+                                <div
+                                  onClick={() =>
+                                    selectedPending?.id !== undefined &&
+                                    approveSubmission(selectedPending.id)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white font-bold text-center'
+                                >
+                                  Approve
                                 </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className=''>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Date Submitted</p>
-                            <p className='text-sm text-gray-600'>
-                              On{' '}
-                              {dayjs(selectedPending.createdAt).format('dddd')}
-                              {', '}
-                              {dayjs(selectedPending.createdAt).format(
-                                'MM/DD/YYYY',
-                              )}{' '}
-                              at{' '}
-                              {dayjs(selectedPending.createdAt).format(
-                                'h:mm a',
-                              )}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Description</p>
-                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
-                              {selectedPending.description}
-                            </p>
-                          </div>
-                          {selectedPending.photos &&
-                            selectedPending.photos.length > 0 && (
-                              <div className='space-y-3 px-6 py-8'>
-                                <p className='text-lg font-bold'>
-                                  Photos ({selectedPending.photos.length})
-                                </p>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  {selectedPending.photos.map((photo) => (
-                                    <div
-                                      key={photo.id}
-                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
-                                      onClick={() => {
-                                        setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
-                                        );
-                                        setShowImageModal(true);
-                                      }}
-                                    >
-                                      <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                        alt='photo'
-                                        className='max-h-96 rounded-md'
-                                      />
-                                      <p className='text-xs text-gray-500'>
-                                        ID: {photo.id}
-                                      </p>
-                                    </div>
-                                  ))}
+                                <div
+                                  onClick={() =>
+                                    selectedPending?.id !== undefined &&
+                                    rejectSubmission(selectedPending.id)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
+                                >
+                                  Reject
+                                </div>
+                                <div
+                                  onClick={() => startEdit(selectedPending)}
+                                  className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                >
+                                  Edit
                                 </div>
                               </div>
-                            )}
+                            </>
+                          )}
                         </div>
-                      </>
-                    ) : (
-                      <div className='p-4 font-semibold'>
-                        No pending reports
                       </div>
-                    )}
-                  </div>
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Date Submitted</p>
+                          <p className='text-sm text-gray-600'>
+                            On {dayjs(selectedPending.createdAt).format('dddd')}
+                            {', '}
+                            {dayjs(selectedPending.createdAt).format(
+                              'MM/DD/YYYY',
+                            )}{' '}
+                            at{' '}
+                            {dayjs(selectedPending.createdAt).format('h:mm a')}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Description</p>
+                          <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                            {selectedPending.description}
+                          </p>
+                        </div>
+                        {selectedPending.photos &&
+                          selectedPending.photos.length > 0 && (
+                            <div className='space-y-3 px-6 py-8'>
+                              <p className='text-lg font-bold'>
+                                Photos ({selectedPending.photos.length})
+                              </p>
+                              <div className='grid grid-cols-3 gap-3'>
+                                {selectedPending.photos.map((photo) => (
+                                  <div
+                                    key={photo.id}
+                                    className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                    onClick={() => {
+                                      setSelectedImageData(
+                                        `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                      );
+                                      setShowImageModal(true);
+                                    }}
+                                  >
+                                    <img
+                                      src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                      alt='photo'
+                                      className='max-h-96 rounded-md'
+                                    />
+                                    <p className='text-xs text-gray-500'>
+                                      ID: {photo.id}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className='p-4 font-semibold'>No pending reports</div>
+                  )}
                 </div>
               </div>
             )}
 
             {currentPage === 'Pending Claims' && (
-              <div className='flex flex-col w-full h-full p-8 space-x-4'>
-                <div className='flex w-full h-full p-8 space-x-4'>
-                  <div className='flex flex-col space-y-4 overflow-auto'>
-                    {pendingClaims.length ? (
-                      pendingClaims.map((c: IClaimForm, i) => {
-                        return (
-                          <div key={i} className='group'>
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='flex flex-col space-y-4 overflow-auto'>
+                  {pendingClaims.length ? (
+                    pendingClaims.map((c: IClaimForm, i) => {
+                      return (
+                        <div key={i} className='group'>
+                          <div
+                            onClick={() => {
+                              setSelectedPendingClaim(c);
+                            }}
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                          >
+                            <div className='group-hover:cursor-pointer'>
+                              <p className='font-bold group-hover:underline'>
+                                {c.item?.itemName || 'Unknown Item'}
+                              </p>
+                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                {truncate(c.comment, 12)}
+                              </p>
+                              <p className='font-medium text-xs mt-2 text-gray-500'>
+                                By: {c.user?.name || 'Unknown User'}
+                              </p>
+                              <p className='font-medium text-xs mt-1 text-gray-500'>
+                                Created on{' '}
+                                {dayjs(c.createdAt).format('MM/DD/YYYY')}{' '}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className='font-semibold'>No pending claims</div>
+                  )}
+                </div>
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedPendingClaim ? (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          <p className='font-bold text-2xl'>
+                            {selectedPendingClaim.item?.itemName ||
+                              'Unknown Item'}
+                          </p>
+                          <p className='font-medium text-gray-600 mt-1 text-sm'>
+                            Claimed by:{' '}
+                            {selectedPendingClaim.user?.name || 'Unknown User'}
+                          </p>
+                          <p className='font-medium text-gray-600 mt-1 text-sm'>
+                            Item owner:{' '}
+                            {selectedPendingClaim.item?.author?.name ||
+                              'Unknown User'}
+                          </p>
+                          <div className='space-x-2 flex flex-wrap'>
                             <div
-                              onClick={() => {
-                                setSelectedPendingClaim(c);
-                              }}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                              onClick={() =>
+                                selectedPendingClaim?.id !== undefined &&
+                                approveClaim(selectedPendingClaim.id)
+                              }
+                              className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white font-bold text-center'
                             >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline'>
-                                  {c.item?.itemName || 'Unknown Item'}
-                                </p>
-                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                  {truncate(c.comment, 12)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  By: {c.user?.name || 'Unknown User'}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Created on{' '}
-                                  {dayjs(c.createdAt).format('MM/DD/YYYY')}{' '}
-                                </p>
-                              </div>
+                              Approve Claim
                             </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className='font-semibold'>No pending claims</div>
-                    )}
-                  </div>
-                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
-                    {selectedPendingClaim ? (
-                      <>
-                        <div className='border-b border-gray-300 h-fit'>
-                          <div className='px-6 py-6'>
-                            <p className='font-bold text-2xl'>
-                              {selectedPendingClaim.item?.itemName ||
-                                'Unknown Item'}
-                            </p>
-                            <p className='font-medium text-gray-600 mt-1 text-sm'>
-                              Claimed by:{' '}
-                              {selectedPendingClaim.user?.name ||
-                                'Unknown User'}
-                            </p>
-                            <p className='font-medium text-gray-600 mt-1 text-sm'>
-                              Item owner:{' '}
-                              {selectedPendingClaim.item?.author?.name ||
-                                'Unknown User'}
-                            </p>
-                            <div className='space-x-2 flex flex-wrap'>
-                              <div
-                                onClick={() =>
-                                  selectedPendingClaim?.id !== undefined &&
-                                  approveClaim(selectedPendingClaim.id)
-                                }
-                                className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white font-bold text-center'
-                              >
-                                Approve Claim
-                              </div>
-                              <div
-                                onClick={() =>
-                                  selectedPendingClaim?.id !== undefined &&
-                                  deleteClaim(selectedPendingClaim.id)
-                                }
-                                className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
-                              >
-                                Delete Claim
-                              </div>
+                            <div
+                              onClick={() =>
+                                selectedPendingClaim?.id !== undefined &&
+                                deleteClaim(selectedPendingClaim.id)
+                              }
+                              className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold text-center'
+                            >
+                              Delete Claim
                             </div>
                           </div>
                         </div>
-                        <div className=''>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Date Submitted</p>
-                            <p className='text-sm text-gray-600'>
-                              On{' '}
-                              {dayjs(selectedPendingClaim.createdAt).format(
-                                'dddd',
-                              )}
-                              {', '}
-                              {dayjs(selectedPendingClaim.createdAt).format(
-                                'MM/DD/YYYY',
-                              )}{' '}
-                              at{' '}
-                              {dayjs(selectedPendingClaim.createdAt).format(
-                                'h:mm a',
-                              )}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Claim Comment</p>
-                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
-                              {selectedPendingClaim.comment}
-                            </p>
-                          </div>
-                          {selectedPendingClaim.item?.photos &&
-                            selectedPendingClaim.item.photos.length > 0 && (
-                              <div className='space-y-3 px-6 py-8'>
-                                <p className='text-lg font-bold'>
-                                  Item Photos (
-                                  {selectedPendingClaim.item.photos.length})
-                                </p>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  {selectedPendingClaim.item.photos.map(
-                                    (photo) => (
-                                      <div
-                                        key={photo.id}
-                                        className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
-                                        onClick={() => {
-                                          setSelectedImageData(
-                                            `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
-                                          );
-                                          setShowImageModal(true);
-                                        }}
-                                      >
-                                        <img
-                                          src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                          alt='photo'
-                                          className='max-h-96 rounded-md'
-                                        />
-                                        <p className='text-xs text-gray-500'>
-                                          ID: {photo.id}
-                                        </p>
-                                        <p className='text-xs text-gray-600 text-center'>
-                                          Uploaded{' '}
-                                          {dayjs(photo.createdAt).format(
-                                            'M/D/YY',
-                                          )}
-                                        </p>
-                                      </div>
-                                    ),
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                        </div>
-                      </>
-                    ) : (
-                      <div className='p-8 text-gray-500 text-center'>
-                        Select a pending claim to view details
                       </div>
-                    )}
-                  </div>
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Date Submitted</p>
+                          <p className='text-sm text-gray-600'>
+                            On{' '}
+                            {dayjs(selectedPendingClaim.createdAt).format(
+                              'dddd',
+                            )}
+                            {', '}
+                            {dayjs(selectedPendingClaim.createdAt).format(
+                              'MM/DD/YYYY',
+                            )}{' '}
+                            at{' '}
+                            {dayjs(selectedPendingClaim.createdAt).format(
+                              'h:mm a',
+                            )}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Claim Comment</p>
+                          <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                            {selectedPendingClaim.comment}
+                          </p>
+                        </div>
+                        {selectedPendingClaim.item?.photos &&
+                          selectedPendingClaim.item.photos.length > 0 && (
+                            <div className='space-y-3 px-6 py-8'>
+                              <p className='text-lg font-bold'>
+                                Item Photos (
+                                {selectedPendingClaim.item.photos.length})
+                              </p>
+                              <div className='grid grid-cols-3 gap-3'>
+                                {selectedPendingClaim.item.photos.map(
+                                  (photo) => (
+                                    <div
+                                      key={photo.id}
+                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                      onClick={() => {
+                                        setSelectedImageData(
+                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                        );
+                                        setShowImageModal(true);
+                                      }}
+                                    >
+                                      <img
+                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                        alt='photo'
+                                        className='max-h-96 rounded-md'
+                                      />
+                                      <p className='text-xs text-gray-500'>
+                                        ID: {photo.id}
+                                      </p>
+                                      <p className='text-xs text-gray-600 text-center'>
+                                        Uploaded{' '}
+                                        {dayjs(photo.createdAt).format(
+                                          'M/D/YY',
+                                        )}
+                                      </p>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className='p-8 text-gray-500 text-center'>
+                      Select a pending claim to view details
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {currentPage === 'Approved Reports' && (
-              <div className='flex flex-col w-full h-full p-8 space-x-4'>
-                <div className='flex w-full h-full p-8 space-x-4'>
-                  <div className='flex flex-col space-y-4 overflow-auto'>
-                    {approvedSubmissions.length ? (
-                      approvedSubmissions.map((v: ISubmission, i) => {
-                        return (
-                          <div key={i} className='group'>
-                            <div
-                              onClick={() => setSelectedApproved(v)}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                            >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline'>
-                                  {v.itemName}
-                                </p>
-                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                  {truncate(v.description, 12)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  Name: {v.user.name}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Created on{' '}
-                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
-                                </p>
-                              </div>
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='flex flex-col space-y-4 overflow-auto'>
+                  {approvedSubmissions.length ? (
+                    approvedSubmissions.map((v: ISubmission, i) => {
+                      return (
+                        <div key={i} className='group'>
+                          <div
+                            onClick={() => setSelectedApproved(v)}
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                          >
+                            <div className='group-hover:cursor-pointer'>
+                              <p className='font-bold group-hover:underline'>
+                                {v.itemName}
+                              </p>
+                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                {truncate(v.description, 12)}
+                              </p>
+                              <p className='font-medium text-xs mt-2 text-gray-500'>
+                                Name: {v.user.name}
+                              </p>
+                              <p className='font-medium text-xs mt-1 text-gray-500'>
+                                Created on{' '}
+                                {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <div className='font-semibold'>
-                        No approved submissions found
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className='font-semibold'>
+                      No approved submissions found
+                    </div>
+                  )}
+                </div>
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedApproved && (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          <p className='font-bold text-2xl'>
+                            {selectedApproved.itemName}
+                          </p>
+                          <p className='font-medium text-gray-600 mt-1 text-sm'>
+                            Submitted by:{' '}
+                            {selectedApproved.user?.name || 'Unknown User'}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
-                    {selectedApproved && (
-                      <>
-                        <div className='border-b border-gray-300 h-fit'>
-                          <div className='px-6 py-6'>
-                            <p className='font-bold text-2xl'>
-                              {selectedApproved.itemName}
-                            </p>
-                            <p className='font-medium text-gray-600 mt-1 text-sm'>
-                              Submitted by:{' '}
-                              {selectedApproved.user?.name || 'Unknown User'}
-                            </p>
-                          </div>
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Date Submitted</p>
+                          <p className='text-sm text-gray-600'>
+                            On{' '}
+                            {dayjs(selectedApproved.createdAt).format('dddd')}
+                            {', '}
+                            {dayjs(selectedApproved.createdAt).format(
+                              'MM/DD/YYYY',
+                            )}{' '}
+                            at{' '}
+                            {dayjs(selectedApproved.createdAt).format('h:mm a')}
+                          </p>
                         </div>
-                        <div className=''>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Date Submitted</p>
-                            <p className='text-sm text-gray-600'>
-                              On{' '}
-                              {dayjs(selectedApproved.createdAt).format('dddd')}
-                              {', '}
-                              {dayjs(selectedApproved.createdAt).format(
-                                'MM/DD/YYYY',
-                              )}{' '}
-                              at{' '}
-                              {dayjs(selectedApproved.createdAt).format(
-                                'h:mm a',
-                              )}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Description</p>
-                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
-                              {selectedApproved.description}
-                            </p>
-                          </div>
-                          {selectedApproved.photos &&
-                            selectedApproved.photos.length > 0 && (
-                              <div className='space-y-3 px-6 py-8'>
-                                <p className='text-lg font-bold'>
-                                  Photos ({selectedApproved.photos.length})
-                                </p>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  {selectedApproved.photos.map((photo) => (
-                                    <div
-                                      key={photo.id}
-                                      className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
-                                      onClick={() => {
-                                        setSelectedImageData(
-                                          `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
-                                        );
-                                        setShowImageModal(true);
-                                      }}
-                                    >
-                                      <img
-                                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                        alt='photo'
-                                        className='max-h-96 rounded-md'
-                                      />
-                                      <p className='text-xs text-gray-500'>
-                                        ID: {photo.id}
-                                      </p>
-                                      <p className='text-xs text-gray-600 text-center'>
-                                        Uploaded{' '}
-                                        {dayjs(photo.createdAt).format(
-                                          'M/D/YY',
-                                        )}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Description</p>
+                          <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                            {selectedApproved.description}
+                          </p>
+                        </div>
+                        {selectedApproved.photos &&
+                          selectedApproved.photos.length > 0 && (
+                            <div className='space-y-3 px-6 py-8'>
+                              <p className='text-lg font-bold'>
+                                Photos ({selectedApproved.photos.length})
+                              </p>
+                              <div className='grid grid-cols-3 gap-3'>
+                                {selectedApproved.photos.map((photo) => (
+                                  <div
+                                    key={photo.id}
+                                    className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                    onClick={() => {
+                                      setSelectedImageData(
+                                        `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                      );
+                                      setShowImageModal(true);
+                                    }}
+                                  >
+                                    <img
+                                      src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                      alt='photo'
+                                      className='max-h-96 rounded-md'
+                                    />
+                                    <p className='text-xs text-gray-500'>
+                                      ID: {photo.id}
+                                    </p>
+                                    <p className='text-xs text-gray-600 text-center'>
+                                      Uploaded{' '}
+                                      {dayjs(photo.createdAt).format('M/D/YY')}
+                                    </p>
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                            </div>
+                          )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
             {currentPage === 'Declined Reports' && (
-              <div className='flex flex-col w-full h-full p-8 space-x-4'>
-                <div className='flex w-full h-full p-8 space-x-4'>
-                  <div className='flex flex-col space-y-4 overflow-auto'>
-                    {rejectedSubmissions.length ? (
-                      rejectedSubmissions.map((v: ISubmission, i) => {
-                        return (
-                          <div key={i} className='group'>
-                            <div
-                              onClick={() => setSelectedRejected(v)}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                            >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline'>
-                                  {v.itemName}
-                                </p>
-                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                  {truncate(v.description, 12)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  {v.user.name}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Created on{' '}
-                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
-                                </p>
-                              </div>
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='flex flex-col space-y-4 overflow-auto'>
+                  {rejectedSubmissions.length ? (
+                    rejectedSubmissions.map((v: ISubmission, i) => {
+                      return (
+                        <div key={i} className='group'>
+                          <div
+                            onClick={() => setSelectedRejected(v)}
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                          >
+                            <div className='group-hover:cursor-pointer'>
+                              <p className='font-bold group-hover:underline'>
+                                {v.itemName}
+                              </p>
+                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                {truncate(v.description, 12)}
+                              </p>
+                              <p className='font-medium text-xs mt-2 text-gray-500'>
+                                {v.user.name}
+                              </p>
+                              <p className='font-medium text-xs mt-1 text-gray-500'>
+                                Created on{' '}
+                                {dayjs(v.createdAt).format('MM/DD/YYYY')}{' '}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <div className='font-semibold'>
-                        No rejected reports found
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className='font-semibold'>
+                      No rejected reports found
+                    </div>
+                  )}
+                </div>
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedRejected && (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          <p className='font-bold text-2xl'>
+                            {selectedRejected.itemName}
+                          </p>
+                          <p className='font-medium text-gray-600 mt-1 text-sm'>
+                            Submitted by:{' '}
+                            {selectedRejected.user?.name || 'Unknown User'}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
-                    {selectedRejected && (
-                      <>
-                        <div className='border-b border-gray-300 h-fit'>
-                          <div className='px-6 py-6'>
-                            <p className='font-bold text-2xl'>
-                              {selectedRejected.itemName}
-                            </p>
-                            <p className='font-medium text-gray-600 mt-1 text-sm'>
-                              Submitted by:{' '}
-                              {selectedRejected.user?.name || 'Unknown User'}
-                            </p>
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Date Submitted</p>
+                          <p className='text-sm text-gray-600'>
+                            On{' '}
+                            {dayjs(selectedRejected.createdAt).format('dddd')}
+                            {', '}
+                            {dayjs(selectedRejected.createdAt).format(
+                              'MM/DD/YYYY',
+                            )}{' '}
+                            at{' '}
+                            {dayjs(selectedRejected.createdAt).format('h:mm a')}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Description</p>
+                          <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                            {selectedRejected.description}
+                          </p>
+                        </div>
+                        {selectedRejected.photos &&
+                          selectedRejected.photos.length > 0 && (
+                            <div className='space-y-3 px-6 py-8'>
+                              <p className='text-lg font-bold'>
+                                Photos ({selectedRejected.photos.length})
+                              </p>
+                              <div className='grid grid-cols-3 gap-3'>
+                                {selectedRejected.photos.map((photo) => (
+                                  <div
+                                    key={photo.id}
+                                    className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
+                                    onClick={() => {
+                                      setSelectedImageData(
+                                        `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                      );
+                                      setShowImageModal(true);
+                                    }}
+                                  >
+                                    <img
+                                      src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                      alt='photo'
+                                      className='max-h-96 rounded-md'
+                                    />
+                                    <p className='text-xs text-gray-500'>
+                                      ID: {photo.id}
+                                    </p>
+                                    <p className='text-xs text-gray-600 text-center'>
+                                      Uploaded{' '}
+                                      {dayjs(photo.createdAt).format('M/D/YY')}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {currentPage === 'Approved Claims' && (
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='flex flex-col space-y-4 overflow-auto'>
+                  {approvedClaims.length ? (
+                    approvedClaims.map((c: IClaimForm, i) => {
+                      return (
+                        <div key={i} className='group'>
+                          <div
+                            onClick={() => {
+                              setSelectedApprovedClaim(c);
+                            }}
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                          >
+                            <div className='group-hover:cursor-pointer'>
+                              <p className='font-bold group-hover:underline'>
+                                {c.item?.itemName || 'Unknown Item'}
+                              </p>
+                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                                {truncate(c.comment, 12)}
+                              </p>
+                              <p className='font-medium text-xs mt-2 text-gray-500'>
+                                By: {c.user?.name || 'Unknown User'}
+                              </p>
+                              <p className='font-medium text-xs mt-1 text-gray-500'>
+                                Created on{' '}
+                                {dayjs(c.createdAt).format('MM/DD/YYYY')}{' '}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        <div className=''>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Date Submitted</p>
-                            <p className='text-sm text-gray-600'>
-                              On{' '}
-                              {dayjs(selectedRejected.createdAt).format('dddd')}
-                              {', '}
-                              {dayjs(selectedRejected.createdAt).format(
-                                'MM/DD/YYYY',
-                              )}{' '}
-                              at{' '}
-                              {dayjs(selectedRejected.createdAt).format(
-                                'h:mm a',
-                              )}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Description</p>
-                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
-                              {selectedRejected.description}
-                            </p>
-                          </div>
-                          {selectedRejected.photos &&
-                            selectedRejected.photos.length > 0 && (
-                              <div className='space-y-3 px-6 py-8'>
-                                <p className='text-lg font-bold'>
-                                  Photos ({selectedRejected.photos.length})
-                                </p>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  {selectedRejected.photos.map((photo) => (
+                      );
+                    })
+                  ) : (
+                    <div className='font-semibold'>No approved claims</div>
+                  )}
+                </div>
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedApprovedClaim ? (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          <p className='font-bold text-2xl'>
+                            {selectedApprovedClaim.item?.itemName ||
+                              'Unknown Item'}
+                          </p>
+                          <p className='font-medium text-gray-600 mt-1 text-sm'>
+                            Claimed by:{' '}
+                            {selectedApprovedClaim.user?.name || 'Unknown User'}
+                          </p>
+                          <p className='font-medium text-gray-600 mt-1 text-sm'>
+                            Item owner:{' '}
+                            {selectedApprovedClaim.item?.author?.name ||
+                              'Unknown User'}
+                          </p>
+                          <p className='font-medium text-green-600 mt-2 text-sm'>
+                            ✓ Claim Approved
+                          </p>
+                        </div>
+                      </div>
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Date Submitted</p>
+                          <p className='text-sm text-gray-600'>
+                            On{' '}
+                            {dayjs(selectedApprovedClaim.createdAt).format(
+                              'dddd',
+                            )}
+                            {', '}
+                            {dayjs(selectedApprovedClaim.createdAt).format(
+                              'MM/DD/YYYY',
+                            )}{' '}
+                            at{' '}
+                            {dayjs(selectedApprovedClaim.createdAt).format(
+                              'h:mm a',
+                            )}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Claim Comment</p>
+                          <p className='text-sm text-gray-600 whitespace-pre-wrap'>
+                            {selectedApprovedClaim.comment}
+                          </p>
+                        </div>
+                        {selectedApprovedClaim.item?.photos &&
+                          selectedApprovedClaim.item.photos.length > 0 && (
+                            <div className='space-y-3 px-6 py-8'>
+                              <p className='text-lg font-bold'>
+                                Item Photos (
+                                {selectedApprovedClaim.item.photos.length})
+                              </p>
+                              <div className='grid grid-cols-3 gap-3'>
+                                {selectedApprovedClaim.item.photos.map(
+                                  (photo) => (
                                     <div
                                       key={photo.id}
                                       className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
@@ -1259,150 +1632,191 @@ export default function Home() {
                                         )}
                                       </p>
                                     </div>
-                                  ))}
-                                </div>
+                                  ),
+                                )}
                               </div>
-                            )}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                            </div>
+                          )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className='p-8 text-gray-500 text-center'>
+                      Select an approved claim to view details
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {currentPage === 'Approved Claims' && (
-              <div className='flex flex-col w-full h-full p-8 space-x-4'>
-                <div className='flex w-full h-full p-8 space-x-4'>
-                  <div className='flex flex-col space-y-4 overflow-auto'>
-                    {approvedClaims.length ? (
-                      approvedClaims.map((c: IClaimForm, i) => {
-                        return (
-                          <div key={i} className='group'>
-                            <div
-                              onClick={() => {
-                                setSelectedApprovedClaim(c);
-                              }}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                            >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline'>
-                                  {c.item?.itemName || 'Unknown Item'}
-                                </p>
-                                <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                  {truncate(c.comment, 12)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  By: {c.user?.name || 'Unknown User'}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Created on{' '}
-                                  {dayjs(c.createdAt).format('MM/DD/YYYY')}{' '}
-                                </p>
-                              </div>
+            {currentPage === 'All Locations' && (
+              <div className='flex w-full h-full p-8 space-x-4'>
+                <div className='flex flex-col space-y-4 overflow-auto'>
+                  {locations.length ? (
+                    locations.map((v: ILocation, i) => {
+                      return (
+                        <div key={i} className='group'>
+                          <div
+                            onClick={() => {
+                              setSelectedLocation(v);
+                              setIsEditingLocation(false);
+                            }}
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                          >
+                            <div className='group-hover:cursor-pointer'>
+                              <p className='font-bold group-hover:underline'>
+                                {v.name}
+                              </p>
+                              <p className='font-medium text-xs mt-2 text-gray-500'>
+                                Found items: {v.items.length}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <div className='font-semibold'>No approved claims</div>
-                    )}
-                  </div>
-                  <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
-                    {selectedApprovedClaim ? (
-                      <>
-                        <div className='border-b border-gray-300 h-fit'>
-                          <div className='px-6 py-6'>
-                            <p className='font-bold text-2xl'>
-                              {selectedApprovedClaim.item?.itemName ||
-                                'Unknown Item'}
-                            </p>
-                            <p className='font-medium text-gray-600 mt-1 text-sm'>
-                              Claimed by:{' '}
-                              {selectedApprovedClaim.user?.name ||
-                                'Unknown User'}
-                            </p>
-                            <p className='font-medium text-gray-600 mt-1 text-sm'>
-                              Item owner:{' '}
-                              {selectedApprovedClaim.item?.author?.name ||
-                                'Unknown User'}
-                            </p>
-                            <p className='font-medium text-green-600 mt-2 text-sm'>
-                              ✓ Claim Approved
-                            </p>
-                          </div>
                         </div>
-                        <div className=''>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Date Submitted</p>
-                            <p className='text-sm text-gray-600'>
-                              On{' '}
-                              {dayjs(selectedApprovedClaim.createdAt).format(
-                                'dddd',
-                              )}
-                              {', '}
-                              {dayjs(selectedApprovedClaim.createdAt).format(
-                                'MM/DD/YYYY',
-                              )}{' '}
-                              at{' '}
-                              {dayjs(selectedApprovedClaim.createdAt).format(
-                                'h:mm a',
-                              )}
-                            </p>
-                          </div>
-                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
-                            <p className='text-lg font-bold'>Claim Comment</p>
-                            <p className='text-sm text-gray-600 whitespace-pre-wrap'>
-                              {selectedApprovedClaim.comment}
-                            </p>
-                          </div>
-                          {selectedApprovedClaim.item?.photos &&
-                            selectedApprovedClaim.item.photos.length > 0 && (
-                              <div className='space-y-3 px-6 py-8'>
-                                <p className='text-lg font-bold'>
-                                  Item Photos (
-                                  {selectedApprovedClaim.item.photos.length})
-                                </p>
-                                <div className='grid grid-cols-3 gap-3'>
-                                  {selectedApprovedClaim.item.photos.map(
-                                    (photo) => (
-                                      <div
-                                        key={photo.id}
-                                        className='flex flex-col items-center space-y-1 p-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:shadow-lg transition-shadow'
-                                        onClick={() => {
-                                          setSelectedImageData(
-                                            `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
-                                          );
-                                          setShowImageModal(true);
-                                        }}
-                                      >
-                                        <img
-                                          src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                          alt='photo'
-                                          className='max-h-96 rounded-md'
-                                        />
-                                        <p className='text-xs text-gray-500'>
-                                          ID: {photo.id}
-                                        </p>
-                                        <p className='text-xs text-gray-600 text-center'>
-                                          Uploaded{' '}
-                                          {dayjs(photo.createdAt).format(
-                                            'M/D/YY',
-                                          )}
-                                        </p>
-                                      </div>
-                                    ),
-                                  )}
+                      );
+                    })
+                  ) : (
+                    <div className='font-semibold'>No locations found</div>
+                  )}
+                </div>
+                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                  {selectedLocation ? (
+                    <>
+                      <div className='border-b border-gray-300 h-fit'>
+                        <div className='px-6 py-6'>
+                          {isEditingLocation ? (
+                            <div className='space-y-4'>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Location Name
+                                </label>
+                                <input
+                                  type='text'
+                                  value={editLocationName}
+                                  onChange={(e) =>
+                                    setEditLocationName(e.target.value)
+                                  }
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                />
+                              </div>
+                              <div className='space-x-2 flex'>
+                                <div
+                                  onClick={() =>
+                                    selectedLocation?.id !== undefined &&
+                                    editLocation(selectedLocation.id)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                >
+                                  Save Changes
+                                </div>
+                                <div
+                                  onClick={() => cancelEditLocation()}
+                                  className='w-fit h-fit px-4 py-2 rounded-md bg-gray-400 hover:cursor-pointer hover:bg-gray-500 text-white font-bold text-center'
+                                >
+                                  Cancel
                                 </div>
                               </div>
-                            )}
+                            </div>
+                          ) : (
+                            <>
+                              <p className='font-bold text-2xl'>
+                                {selectedLocation.name}
+                              </p>
+                              <div className='space-x-2 flex flex-wrap'>
+                                <div
+                                  onClick={() =>
+                                    startEditLocation(selectedLocation)
+                                  }
+                                  className='w-fit h-fit px-4 py-2 mt-4 rounded-md bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600 text-white font-bold text-center'
+                                >
+                                  Edit
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
-                      </>
-                    ) : (
-                      <div className='p-8 text-gray-500 text-center'>
-                        Select an approved claim to view details
                       </div>
-                    )}
+                      <div className=''>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>Teacher</p>
+                          <p className='text-sm text-gray-600'>
+                            {selectedLocation.teacher || 'No teacher assigned'}
+                          </p>
+                        </div>
+                        <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                          <p className='text-lg font-bold'>
+                            Unclaimed items found at this location
+                          </p>
+                          <p className='text-sm text-gray-600'>
+                            {selectedLocation?.items.length} item
+                            {selectedLocation?.items.length === 1 ? '' : 's'}
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className='p-8 text-gray-500 text-center'>
+                      Select a location to view details
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {currentPage === 'Add Location' && (
+              <div className='w-full h-full'>
+                <div className='m-8 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+                  <div className='border-b border-gray-300 h-fit'>
+                    <div className='px-6 py-6'>
+                      <p className='font-bold text-2xl text-black'>
+                        Add a new location
+                      </p>
+                    </div>
+                  </div>
+                  <div className='p-6 space-y-4 flex flex-col'>
+                    <div className='space-y-2'>
+                      <div>
+                        <label className='block text-sm/6 font-bold text-gray-900'>
+                          Location name*
+                        </label>
+                        <div className='mt-2'>
+                          <input
+                            type='text'
+                            value={newLocationName}
+                            onChange={(e) => setNewLocationName(e.target.value)}
+                            placeholder='Main Office, Room 204...'
+                            className='block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 sm:text-sm/6'
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className='space-y-2'>
+                      <div>
+                        <label className='block text-sm/6 font-bold text-gray-900'>
+                          Location teacher
+                        </label>
+                        <div className='mt-2'>
+                          <input
+                            type='text'
+                            value={newLocationTeacher}
+                            onChange={(e) =>
+                              setNewLocationTeacher(e.target.value)
+                            }
+                            placeholder='Mr. Smith, Ms. Johnson... (optional)'
+                            className='block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 sm:text-sm/6'
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      onClick={() => newLocationName.trim() && createLocation()}
+                      className={`bg-indigo-500 w-fit hover:bg-indigo-600 hover:cursor-pointer font-bold text-lg text-white rounded-md px-4 py-2 ${
+                        !newLocationName.trim()
+                          ? 'opacity-50 pointer-events-none'
+                          : ''
+                      }`}
+                    >
+                      Add Location
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1726,6 +2140,67 @@ export default function Home() {
                   )}
                 </div>
               )}
+
+              {currentPage === 'All Locations' && (
+                <div className='space-y-4'>
+                  {locations.length ? (
+                    locations.map((location: ILocation, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      >
+                        <div className='flex justify-between items-start'>
+                          <div className='flex-1'>
+                            <h3 className='font-bold text-black'>
+                              {location.name}
+                            </h3>
+                            <p className='text-xs text-gray-500 mt-2'>
+                              ID: {location.id}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => startEditLocation(location)}
+                            className='bg-indigo-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-indigo-600'
+                          >
+                            Edit
+                          </button>
+                        </div>
+                        {isEditingLocation &&
+                          selectedLocation?.id === location.id && (
+                            <div className='mt-4 space-y-2'>
+                              <input
+                                type='text'
+                                value={editLocationName}
+                                onChange={(e) =>
+                                  setEditLocationName(e.target.value)
+                                }
+                                className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                              />
+                              <div className='flex space-x-2'>
+                                <button
+                                  onClick={() => editLocation(location.id)}
+                                  className='bg-indigo-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-indigo-600'
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={cancelEditLocation}
+                                  className='bg-gray-400 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-gray-500'
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-8 text-gray-500'>
+                      No locations found
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Mobile Bottom Navigation */}
@@ -1840,6 +2315,30 @@ export default function Home() {
                       </svg>
                     ),
                   },
+                  {
+                    name: 'All Locations',
+                    icon: (
+                      <svg
+                        className='w-4 h-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
+                        />
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
+                        />
+                      </svg>
+                    ),
+                  },
                 ].map((tab) => (
                   <button
                     key={tab.name}
@@ -1861,6 +2360,81 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {/* Filter Modal */}
+          <Modal open={showFilterModal} setOpen={setShowFilterModal}>
+            <div className='bg-white rounded-lg p-6 w-full max-w-md mx-auto space-y-5'>
+              <h2 className='text-xl font-bold text-black'>
+                Filter by Location
+              </h2>
+              <div>
+                <input
+                  type='text'
+                  placeholder='Search locations...'
+                  value={filterSearchQuery}
+                  onChange={(e) => setFilterSearchQuery(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none mb-2'
+                />
+                <div className='border border-gray-200 rounded-md max-h-64 overflow-y-auto'>
+                  <button
+                    type='button'
+                    onClick={() => setLocationFilter(null)}
+                    className={`w-full text-left px-3 py-2 hover:bg-gray-50 hover:cursor-pointer text-sm border-b border-gray-100 ${
+                      locationFilter === null
+                        ? 'bg-indigo-50 font-semibold text-indigo-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    All Locations
+                  </button>
+                  {locations
+                    .filter((loc) => {
+                      const q = filterSearchQuery.toLowerCase();
+                      return (
+                        loc.name.toLowerCase().includes(q) ||
+                        (loc.teacher ?? '').toLowerCase().includes(q)
+                      );
+                    })
+                    .map((loc) => (
+                      <button
+                        key={loc.id}
+                        type='button'
+                        onClick={() => setLocationFilter(loc.id)}
+                        className={`w-full text-left px-3 py-2 hover:bg-gray-50 hover:cursor-pointer border-b border-gray-100 last:border-b-0 ${
+                          locationFilter === loc.id ? 'bg-indigo-50' : ''
+                        }`}
+                      >
+                        <div className='font-medium text-gray-900 text-sm'>
+                          {loc.name}
+                        </div>
+                        {loc.teacher && (
+                          <div className='text-xs text-gray-500'>
+                            Teacher: {loc.teacher}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                </div>
+              </div>
+              <div className='flex gap-2'>
+                <button
+                  onClick={() => {
+                    setLocationFilter(null);
+                    setFilterSearchQuery('');
+                  }}
+                  className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setShowFilterModal(false)}
+                  className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold py-2 rounded-md text-sm'
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </Modal>
 
           {/* Modals */}
           <div>

@@ -36,7 +36,6 @@ const CreateItemLookouts = ({
 
       const photoIds: number[] = [];
 
-      // Upload photos if selected
       if (selectedPhotos !== null && selectedPhotos.length > 0) {
         const formData = new FormData();
         for (let i = 0; i < selectedPhotos.length; i++) {
@@ -49,11 +48,9 @@ const CreateItemLookouts = ({
               'Content-Type': 'multipart/form-data',
             },
           });
-          console.log(photoResponse);
           for (let i = 0; i < photoResponse.length; i++) {
             photoIds.push(photoResponse[i]);
           }
-          console.log(photoIds);
         } catch (photoError) {
           console.error('Error uploading photos:', photoError);
           alert('Error uploading photos');
@@ -61,8 +58,6 @@ const CreateItemLookouts = ({
           return;
         }
       }
-      console.log(photoIds);
-      // Create the item lookout
       const { data: response } = await a.post('/itemLookouts', {
         description: lookoutDescription,
         photoIds: photoIds,
@@ -70,7 +65,6 @@ const CreateItemLookouts = ({
       });
 
       if (response) {
-        // Reset form
         setSelectedPhotos(null);
         setLookoutDescription('');
         setIsLoading(false);

@@ -109,6 +109,10 @@ export default function Citations() {
                                 <strong>pg</strong> (v8.17.2) - PostgreSQL
                                 client for Node.js (MIT)
                               </p>
+                              <p>
+                                <strong>nodemailer</strong> (v8.0.4) - Email
+                                sending library for Node.js (MIT)
+                              </p>
                             </div>
                           </div>
                           <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
@@ -149,6 +153,42 @@ export default function Citations() {
                                 TypeScript language and compiler (Apache-2.0)
                               </p>
                             </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className='text-xl font-bold text-black mb-4'>
+                          Python Dependencies
+                        </h3>
+                        <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
+                          <div className='space-y-2 text-sm'>
+                            <p>
+                              <strong>torch</strong> (v2.0.0) - Open source
+                              machine learning framework (BSD-3-Clause)
+                            </p>
+                            <p>
+                              <strong>torchvision</strong> (v0.15.0) - Computer
+                              vision library for PyTorch (BSD-3-Clause)
+                            </p>
+                            <p>
+                              <strong>clip-by-openai</strong> (v0.3.0) - OpenAI
+                              CLIP model for image and text embeddings (MIT)
+                            </p>
+                            <p>
+                              <strong>Pillow</strong> (v9.0.0) - Python Imaging
+                              Library fork for image processing (HPND)
+                            </p>
+                            <p>
+                              <strong>Flask</strong> (v2.3.0) - Lightweight WSGI
+                              web application framework for Python
+                              (BSD-3-Clause)
+                            </p>
+                            <p>
+                              <strong>numpy</strong> (v1.24.0) - Fundamental
+                              package for scientific computing with Python
+                              (BSD-3-Clause)
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -234,6 +274,40 @@ export default function Citations() {
                           </div>
                         </div>
                       </div>
+                      <div>
+                        <h3 className='text-xl font-bold text-black mb-4'>
+                          Runtimes
+                        </h3>
+                        <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
+                          <div className='space-y-2 text-sm'>
+                            <p>
+                              <strong>Node.js</strong> - JavaScript runtime
+                              built on Chrome&apos;s V8 engine. Used to run the
+                              backend server and build tooling. (MIT){' '}
+                              <span className='text-gray-500'>
+                                https://nodejs.org
+                              </span>
+                            </p>
+                            <p>
+                              <strong>Python</strong> - General-purpose
+                              programming language used for the AI embedding
+                              service. (PSF License){' '}
+                              <span className='text-gray-500'>
+                                https://www.python.org
+                              </span>
+                            </p>
+                            <p>
+                              <strong>React</strong> - JavaScript library for
+                              building user interfaces. Used as the frontend UI
+                              runtime. (MIT){' '}
+                              <span className='text-gray-500'>
+                                https://react.dev
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
                         <h4 className='font-bold text-black mb-2'>
                           Acknowledgments
@@ -295,7 +369,7 @@ export default function Citations() {
                   <h3 className='font-bold text-black mb-2'>
                     Backend Dependencies
                   </h3>
-                  <div className='text-xs space-y-1'>
+                  <div className='text-xs space-y-1 text-gray-700'>
                     <p>
                       <strong>@prisma/adapter-pg</strong> (v7.3.0) - PostgreSQL
                       adapter (Apache-2.0)
@@ -323,9 +397,56 @@ export default function Citations() {
 
                 <div>
                   <h3 className='font-bold text-black mb-2'>
+                    Python / AI Service Dependencies
+                  </h3>
+                  <div className='text-xs space-y-1 text-gray-700'>
+                    <p>
+                      <strong>torch</strong> (&gt;=2.0.0) - ML framework
+                      (BSD-3-Clause)
+                    </p>
+                    <p>
+                      <strong>torchvision</strong> (&gt;=0.15.0) - Computer
+                      vision for PyTorch (BSD-3-Clause)
+                    </p>
+                    <p>
+                      <strong>clip-by-openai</strong> (&gt;=0.3.0) - CLIP
+                      embeddings (MIT)
+                    </p>
+                    <p>
+                      <strong>Pillow</strong> (&gt;=9.0.0) - Image processing
+                      (HPND)
+                    </p>
+                    <p>
+                      <strong>Flask</strong> (&gt;=2.3.0) - Python web framework
+                      (BSD-3-Clause)
+                    </p>
+                    <p>
+                      <strong>numpy</strong> (&gt;=1.24.0) - Scientific
+                      computing (BSD-3-Clause)
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className='font-bold text-black mb-2'>Runtimes</h3>
+                  <div className='text-xs text-gray-700 space-y-1'>
+                    <p>
+                      <strong>Node.js</strong> - JavaScript runtime (MIT)
+                    </p>
+                    <p>
+                      <strong>Python</strong> - AI service runtime (PSF License)
+                    </p>
+                    <p>
+                      <strong>React</strong> - Frontend UI runtime (MIT)
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className='font-bold text-black mb-2'>
                     Frontend Dependencies
                   </h3>
-                  <div className='text-xs space-y-1'>
+                  <div className='text-xs text-gray-700 space-y-1'>
                     <p>
                       <strong>next</strong> (v16.1.1) - React framework (MIT)
                     </p>

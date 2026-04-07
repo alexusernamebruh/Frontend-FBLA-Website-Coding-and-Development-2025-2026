@@ -1,14 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { a } from '../config';
 import SideNav from '../components/sidenav';
 import { truncate } from '../helpers';
 import dayjs from 'dayjs';
 import Success from '../components/success';
 import Modal from '../components/modal';
-import { DocumentTextIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import {
+  DocumentTextIcon,
+  PhotoIcon,
+  HomeIcon,
+  CheckBadgeIcon,
+} from '@heroicons/react/24/solid';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
@@ -43,7 +47,6 @@ export default function Home() {
     useState<IClaimForm>();
   const [selectedItem, setSelectedItem] = useState<IItem>();
 
-  // Locations state
   const [locations, setLocations] = useState<ILocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation>();
   const [locationFilter, setLocationFilter] = useState<number | null>(null);
@@ -64,15 +67,19 @@ export default function Home() {
   const [locationCreateSuccess, setLocationCreateSuccess] = useState(false);
   const [locationEditSuccess, setLocationEditSuccess] = useState(false);
 
-  // Edit state
   const [isEditing, setIsEditing] = useState(false);
   const [editItemName, setEditItemName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editRemovePhotoIds, setEditRemovePhotoIds] = useState<number[]>([]);
 
-  // Image modal state
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageData, setSelectedImageData] = useState<string>('');
+
+  const [showMobileDetailModal, setShowMobileDetailModal] = useState(false);
+  const [mobileDetailType, setMobileDetailType] = useState<
+    'item' | 'submission' | 'claim'
+  >('item');
+  const [showMobileEditModal, setShowMobileEditModal] = useState(false);
 
   const authenticate = async () => {
     if (password === 'password') {
@@ -90,7 +97,6 @@ export default function Home() {
       } else {
         setSelectedPendingClaim(undefined);
       }
-      console.log(pending);
     } catch (error) {
       console.error('Error fetching pending claims:', error);
     }
@@ -116,7 +122,6 @@ export default function Home() {
         await getPendingClaims();
         await getApprovedClaims();
         await getAllItemsData();
-        // Reset selected pending claim if it was the one that got approved
         if (selectedPendingClaim?.id === claimId) {
           setSelectedPendingClaim(undefined);
         }
@@ -159,7 +164,6 @@ export default function Home() {
       } else {
         setSelectedPending(undefined);
       }
-      console.log(pending);
     } catch (error) {
       console.error('Error fetching pending submissions:', error);
     }
@@ -1654,7 +1658,7 @@ export default function Home() {
                   {locations.length ? (
                     locations.map((v: ILocation, i) => {
                       return (
-                        <div key={i} className='group'>
+                        <div key={i} className='group w-fit'>
                           <div
                             onClick={() => {
                               setSelectedLocation(v);
@@ -1667,7 +1671,7 @@ export default function Home() {
                                 {v.name}
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
-                                Found items: {v.items.length}
+                                Items: {v.items.length}
                               </p>
                             </div>
                           </div>
@@ -1825,8 +1829,8 @@ export default function Home() {
           {/* Desktop Ends here */}
 
           {/* Mobile Version */}
-          <div className='lg:hidden bg-white min-h-screen pb-20 text-black'>
-            <div className='absolute pointer-events-none z-50'>
+          <div className='lg:hidden bg-white min-h-screen pb-24 text-black w-full'>
+            <div className='fixed pointer-events-none top-0 right-0 z-50'>
               <Success
                 title={'Success!'}
                 description={'Successfully approved a submission form.'}
@@ -1869,96 +1873,252 @@ export default function Home() {
                 show={itemDeleteSuccess}
                 setShow={setItemDeleteSuccess}
               />
+              <Success
+                title={'Success'}
+                description={'Successfully created a new location.'}
+                show={locationCreateSuccess}
+                setShow={setLocationCreateSuccess}
+              />
+              <Success
+                title={'Success'}
+                description={'Successfully edited the location.'}
+                show={locationEditSuccess}
+                setShow={setLocationEditSuccess}
+              />
             </div>
 
             {/* Mobile Header */}
-            <div className='bg-indigo-600 text-white p-4 shadow-lg'>
-              <h1 className='text-xl font-bold'>Admin - {currentPage}</h1>
+            <div className='sticky top-0 bg-indigo-600 text-white p-4 shadow-lg z-40'>
+              <h1 className='text-lg font-bold'>{currentPage}</h1>
+              <p className='text-xs text-indigo-100 mt-1'>Admin Panel</p>
             </div>
 
+            {/* Mobile Search/Filter Bar */}
+            {currentPage === 'All Items' && (
+              <div className='bg-white border-b border-gray-200 p-4 space-y-3'>
+                <div className='flex space-x-2'>
+                  <button
+                    onClick={() => {
+                      setSearchType('text');
+                      setSearchQuery('');
+                    }}
+                    className={`flex-1 p-2 rounded-md transition-colors flex items-center justify-center space-x-1 ${
+                      searchType === 'text'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <DocumentTextIcon className='w-4 h-4' />
+                    <span className='text-xs font-medium'>Text</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchType('image');
+                      setSelectedSearchImage('None');
+                    }}
+                    className={`flex-1 p-2 rounded-md transition-colors flex items-center justify-center space-x-1 ${
+                      searchType === 'image'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <PhotoIcon className='w-4 h-4' />
+                    <span className='text-xs font-medium'>Image</span>
+                  </button>
+                  <button
+                    onClick={() => setSearchType('location')}
+                    className={`flex-1 p-2 rounded-md transition-colors flex items-center justify-center space-x-1 ${
+                      searchType === 'location'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <MapPinIcon className='w-4 h-4' />
+                    <span className='text-xs font-medium'>Location</span>
+                  </button>
+                </div>
+                {searchType === 'text' && (
+                  <input
+                    type='text'
+                    placeholder='Search items...'
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      searchItemByText(e.target.value);
+                    }}
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                  />
+                )}
+                {searchType === 'image' && (
+                  <label className='block'>
+                    <input
+                      ref={imageSearchRef}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setSelectedSearchImage(e.target.files[0].name);
+                          searchItemsByImage(e.target.files[0]);
+                        }
+                      }}
+                      type='file'
+                      accept='.png, .jpg, .jpeg, .webp'
+                      hidden
+                    />
+                    <div className='bg-indigo-500 text-white text-sm font-semibold p-2 rounded-md text-center cursor-pointer hover:bg-indigo-600'>
+                      Select Image
+                    </div>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      {selectedSearchImage}
+                    </p>
+                  </label>
+                )}
+                {searchType === 'location' && (
+                  <button
+                    onClick={() => setShowFilterModal(true)}
+                    className='w-full bg-indigo-500 text-white text-sm font-semibold p-2 rounded-md hover:bg-indigo-600'
+                  >
+                    Select Location:{' '}
+                    {locations.find((loc) => loc.id === locationFilter)?.name ||
+                      'All'}
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Mobile Content */}
-            <div className='p-4'>
+            <div className='p-4 space-y-3'>
               {currentPage === 'All Items' && (
-                <div className='space-y-4'>
-                  {allItems.length ? (
-                    allItems.map((item: IItem, i) => (
-                      <div
-                        key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
-                      >
-                        <h3 className='font-bold text-lg text-black'>
-                          {item.itemName}
-                        </h3>
-                        <p className='text-sm text-gray-600 mt-2'>
-                          {truncate(item.description, 100)}
-                        </p>
-                        <div className='flex justify-between items-center mt-3'>
-                          <div>
-                            <p className='text-xs text-gray-500'>
-                              By: {item.author?.name || 'Unknown'}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {dayjs(item.createdAt).format('MM/DD/YYYY')}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {item.claimed ? 'Claimed' : 'Unclaimed'}
-                            </p>
-                          </div>
-                          <div className='flex space-x-2'>
-                            <button
-                              onClick={() => startEditItem(item)}
-                              className='bg-indigo-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => item.id && deleteItemData(item.id)}
-                              className='bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
-                            >
-                              Delete
-                            </button>
+                <div className='space-y-3'>
+                  {filteredItems.filter(
+                    (v) =>
+                      locationFilter === null ||
+                      v.location?.id === locationFilter,
+                  ).length ? (
+                    filteredItems
+                      .filter(
+                        (v) =>
+                          locationFilter === null ||
+                          v.location?.id === locationFilter,
+                      )
+                      .map((item: IItem, i) => (
+                        <div
+                          key={i}
+                          className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
+                        >
+                          <div className='p-4'>
+                            <div className='flex justify-between items-start gap-2'>
+                              <div className='flex-1 min-w-0'>
+                                <h3 className='font-bold text-base text-black truncate'>
+                                  {item.itemName}
+                                </h3>
+                                <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                  {truncate(item.description, 50)}
+                                </p>
+                              </div>
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
+                                  item.claimed
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}
+                              >
+                                {item.claimed ? 'Claimed' : 'Unclaimed'}
+                              </span>
+                            </div>
+                            <div className='mt-2 flex flex-wrap gap-1 text-xs text-gray-500'>
+                              <span>By: {item.author?.name || 'Unknown'}</span>
+                              <span>•</span>
+                              <span>
+                                {dayjs(item.createdAt).format('MM/DD/YY')}
+                              </span>
+                            </div>
+                            {item.location && (
+                              <p className='text-xs text-indigo-600 mt-1'>
+                                {item.location.name}
+                              </p>
+                            )}
+                            <div className='flex gap-2 mt-3'>
+                              <button
+                                onClick={() => {
+                                  setSelectedItem(item);
+                                  setMobileDetailType('item');
+                                  setShowMobileDetailModal(true);
+                                }}
+                                className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                              >
+                                View
+                              </button>
+                              <button
+                                onClick={() => {
+                                  startEditItem(item);
+                                  setShowMobileEditModal(true);
+                                }}
+                                className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm font-semibold hover:bg-gray-300 transition-colors'
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  item.id && deleteItemData(item.id)
+                                }
+                                className='px-3 py-2 bg-red-100 text-red-600 rounded text-sm font-semibold hover:bg-red-200 transition-colors'
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      ))
                   ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No items found
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No items found</p>
                     </div>
                   )}
                 </div>
               )}
 
               {currentPage === 'Pending Reports' && (
-                <div className='space-y-4'>
+                <div className='space-y-3'>
                   {pendingSubmissions.length ? (
                     pendingSubmissions.map((submission: ISubmission, i) => (
                       <div
                         key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
                       >
-                        <h3 className='font-bold text-lg text-black'>
-                          {submission.itemName}
-                        </h3>
-                        <p className='text-sm text-gray-600 mt-2'>
-                          {truncate(submission.description, 80)}
-                        </p>
-                        <div className='flex justify-between items-center mt-3'>
-                          <div>
-                            <p className='text-xs text-gray-500'>
-                              By: {submission.user?.name || 'Unknown'}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {dayjs(submission.createdAt).format('MM/DD/YYYY')}
-                            </p>
+                        <div className='p-4'>
+                          <div className='flex items-start justify-between gap-2'>
+                            <div className='flex-1 min-w-0'>
+                              <h3 className='font-bold text-base text-black truncate'>
+                                {submission.itemName}
+                              </h3>
+                              <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                {truncate(submission.description, 50)}
+                              </p>
+                            </div>
+                            <span className='px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800 whitespace-nowrap'>
+                              PENDING
+                            </span>
                           </div>
-                          <div className='flex space-x-2'>
+                          <div className='mt-2 text-xs text-gray-500'>
+                            By: {submission.user?.name || 'Unknown'} •{' '}
+                            {dayjs(submission.createdAt).format('MM/DD/YY')}
+                          </div>
+                          <div className='flex gap-2 mt-3'>
+                            <button
+                              onClick={() => {
+                                setSelectedPending(submission);
+                                setMobileDetailType('submission');
+                                setShowMobileDetailModal(true);
+                              }}
+                              className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                            >
+                              View
+                            </button>
                             <button
                               onClick={() =>
                                 submission.id &&
                                 approveSubmission(submission.id)
                               }
-                              className='bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                              className='flex-1 bg-green-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-green-600 transition-colors'
                             >
                               Approve
                             </button>
@@ -1966,7 +2126,7 @@ export default function Home() {
                               onClick={() =>
                                 submission.id && rejectSubmission(submission.id)
                               }
-                              className='bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                              className='px-3 py-2 bg-red-100 text-red-600 rounded text-sm font-semibold hover:bg-red-200 transition-colors'
                             >
                               Reject
                             </button>
@@ -1975,46 +2135,152 @@ export default function Home() {
                       </div>
                     ))
                   ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No pending reports
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No pending reports</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Approved Reports' && (
+                <div className='space-y-3'>
+                  {approvedSubmissions.length ? (
+                    approvedSubmissions.map((submission: ISubmission, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
+                      >
+                        <div className='p-4'>
+                          <div className='flex items-start justify-between gap-2'>
+                            <div className='flex-1 min-w-0'>
+                              <h3 className='font-bold text-base text-black truncate'>
+                                {submission.itemName}
+                              </h3>
+                              <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                {truncate(submission.description, 50)}
+                              </p>
+                            </div>
+                            <span className='px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800 whitespace-nowrap'>
+                              APPROVED
+                            </span>
+                          </div>
+                          <div className='mt-2 text-xs text-gray-500'>
+                            By: {submission.user?.name || 'Unknown'} •{' '}
+                            {dayjs(submission.createdAt).format('MM/DD/YY')}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedApproved(submission);
+                              setMobileDetailType('submission');
+                              setShowMobileDetailModal(true);
+                            }}
+                            className='w-full mt-3 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No approved reports</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentPage === 'Declined Reports' && (
+                <div className='space-y-3'>
+                  {rejectedSubmissions.length ? (
+                    rejectedSubmissions.map((submission: ISubmission, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
+                      >
+                        <div className='p-4'>
+                          <div className='flex items-start justify-between gap-2'>
+                            <div className='flex-1 min-w-0'>
+                              <h3 className='font-bold text-base text-black truncate'>
+                                {submission.itemName}
+                              </h3>
+                              <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                {truncate(submission.description, 50)}
+                              </p>
+                            </div>
+                            <span className='px-2 py-1 rounded text-xs font-semibold bg-red-100 text-red-800 whitespace-nowrap'>
+                              DECLINED
+                            </span>
+                          </div>
+                          <div className='mt-2 text-xs text-gray-500'>
+                            By: {submission.user?.name || 'Unknown'} •{' '}
+                            {dayjs(submission.createdAt).format('MM/DD/YY')}
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedRejected(submission);
+                              setMobileDetailType('submission');
+                              setShowMobileDetailModal(true);
+                            }}
+                            className='w-full mt-3 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No declined reports</p>
                     </div>
                   )}
                 </div>
               )}
 
               {currentPage === 'Pending Claims' && (
-                <div className='space-y-4'>
+                <div className='space-y-3'>
                   {pendingClaims.length ? (
                     pendingClaims.map((claim: IClaimForm, i) => (
                       <div
                         key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
                       >
-                        <h3 className='font-bold text-lg text-black'>
-                          {claim.item?.itemName || 'Unknown Item'}
-                        </h3>
-                        <p className='text-sm text-gray-600 mt-2'>
-                          {truncate(claim.comment, 80)}
-                        </p>
-                        <div className='flex justify-between items-center mt-3'>
-                          <div>
-                            <p className='text-xs text-gray-500'>
-                              By: {claim.user?.name || 'Unknown'}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {dayjs(claim.createdAt).format('MM/DD/YYYY')}
-                            </p>
+                        <div className='p-4'>
+                          <div className='flex items-start justify-between gap-2'>
+                            <div className='flex-1 min-w-0'>
+                              <h3 className='font-bold text-base text-black truncate'>
+                                {claim.item?.itemName || 'Unknown Item'}
+                              </h3>
+                              <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                {truncate(claim.comment, 50)}
+                              </p>
+                            </div>
+                            <span className='px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800 whitespace-nowrap'>
+                              PENDING
+                            </span>
                           </div>
-                          <div className='flex space-x-2'>
+                          <div className='mt-2 text-xs text-gray-500'>
+                            Claimed by: {claim.user?.name || 'Unknown'}
+                          </div>
+                          <div className='flex gap-2 mt-3'>
+                            <button
+                              onClick={() => {
+                                setSelectedPendingClaim(claim);
+                                setMobileDetailType('claim');
+                                setShowMobileDetailModal(true);
+                              }}
+                              className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                            >
+                              View
+                            </button>
                             <button
                               onClick={() => claim.id && approveClaim(claim.id)}
-                              className='bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                              className='flex-1 bg-green-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-green-600 transition-colors'
                             >
                               Approve
                             </button>
                             <button
                               onClick={() => claim.id && deleteClaim(claim.id)}
-                              className='bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold hover:cursor-pointer'
+                              className='px-3 py-2 bg-red-100 text-red-600 rounded text-sm font-semibold hover:bg-red-200 transition-colors'
                             >
                               Delete
                             </button>
@@ -2023,180 +2289,124 @@ export default function Home() {
                       </div>
                     ))
                   ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No pending claims
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {currentPage === 'Approved Reports' && (
-                <div className='space-y-4'>
-                  {approvedSubmissions.length ? (
-                    approvedSubmissions.map((submission: ISubmission, i) => (
-                      <div
-                        key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
-                      >
-                        <div className='flex justify-between items-start'>
-                          <div className='flex-1'>
-                            <h3 className='font-bold text-black'>
-                              {submission.itemName}
-                            </h3>
-                            <p className='text-sm text-gray-600 mt-1'>
-                              {truncate(submission.description, 80)}
-                            </p>
-                            <p className='text-xs text-gray-500 mt-2'>
-                              By: {submission.user?.name || 'Unknown'}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {dayjs(submission.createdAt).format('MM/DD/YYYY')}
-                            </p>
-                          </div>
-                          <div className='px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800'>
-                            APPROVED
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No approved reports
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {currentPage === 'Declined Reports' && (
-                <div className='space-y-4'>
-                  {rejectedSubmissions.length ? (
-                    rejectedSubmissions.map((submission: ISubmission, i) => (
-                      <div
-                        key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
-                      >
-                        <div className='flex justify-between items-start'>
-                          <div className='flex-1'>
-                            <h3 className='font-bold text-black'>
-                              {submission.itemName}
-                            </h3>
-                            <p className='text-sm text-gray-600 mt-1'>
-                              {truncate(submission.description, 80)}
-                            </p>
-                            <p className='text-xs text-gray-500 mt-2'>
-                              By: {submission.user?.name || 'Unknown'}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {dayjs(submission.createdAt).format('MM/DD/YYYY')}
-                            </p>
-                          </div>
-                          <div className='px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-800'>
-                            REJECTED
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No rejected reports
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No pending claims</p>
                     </div>
                   )}
                 </div>
               )}
 
               {currentPage === 'Approved Claims' && (
-                <div className='space-y-4'>
+                <div className='space-y-3'>
                   {approvedClaims.length ? (
                     approvedClaims.map((claim: IClaimForm, i) => (
                       <div
                         key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
                       >
-                        <div className='flex justify-between items-start'>
-                          <div className='flex-1'>
-                            <h3 className='font-bold text-black'>
-                              {claim.item?.itemName || 'Unknown Item'}
-                            </h3>
-                            <p className='text-sm text-gray-600 mt-1'>
-                              {truncate(claim.comment, 80)}
-                            </p>
-                            <p className='text-xs text-gray-500 mt-2'>
-                              By: {claim.user?.name || 'Unknown'}
-                            </p>
-                            <p className='text-xs text-gray-500'>
-                              {dayjs(claim.createdAt).format('MM/DD/YYYY')}
-                            </p>
+                        <div className='p-4'>
+                          <div className='flex items-start justify-between gap-2'>
+                            <div className='flex-1'>
+                              <h3 className='font-bold text-base text-black'>
+                                {claim.item?.itemName || 'Unknown Item'}
+                              </h3>
+                              <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                {truncate(claim.comment, 50)}
+                              </p>
+                            </div>
+                            <span className='px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800 whitespace-nowrap'>
+                              APPROVED
+                            </span>
                           </div>
-                          <div className='px-2 py-1 rounded text-xs font-bold bg-green-100 text-green-800'>
-                            APPROVED
+                          <div className='mt-2 text-xs text-gray-500'>
+                            Claimed by: {claim.user?.name || 'Unknown'}
                           </div>
+                          <button
+                            onClick={() => {
+                              setSelectedApprovedClaim(claim);
+                              setMobileDetailType('claim');
+                              setShowMobileDetailModal(true);
+                            }}
+                            className='w-full mt-3 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                          >
+                            View Details
+                          </button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No approved claims
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No approved claims</p>
                     </div>
                   )}
                 </div>
               )}
 
               {currentPage === 'All Locations' && (
-                <div className='space-y-4'>
+                <div className='space-y-3'>
                   {locations.length ? (
-                    locations.map((location: ILocation, i) => (
-                      <div
-                        key={i}
-                        className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                    <>
+                      <button
+                        onClick={() => {
+                          setNewLocationName('');
+                          setNewLocationTeacher('');
+                          setIsEditing(false);
+                          setShowMobileEditModal(true);
+                        }}
+                        className='w-full bg-green-500 text-white px-4 py-3 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors'
                       >
-                        <div className='flex justify-between items-start'>
-                          <div className='flex-1'>
-                            <h3 className='font-bold text-black'>
-                              {location.name}
-                            </h3>
-                            <p className='text-xs text-gray-500 mt-2'>
-                              ID: {location.id}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => startEditLocation(location)}
-                            className='bg-indigo-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-indigo-600'
-                          >
-                            Edit
-                          </button>
-                        </div>
-                        {isEditingLocation &&
-                          selectedLocation?.id === location.id && (
-                            <div className='mt-4 space-y-2'>
-                              <input
-                                type='text'
-                                value={editLocationName}
-                                onChange={(e) =>
-                                  setEditLocationName(e.target.value)
-                                }
-                                className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-                              />
-                              <div className='flex space-x-2'>
-                                <button
-                                  onClick={() => editLocation(location.id)}
-                                  className='bg-indigo-500 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-indigo-600'
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={cancelEditLocation}
-                                  className='bg-gray-400 text-white px-3 py-1 rounded text-sm font-semibold hover:bg-gray-500'
-                                >
-                                  Cancel
-                                </button>
+                        + Add New Location
+                      </button>
+                      {locations.map((location: ILocation, i) => (
+                        <div
+                          key={i}
+                          className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
+                        >
+                          <div className='p-4'>
+                            <div className='flex justify-between items-start'>
+                              <div className='flex-1'>
+                                <h3 className='font-bold text-base text-black'>
+                                  {location.name}
+                                </h3>
+                                {location.teacher && (
+                                  <p className='text-xs text-gray-600 mt-1'>
+                                    {location.teacher}
+                                  </p>
+                                )}
+                                <p className='text-xs text-gray-500 mt-2'>
+                                  ID: {location.id}
+                                </p>
                               </div>
                             </div>
-                          )}
-                      </div>
-                    ))
+                            <div className='flex gap-2 mt-3'>
+                              <button
+                                onClick={() => {
+                                  startEditLocation(location);
+                                  setSelectedLocation(location);
+                                  setShowMobileEditModal(true);
+                                }}
+                                className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
                   ) : (
-                    <div className='text-center py-8 text-gray-500'>
-                      No locations found
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No locations found</p>
+                      <button
+                        onClick={() => {
+                          setNewLocationName('');
+                          setNewLocationTeacher('');
+                          setShowMobileEditModal(true);
+                        }}
+                        className='mt-4 bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600'
+                      >
+                        Create First Location
+                      </button>
                     </div>
                   )}
                 </div>
@@ -2204,161 +2414,559 @@ export default function Home() {
             </div>
 
             {/* Mobile Bottom Navigation */}
-            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2'>
-              <div className='flex justify-around'>
+            <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40'>
+              <div className='grid grid-cols-4 gap-1 p-2'>
                 {[
                   {
                     name: 'All Items',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
-                        />
-                      </svg>
-                    ),
+                    label: 'Items',
+                    icon: <HomeIcon className='w-5 h-5' />,
+                    active: currentPage === 'All Items',
                   },
                   {
                     name: 'Pending Reports',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-                        />
-                      </svg>
-                    ),
+                    label: 'Reports',
+                    icon: <DocumentTextIcon className='w-5 h-5' />,
+                    active: currentPage.includes('Reports'),
                   },
                   {
                     name: 'Pending Claims',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    name: 'Approved Reports',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M5 13l4 4L19 7'
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    name: 'Declined Reports',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M6 18L18 6M6 6l12 12'
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    name: 'Approved Claims',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
-                        />
-                      </svg>
-                    ),
+                    label: 'Claims',
+                    icon: <CheckBadgeIcon className='w-5 h-5' />,
+                    active: currentPage.includes('Claims'),
                   },
                   {
                     name: 'All Locations',
-                    icon: (
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
-                      >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
-                        />
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
-                        />
-                      </svg>
-                    ),
+                    label: 'Locations',
+                    icon: <MapPinIcon className='w-5 h-5' />,
+                    active: currentPage === 'All Locations',
                   },
                 ].map((tab) => (
                   <button
                     key={tab.name}
                     onClick={() => handleCurrentPageChange(tab.name)}
-                    className={`flex flex-col items-center py-1 px-1 rounded ${
-                      currentPage === tab.name
-                        ? 'text-indigo-600'
-                        : 'text-gray-500'
+                    className={`flex flex-col items-center justify-center gap-1 rounded py-2 text-xs font-semibold transition-colors ${
+                      tab.active
+                        ? 'bg-indigo-500 text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <div className='mb-1'>{tab.icon}</div>
-                    <div className='text-xs font-medium text-center leading-tight'>
-                      {tab.name.split(' ').map((word, i) => (
-                        <div key={i}>{word}</div>
-                      ))}
-                    </div>
+                    {tab.icon}
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </div>
             </div>
+
+            {/* Mobile Detail Modal */}
+            <Modal
+              open={showMobileDetailModal}
+              setOpen={setShowMobileDetailModal}
+            >
+              <div className='bg-white rounded-lg p-6 max-w-2xl mx-auto max-h-[90vh] overflow-y-auto'>
+                {mobileDetailType === 'item' && selectedItem && (
+                  <div className='space-y-4'>
+                    <div>
+                      <h2 className='text-2xl font-bold text-black'>
+                        {selectedItem.itemName}
+                      </h2>
+                      <p className='text-sm text-gray-600 mt-1'>
+                        Submitted by:{' '}
+                        {selectedItem.author?.name || 'Unknown User'}
+                      </p>
+                    </div>
+                    <div className='space-y-3 border-t border-gray-200 pt-4'>
+                      <div>
+                        <p className='font-semibold text-black text-sm'>
+                          Date Created
+                        </p>
+                        <p className='text-sm text-gray-600 mt-1'>
+                          {dayjs(selectedItem.createdAt).format(
+                            'dddd, MMMM D, YYYY',
+                          )}{' '}
+                          at {dayjs(selectedItem.createdAt).format('h:mm a')}
+                        </p>
+                      </div>
+                      <div>
+                        <p className='font-semibold text-black text-sm'>
+                          Description
+                        </p>
+                        <p className='text-sm text-gray-600 mt-1 whitespace-pre-wrap'>
+                          {selectedItem.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className='font-semibold text-black text-sm'>
+                          Status
+                        </p>
+                        <p className='text-sm text-gray-600 mt-1'>
+                          {selectedItem.claimed ? '✓ Claimed' : 'Unclaimed'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className='font-semibold text-black text-sm'>
+                          Location
+                        </p>
+                        <p className='text-sm text-gray-600 mt-1'>
+                          {selectedItem.location?.name || 'Unknown'}
+                          {selectedItem.location?.teacher && (
+                            <span className='block text-xs text-gray-500'>
+                              {selectedItem.location.teacher}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      {selectedItem.photos &&
+                        selectedItem.photos.length > 0 && (
+                          <div>
+                            <p className='font-semibold text-black text-sm'>
+                              Photos ({selectedItem.photos.length})
+                            </p>
+                            <div className='grid grid-cols-2 gap-2 mt-2'>
+                              {selectedItem.photos.map((photo) => (
+                                <div
+                                  key={photo.id}
+                                  className='cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow'
+                                  onClick={() => {
+                                    setSelectedImageData(
+                                      `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                    );
+                                    setShowImageModal(true);
+                                  }}
+                                >
+                                  <img
+                                    src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                    alt='photo'
+                                    className='w-full h-32 object-cover'
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                    <div className='flex gap-2 border-t border-gray-200 pt-4'>
+                      <button
+                        onClick={() => {
+                          setShowMobileDetailModal(false);
+                          startEditItem(selectedItem);
+                          setShowMobileEditModal(true);
+                        }}
+                        className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded font-semibold hover:bg-indigo-600 transition-colors'
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMobileDetailModal(false);
+                          selectedItem.id && deleteItemData(selectedItem.id);
+                        }}
+                        className='flex-1 bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition-colors'
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setShowMobileDetailModal(false)}
+                        className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {mobileDetailType === 'submission' &&
+                  (selectedPending || selectedApproved || selectedRejected) && (
+                    <div className='space-y-4'>
+                      {(() => {
+                        const submission =
+                          selectedPending ||
+                          selectedApproved ||
+                          selectedRejected;
+                        return (
+                          <>
+                            <div>
+                              <h2 className='text-2xl font-bold text-black'>
+                                {submission?.itemName}
+                              </h2>
+                              <p className='text-sm text-gray-600 mt-1'>
+                                Submitted by:{' '}
+                                {submission?.user?.name || 'Unknown User'}
+                              </p>
+                              <span
+                                className={`inline-block mt-2 px-2 py-1 rounded text-xs font-semibold ${
+                                  submission?.approvalStatus === 'PENDING'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : submission?.approvalStatus === 'APPROVED'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {submission?.approvalStatus}
+                              </span>
+                            </div>
+                            <div className='space-y-3 border-t border-gray-200 pt-4'>
+                              <div>
+                                <p className='font-semibold text-black text-sm'>
+                                  Date Submitted
+                                </p>
+                                <p className='text-sm text-gray-600 mt-1'>
+                                  {dayjs(submission?.createdAt).format(
+                                    'dddd, MMMM D, YYYY',
+                                  )}{' '}
+                                  at{' '}
+                                  {dayjs(submission?.createdAt).format(
+                                    'h:mm a',
+                                  )}
+                                </p>
+                              </div>
+                              <div>
+                                <p className='font-semibold text-black text-sm'>
+                                  Description
+                                </p>
+                                <p className='text-sm text-gray-600 mt-1 whitespace-pre-wrap'>
+                                  {submission?.description}
+                                </p>
+                              </div>
+                              {submission?.photos &&
+                                submission.photos.length > 0 && (
+                                  <div>
+                                    <p className='font-semibold text-black text-sm'>
+                                      Photos ({submission.photos.length})
+                                    </p>
+                                    <div className='grid grid-cols-2 gap-2 mt-2'>
+                                      {submission.photos.map((photo) => (
+                                        <div
+                                          key={photo.id}
+                                          className='cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow'
+                                          onClick={() => {
+                                            setSelectedImageData(
+                                              `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                            );
+                                            setShowImageModal(true);
+                                          }}
+                                        >
+                                          <img
+                                            src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                            alt='photo'
+                                            className='w-full h-32 object-cover'
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                            </div>
+                            {submission?.approvalStatus === 'PENDING' && (
+                              <div className='flex gap-2 border-t border-gray-200 pt-4'>
+                                <button
+                                  onClick={() => {
+                                    setShowMobileDetailModal(false);
+                                    submission.id &&
+                                      approveSubmission(submission.id);
+                                  }}
+                                  className='flex-1 bg-green-500 text-white px-3 py-2 rounded font-semibold hover:bg-green-600 transition-colors'
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowMobileDetailModal(false);
+                                    submission.id &&
+                                      rejectSubmission(submission.id);
+                                  }}
+                                  className='flex-1 bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition-colors'
+                                >
+                                  Reject
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setShowMobileDetailModal(false)
+                                  }
+                                  className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            )}
+                            {submission?.approvalStatus !== 'PENDING' && (
+                              <button
+                                onClick={() => setShowMobileDetailModal(false)}
+                                className='w-full bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                              >
+                                Close
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                {mobileDetailType === 'claim' &&
+                  (selectedPendingClaim || selectedApprovedClaim) && (
+                    <div className='space-y-4'>
+                      {(() => {
+                        const claim =
+                          selectedPendingClaim || selectedApprovedClaim;
+                        return (
+                          <>
+                            <div>
+                              <h2 className='text-2xl font-bold text-black'>
+                                {claim?.item?.itemName || 'Unknown Item'}
+                              </h2>
+                              <p className='text-sm text-gray-600 mt-1'>
+                                Claimed by:{' '}
+                                {claim?.user?.name || 'Unknown User'}
+                              </p>
+                              <p className='text-sm text-gray-600'>
+                                Original owner:{' '}
+                                {claim?.item?.author?.name || 'Unknown User'}
+                              </p>
+                              <span
+                                className={`inline-block mt-2 px-2 py-1 rounded text-xs font-semibold ${
+                                  claim?.isOpen
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-green-100 text-green-800'
+                                }`}
+                              >
+                                {claim?.isOpen ? 'PENDING' : 'APPROVED'}
+                              </span>
+                            </div>
+                            <div className='space-y-3 border-t border-gray-200 pt-4'>
+                              <div>
+                                <p className='font-semibold text-black text-sm'>
+                                  Claim Comment
+                                </p>
+                                <p className='text-sm text-gray-600 mt-1 whitespace-pre-wrap'>
+                                  {claim?.comment}
+                                </p>
+                              </div>
+                              <div>
+                                <p className='font-semibold text-black text-sm'>
+                                  Date Submitted
+                                </p>
+                                <p className='text-sm text-gray-600 mt-1'>
+                                  {dayjs(claim?.createdAt).format(
+                                    'dddd, MMMM D, YYYY',
+                                  )}{' '}
+                                  at {dayjs(claim?.createdAt).format('h:mm a')}
+                                </p>
+                              </div>
+                            </div>
+                            {claim?.isOpen && (
+                              <div className='flex gap-2 border-t border-gray-200 pt-4'>
+                                <button
+                                  onClick={() => {
+                                    setShowMobileDetailModal(false);
+                                    claim.id && approveClaim(claim.id);
+                                  }}
+                                  className='flex-1 bg-green-500 text-white px-3 py-2 rounded font-semibold hover:bg-green-600 transition-colors'
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowMobileDetailModal(false);
+                                    claim.id && deleteClaim(claim.id);
+                                  }}
+                                  className='flex-1 bg-red-500 text-white px-3 py-2 rounded font-semibold hover:bg-red-600 transition-colors'
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setShowMobileDetailModal(false)
+                                  }
+                                  className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                                >
+                                  Close
+                                </button>
+                              </div>
+                            )}
+                            {!claim?.isOpen && (
+                              <button
+                                onClick={() => setShowMobileDetailModal(false)}
+                                className='w-full bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                              >
+                                Close
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+              </div>
+            </Modal>
+
+            {/* Mobile Edit Modal */}
+            <Modal open={showMobileEditModal} setOpen={setShowMobileEditModal}>
+              <div className='bg-white rounded-lg p-6 max-w-2xl mx-auto max-h-[90vh] overflow-y-auto'>
+                {currentPage === 'All Items' && selectedItem && (
+                  <div className='space-y-4'>
+                    <h2 className='text-2xl font-bold text-black'>Edit Item</h2>
+                    <div>
+                      <label className='block text-sm font-bold text-gray-900 mb-2'>
+                        Item Name
+                      </label>
+                      <input
+                        type='text'
+                        value={editItemName}
+                        onChange={(e) => setEditItemName(e.target.value)}
+                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-bold text-gray-900 mb-2'>
+                        Description
+                      </label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        rows={4}
+                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500'
+                      />
+                    </div>
+                    {selectedItem.photos && selectedItem.photos.length > 0 && (
+                      <div>
+                        <label className='block text-sm font-bold text-gray-900 mb-3'>
+                          Photos - Check to remove
+                        </label>
+                        <div className='space-y-2'>
+                          {selectedItem.photos.map((photo) => (
+                            <div
+                              key={photo.id}
+                              className='flex items-center space-x-2 p-2 border border-gray-300 rounded-md'
+                            >
+                              <input
+                                type='checkbox'
+                                id={`photo-${photo.id}`}
+                                checked={editRemovePhotoIds.includes(photo.id)}
+                                onChange={() => togglePhotoRemoval(photo.id)}
+                                className='w-4 h-4'
+                              />
+                              <label
+                                htmlFor={`photo-${photo.id}`}
+                                className='text-sm text-gray-600 cursor-pointer flex-1'
+                              >
+                                Photo ID: {photo.id}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className='flex gap-2 border-t border-gray-200 pt-4'>
+                      <button
+                        onClick={() => {
+                          selectedItem.id && updateItemData(selectedItem.id);
+                          setShowMobileEditModal(false);
+                        }}
+                        className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded font-semibold hover:bg-indigo-600 transition-colors'
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          cancelEdit();
+                          setShowMobileEditModal(false);
+                        }}
+                        className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {currentPage === 'All Locations' && (
+                  <div className='space-y-4'>
+                    <h2 className='text-2xl font-bold text-black'>
+                      {isEditingLocation ? 'Edit Location' : 'Add New Location'}
+                    </h2>
+                    <div>
+                      <label className='block text-sm font-bold text-gray-900 mb-2'>
+                        Location Name *
+                      </label>
+                      <input
+                        type='text'
+                        value={
+                          isEditingLocation ? editLocationName : newLocationName
+                        }
+                        onChange={(e) =>
+                          isEditingLocation
+                            ? setEditLocationName(e.target.value)
+                            : setNewLocationName(e.target.value)
+                        }
+                        placeholder='e.g., Room 101, Library'
+                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500'
+                      />
+                    </div>
+                    {!isEditingLocation && (
+                      <div>
+                        <label className='block text-sm font-bold text-gray-900 mb-2'>
+                          Teacher/Supervisor (Optional)
+                        </label>
+                        <input
+                          type='text'
+                          value={newLocationTeacher}
+                          onChange={(e) =>
+                            setNewLocationTeacher(e.target.value)
+                          }
+                          placeholder='e.g., Mr. Smith'
+                          className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500'
+                        />
+                      </div>
+                    )}
+                    <div className='flex gap-2 border-t border-gray-200 pt-4'>
+                      {isEditingLocation ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              selectedLocation?.id &&
+                                editLocation(selectedLocation.id);
+                              setShowMobileEditModal(false);
+                            }}
+                            className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded font-semibold hover:bg-indigo-600 transition-colors'
+                          >
+                            Save Changes
+                          </button>
+                          <button
+                            onClick={() => {
+                              cancelEditLocation();
+                              setShowMobileEditModal(false);
+                            }}
+                            className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              newLocationName.trim() && createLocation();
+                              setShowMobileEditModal(false);
+                            }}
+                            disabled={!newLocationName.trim()}
+                            className='flex-1 bg-green-500 text-white px-3 py-2 rounded font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                          >
+                            Create Location
+                          </button>
+                          <button
+                            onClick={() => setShowMobileEditModal(false)}
+                            className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300 transition-colors'
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Modal>
           </div>
 
           {/* Filter Modal */}

@@ -84,7 +84,6 @@ export default function ItemChats() {
     try {
       if (!selectedItem) return;
       const user = getCurrentUser();
-      // Prevent creating a chat with oneself
       if (user.id === selectedItem.authorId) {
         alert('You cannot create a chat about your own item');
         return;

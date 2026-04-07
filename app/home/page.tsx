@@ -8,14 +8,19 @@ import Success from '../components/success';
 import { truncate } from '../helpers';
 import dayjs from 'dayjs';
 import Modal from '../components/modal';
-import { DocumentTextIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import {
+  DocumentTextIcon,
+  PhotoIcon,
+  HomeIcon,
+  CheckBadgeIcon,
+  ChatBubbleLeftRightIcon,
+} from '@heroicons/react/24/solid';
 import ItemLookouts from '../components/itemLookouts';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 
 const HomePage = () => {
   const [current, setCurrent] = useState('All Items');
   const [mobileTab, setMobileTab] = useState(() => {
-    // Initialize based on current value
     return 'Reports';
   });
   const [showItemModal, setShowItemModal] = useState(false);
@@ -27,7 +32,6 @@ const HomePage = () => {
     useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<File[] | null>(null);
 
-  // Locations state
   const [locations, setLocations] = useState<ILocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<ILocation | null>(
     null,
@@ -36,7 +40,6 @@ const HomePage = () => {
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const locationDropdownRef = useRef<HTMLDivElement>(null);
 
-  // All Items state
   const [unclaimedItems, setUnclaimedItems] = useState<IItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<IItem>();
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,7 +54,6 @@ const HomePage = () => {
   const [showLocationFilterModal, setShowLocationFilterModal] = useState(false);
   const [filterSearchQuery, setFilterSearchQuery] = useState('');
 
-  // Submit Claims state
   const [selectedItemForClaim, setSelectedItemForClaim] =
     useState<IItem | null>(null);
   const [claimComment, setClaimComment] = useState('');
@@ -63,12 +65,19 @@ const HomePage = () => {
   const [userReports, setUserReports] = useState<ISubmission[]>([]);
   const [selectedUserReport, setSelectedUserReport] = useState<ISubmission>();
   const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageData, setSelectedImageData] = useState('');
   const [showCreateItemLookout, setShowCreateItemLookout] = useState(false);
   const [createItemLookoutSuccess, setCreateItemLookoutSuccess] =
     useState(false);
-  const [selectedImageData, setSelectedImageData] = useState<string>('');
+  // Mobile modal states
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailModalType, setDetailModalType] = useState<
+    'item' | 'report' | 'claim'
+  >('item');
+  const [mobileEditModalType, setMobileEditModalType] = useState<
+    'report' | 'claim' | null
+  >(null);
 
-  // Your Claims state
   const [userClaims, setUserClaims] = useState<IClaimForm[]>([]);
   const [selectedClaim, setSelectedClaim] = useState<IClaimForm>();
 
@@ -99,7 +108,6 @@ const HomePage = () => {
       const { data: response } = await a.post('/items/search/text', {
         query: query,
       });
-      console.log(response);
       const unclaimedOnly = response.filter((item: IItem) => !item.claimed);
       setFilteredItems(unclaimedOnly);
     } catch (error) {
@@ -132,7 +140,6 @@ const HomePage = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log(response);
       const unclaimedOnly = response.filter((item: IItem) => !item.claimed);
       setFilteredItems(unclaimedOnly);
     } catch (error) {
@@ -171,7 +178,6 @@ const HomePage = () => {
     try {
       const { data: response } = await a.get('/locations');
       setLocations(response);
-      console.log(response);
     } catch (error) {
       console.error('Error fetching locations:', error);
     }
@@ -1162,8 +1168,8 @@ const HomePage = () => {
       </div>
 
       {/* Mobile Version */}
-      <div className='lg:hidden h-full flex flex-col flex-1 bg-white min-h-screen pb-20'>
-        <div className='absolute pointer-events-none z-50'>
+      <div className='lg:hidden h-full flex flex-col flex-1 bg-white min-h-screen pb-24'>
+        <div className='fixed pointer-events-none top-0 right-0 z-50'>
           <Success
             title={'Success!'}
             description={'Submission form created'}
@@ -1179,42 +1185,109 @@ const HomePage = () => {
         </div>
 
         {/* Mobile Header */}
-        <div className='bg-indigo-600 h-fit text-white p-4 shadow-lg'>
-          <h1 className='text-xl font-bold'>{current}</h1>
+        <div className='sticky top-0 bg-indigo-600 text-white p-4 shadow-lg z-40'>
+          <h1 className='text-lg font-bold'>{current}</h1>
+          <p className='text-xs text-indigo-100 mt-1'>Lost & Found Portal</p>
         </div>
 
         {/* Mobile Content */}
-        <div className='p-4 h-full'>
+        <div className='flex-1 overflow-auto h-full p-4 space-y-3'>
           {current === 'All Items' && (
-            <div className='space-y-4'>
-              <div className='mb-4 space-y-2'>
-                <button
-                  type='button'
-                  onClick={() => setShowLocationFilterModal(true)}
-                  className='block w-full rounded-md bg-white px-3 py-2 text-left text-sm text-gray-900 border border-gray-300 hover:cursor-pointer'
-                >
-                  {locationFilter
-                    ? (() => {
-                        const loc = locations.find(
-                          (l) => l.id === locationFilter,
-                        );
-                        return loc
-                          ? `${loc.name}${loc.teacher ? ` — ${loc.teacher}` : ''}`
-                          : 'All Locations';
-                      })()
-                    : 'All Locations'}
-                </button>
-                <input
-                  type='text'
-                  placeholder='Search items...'
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    searchItemByText(e.target.value);
-                  }}
-                  className='w-full outline-none rounded-md border border-gray-300 px-3 py-2 text-sm'
-                />
+            <div className='flex flex-col space-y-3 h-full'>
+              {/* Search Bar */}
+              <div className='bg-white rounded-lg border border-gray-200 p-3 space-y-2'>
+                <div className='flex space-x-2'>
+                  <button
+                    onClick={() => {
+                      setSearchType('text');
+                      setSearchQuery('');
+                      setLocationFilter(null);
+                      setFilteredItems(unclaimedItems);
+                    }}
+                    className={`flex-1 p-2 rounded-md transition-colors text-xs flex items-center justify-center space-x-1 ${
+                      searchType === 'text'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <DocumentTextIcon className='w-4 h-4' />
+                    <span>Text</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchType('image');
+                      setSelectedSearchImage('None');
+                      setFilteredItems(unclaimedItems);
+                    }}
+                    className={`flex-1 p-2 rounded-md transition-colors text-xs flex items-center justify-center space-x-1 ${
+                      searchType === 'image'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <PhotoIcon className='w-4 h-4' />
+                    <span>Image</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSearchType('location');
+                      setFilteredItems(unclaimedItems);
+                    }}
+                    className={`flex-1 p-2 rounded-md transition-colors text-xs flex items-center justify-center space-x-1 ${
+                      searchType === 'location'
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    <MapPinIcon className='w-4 h-4' />
+                    <span>Location</span>
+                  </button>
+                </div>
+                {searchType === 'text' && (
+                  <input
+                    type='text'
+                    placeholder='Search items...'
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      searchItemByText(e.target.value);
+                    }}
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                  />
+                )}
+                {searchType === 'image' && (
+                  <label className='block'>
+                    <input
+                      ref={imageSearchRef}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setSelectedSearchImage(e.target.files[0].name);
+                          searchItemsByImage(e.target.files[0]);
+                        }
+                      }}
+                      type='file'
+                      accept='.png, .jpg, .jpeg, .webp'
+                      hidden
+                    />
+                    <div className='bg-indigo-500 text-white text-sm font-semibold p-2 rounded-md text-center cursor-pointer hover:bg-indigo-600'>
+                      Select Image
+                    </div>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      {selectedSearchImage}
+                    </p>
+                  </label>
+                )}
+                {searchType === 'location' && (
+                  <button
+                    onClick={() => setShowLocationFilterModal(true)}
+                    className='w-full bg-indigo-500 text-white text-sm font-semibold p-2 rounded-md hover:bg-indigo-600'
+                  >
+                    Select Location: {selectedLocationName}
+                  </button>
+                )}
               </div>
+
+              {/* Items List */}
               {filteredItems.filter(
                 (item) =>
                   locationFilter === null ||
@@ -1229,68 +1302,93 @@ const HomePage = () => {
                   .map((item: IItem, i) => (
                     <div
                       key={i}
-                      className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+                      className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow min-h-[220px] flex flex-col'
                     >
-                      <h3 className='font-bold text-lg text-black'>
-                        {item.itemName}
-                      </h3>
-                      <p className='text-sm text-gray-500 mt-2'>
-                        {truncate(item.description, 100)}
-                      </p>
-                      <div className='flex justify-between items-center mt-3'>
-                        <div>
-                          <p className='text-xs  text-gray-500'>
-                            By: {item.author?.name || 'Unknown'}
-                          </p>
-                          <p className='text-xs  text-gray-500'>
-                            {dayjs(item.createdAt).format('MM/DD/YYYY')}
-                          </p>
-                          {item.location && (
-                            <p className='text-xs text-indigo-600'>
-                              {item.location.name}
-                              {item.location.teacher
-                                ? ` — ${item.location.teacher}`
-                                : ''}
+                      <div className='p-4 flex flex-col flex-1 justify-between'>
+                        <div className='flex justify-between items-start gap-2'>
+                          <div className='flex-1 min-w-0'>
+                            <h3 className='font-bold text-base text-black truncate'>
+                              {item.itemName}
+                            </h3>
+                            <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                              {truncate(item.description, 50)}
                             </p>
+                          </div>
+                        </div>
+                        <div className='mt-2 flex flex-wrap gap-1 text-xs text-gray-500'>
+                          <span>
+                            Posted: {dayjs(item.createdAt).format('MM/DD/YY')}
+                          </span>
+                          {item.location && (
+                            <span className='text-indigo-600'>
+                              {item.location.name}
+                            </span>
                           )}
                         </div>
-                        <button
-                          onClick={() => {
-                            setSelectedItem(item);
-                            setShowItemModal(true);
-                          }}
-                          className='bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer font-semibold text-white px-3 py-1 rounded text-sm'
-                        >
-                          View
-                        </button>
+                        <div className='flex gap-2 mt-3'>
+                          <button
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setDetailModalType('item');
+                              setShowDetailModal(true);
+                            }}
+                            className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                          >
+                            View
+                          </button>
+                          {item.author?.id !==
+                            JSON.parse(localStorage.getItem('user') || '{}')
+                              .id && !hasUserClaimedItem(item.id) ? (
+                            <button
+                              onClick={() => {
+                                setSelectedItemForClaim(item);
+                                setShowClaimModal(true);
+                              }}
+                              className='flex-1 bg-green-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-green-600 transition-colors'
+                            >
+                              Claim
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className='flex-1 bg-gray-300 text-gray-600 px-3 py-2 rounded text-sm font-semibold cursor-not-allowed'
+                            >
+                              {item.author?.id ===
+                              JSON.parse(localStorage.getItem('user') || '{}')
+                                .id
+                                ? 'Your Item'
+                                : 'Claimed'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))
               ) : (
-                <div className='text-center py-8  text-gray-500'>
-                  No items available
+                <div className='text-center py-12 text-gray-500'>
+                  <p className='text-sm font-medium'>No items available</p>
                 </div>
               )}
             </div>
           )}
 
           {current === 'Reports' && (
-            <div className='space-y-4'>
+            <div className='space-y-3'>
               {/* Tab Switcher */}
               <div className='flex bg-gray-100 rounded-lg p-1'>
                 <button
                   onClick={() => setMobileTab('Reports')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium ${
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     mobileTab === 'Reports'
                       ? 'bg-white text-indigo-600 shadow-sm'
                       : 'text-gray-600'
                   }`}
                 >
-                  Submit Report
+                  Submit
                 </button>
                 <button
                   onClick={() => setMobileTab('Your Reports')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium ${
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     mobileTab === 'Your Reports'
                       ? 'bg-white text-indigo-600 shadow-sm'
                       : 'text-gray-600'
@@ -1301,178 +1399,156 @@ const HomePage = () => {
               </div>
 
               {mobileTab === 'Reports' && (
-                <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
-                  <div className='space-y-4'>
-                    <div>
-                      <label className='block text-sm font-bold text-gray-900 mb-2'>
-                        Item name*
-                      </label>
-                      <input
-                        type='text'
-                        onChange={(v) => setNewItemName(v.target.value)}
-                        value={newItemName}
-                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-bold text-gray-900 mb-2'>
-                        Description*
-                      </label>
-                      <textarea
-                        onChange={(v) => setNewItemDescription(v.target.value)}
-                        value={newItemDescription}
-                        rows={4}
-                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-bold text-gray-900 mb-2'>
-                        Location Found*
-                      </label>
-                      <div className='relative' ref={locationDropdownRef}>
-                        <button
-                          type='button'
-                          onClick={() =>
-                            setLocationDropdownOpen(!locationDropdownOpen)
-                          }
-                          className='w-full text-gray-300 rounded-md border border-gray-300 px-3 py-2 text-left text-sm bg-white hover:cursor-pointer'
-                        >
-                          {selectedLocation
-                            ? selectedLocation.name
-                            : 'Select a location...'}
-                          <span className='absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none'>
-                            <svg
-                              className='h-4 w-4 text-gray-400'
-                              viewBox='0 0 20 20'
-                              fill='currentColor'
+                <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3'>
+                  <h3 className='font-bold text-black'>Report a Lost Item</h3>
+                  <div>
+                    <label className='block text-xs font-bold text-gray-900 mb-1'>
+                      Item name*
+                    </label>
+                    <input
+                      type='text'
+                      onChange={(v) => setNewItemName(v.target.value)}
+                      value={newItemName}
+                      className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-xs font-bold text-gray-900 mb-1'>
+                      Description*
+                    </label>
+                    <textarea
+                      onChange={(v) => setNewItemDescription(v.target.value)}
+                      value={newItemDescription}
+                      rows={3}
+                      className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-xs font-bold text-gray-900 mb-1'>
+                      Location Found*
+                    </label>
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setLocationDropdownOpen(!locationDropdownOpen)
+                      }
+                      className='w-full text-left rounded-md border border-gray-300 px-3 py-2 text-sm bg-white hover:cursor-pointer flex justify-between items-center'
+                    >
+                      <span
+                        className={
+                          selectedLocation ? 'text-black' : 'text-gray-400'
+                        }
+                      >
+                        {selectedLocation?.name || 'Select a location...'}
+                      </span>
+                      <svg
+                        className='h-4 w-4'
+                        fill='currentColor'
+                        viewBox='0 0 20 20'
+                      >
+                        <path
+                          fillRule='evenodd'
+                          d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
+                          clipRule='evenodd'
+                        />
+                      </svg>
+                    </button>
+                    {locationDropdownOpen && (
+                      <div className='mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-auto z-20'>
+                        <div className='p-2 border-b'>
+                          <input
+                            type='text'
+                            placeholder='Search...'
+                            value={locationSearchQuery}
+                            onChange={(e) =>
+                              setLocationSearchQuery(e.target.value)
+                            }
+                            className='w-full text-sm rounded px-2 py-1 border border-gray-300 outline-none'
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        {locations
+                          .filter((loc) => {
+                            const q = locationSearchQuery.toLowerCase();
+                            return (
+                              loc.name.toLowerCase().includes(q) ||
+                              (loc.teacher ?? '').toLowerCase().includes(q)
+                            );
+                          })
+                          .map((location) => (
+                            <button
+                              key={location.id}
+                              type='button'
+                              onClick={() => {
+                                setSelectedLocation(location);
+                                setLocationDropdownOpen(false);
+                                setLocationSearchQuery('');
+                              }}
+                              className='w-full text-left px-3 py-2 hover:bg-gray-100 border-b last:border-b-0 text-sm'
                             >
-                              <path
-                                fillRule='evenodd'
-                                d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'
-                                clipRule='evenodd'
-                              />
-                            </svg>
-                          </span>
-                        </button>
-                        {locationDropdownOpen && (
-                          <div className='absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm'>
-                            <div className='px-3 py-2'>
-                              <input
-                                type='text'
-                                placeholder='Search locations...'
-                                value={locationSearchQuery}
-                                onChange={(e) =>
-                                  setLocationSearchQuery(e.target.value)
-                                }
-                                className='block w-full rounded-md bg-gray-50 px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600'
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-                            <div className='border-t border-gray-200'>
-                              {locations
-                                .filter((location) => {
-                                  const q = locationSearchQuery.toLowerCase();
-                                  return (
-                                    location.name.toLowerCase().includes(q) ||
-                                    (location.teacher ?? '')
-                                      .toLowerCase()
-                                      .includes(q)
-                                  );
-                                })
-                                .map((location) => (
-                                  <button
-                                    key={location.id}
-                                    type='button'
-                                    onClick={() => {
-                                      setSelectedLocation(location);
-                                      setLocationDropdownOpen(false);
-                                      setLocationSearchQuery('');
-                                    }}
-                                    className='w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none hover:cursor-pointer'
-                                  >
-                                    <div className='font-medium text-gray-900'>
-                                      {location.name}
-                                    </div>
-                                    {location.teacher && (
-                                      <div className='text-sm text-gray-600'>
-                                        Teacher: {location.teacher}
-                                      </div>
-                                    )}
-                                  </button>
-                                ))}
-                              {locations.filter((location) => {
-                                const q = locationSearchQuery.toLowerCase();
-                                return (
-                                  location.name.toLowerCase().includes(q) ||
-                                  (location.teacher ?? '')
-                                    .toLowerCase()
-                                    .includes(q)
-                                );
-                              }).length === 0 && (
-                                <div className='px-3 py-2 text-sm text-gray-500'>
-                                  No locations found
+                              <div className='font-medium text-black'>
+                                {location.name}
+                              </div>
+                              {location.teacher && (
+                                <div className='text-xs text-gray-600'>
+                                  Teacher: {location.teacher}
                                 </div>
                               )}
-                            </div>
-                          </div>
-                        )}
+                            </button>
+                          ))}
                       </div>
-                    </div>
-                    <div>
-                      <label className='block text-sm font-bold text-gray-900 mb-2'>
-                        Photos
-                      </label>
-                      <label className='block'>
-                        <input
-                          onChange={handleFileChange}
-                          type='file'
-                          accept='.png, .jpg, .jpeg, .webp'
-                          hidden
-                          multiple
-                        />
-                        <div className='bg-indigo-500 text-white text-center py-3 rounded-md font-semibold'>
-                          Choose Photos
-                        </div>
-                      </label>
-                      <p className='text-xs text-gray-500 mt-1'>
-                        Selected:{' '}
-                        {selectedPhotos?.length
-                          ? selectedPhotos.map((f) => f.name).join(', ')
-                          : 'None'}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => createSubmissionForm()}
-                      className='w-full bg-indigo-600 text-white py-3 rounded-md font-bold'
-                    >
-                      Submit Report
-                    </button>
+                    )}
                   </div>
+                  <div>
+                    <label className='block text-xs font-bold text-gray-900 mb-1'>
+                      Photos
+                    </label>
+                    <label className='block'>
+                      <input
+                        onChange={handleFileChange}
+                        type='file'
+                        accept='.png, .jpg, .jpeg, .webp'
+                        hidden
+                        multiple
+                      />
+                      <div className='bg-indigo-500 text-white text-center py-2 rounded-md font-semibold text-sm cursor-pointer hover:bg-indigo-600'>
+                        Choose Photos
+                      </div>
+                    </label>
+                    <p className='text-xs text-gray-500 mt-1'>
+                      {selectedPhotos?.length
+                        ? selectedPhotos.map((f) => f.name).join(', ')
+                        : 'None'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => createSubmissionForm()}
+                    className='w-full bg-indigo-600 text-white py-2 rounded-md font-bold text-sm'
+                  >
+                    Submit Report
+                  </button>
                 </div>
               )}
 
               {mobileTab === 'Your Reports' && (
-                <div className='space-y-4'>
+                <div className='space-y-3'>
                   {userReports.length ? (
                     userReports.map((report: ISubmission, i) => (
                       <div
                         key={i}
                         className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
                       >
-                        <div className='flex justify-between items-start'>
-                          <div className='flex-1'>
-                            <h3 className='font-bold text-black'>
+                        <div className='flex justify-between items-start gap-2'>
+                          <div className='flex-1 min-w-0'>
+                            <h3 className='font-bold text-black truncate'>
                               {report.itemName}
                             </h3>
-                            <p className='text-sm text-gray-500 mt-1'>
-                              {truncate(report.description, 80)}
-                            </p>
-                            <p className='text-xs  text-gray-500 mt-2'>
-                              {dayjs(report.createdAt).format('MM/DD/YYYY')}
+                            <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                              {truncate(report.description, 60)}
                             </p>
                           </div>
-                          <div
-                            className={`px-2 py-1 rounded text-xs font-bold ${
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
                               report.approvalStatus === 'APPROVED'
                                 ? 'bg-green-100 text-green-800'
                                 : report.approvalStatus === 'REJECTED'
@@ -1481,13 +1557,26 @@ const HomePage = () => {
                             }`}
                           >
                             {report.approvalStatus}
-                          </div>
+                          </span>
                         </div>
+                        <div className='mt-2 text-xs text-gray-500'>
+                          {dayjs(report.createdAt).format('MM/DD/YYYY h:mm a')}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedUserReport(report);
+                            setDetailModalType('report');
+                            setShowDetailModal(true);
+                          }}
+                          className='w-full mt-3 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600'
+                        >
+                          View Details
+                        </button>
                       </div>
                     ))
                   ) : (
-                    <div className='text-center py-8  text-gray-500'>
-                      No reports found
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No reports found</p>
                     </div>
                   )}
                 </div>
@@ -1496,22 +1585,22 @@ const HomePage = () => {
           )}
 
           {current === 'Claims' && (
-            <div className='space-y-4'>
+            <div className='space-y-3'>
               {/* Tab Switcher */}
               <div className='flex bg-gray-100 rounded-lg p-1'>
                 <button
                   onClick={() => setMobileTab('Claims')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium ${
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     mobileTab === 'Claims'
                       ? 'bg-white text-indigo-600 shadow-sm'
                       : 'text-gray-600'
                   }`}
                 >
-                  Submit Claim
+                  Submit
                 </button>
                 <button
                   onClick={() => setMobileTab('Your Claims')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium ${
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     mobileTab === 'Your Claims'
                       ? 'bg-white text-indigo-600 shadow-sm'
                       : 'text-gray-600'
@@ -1522,120 +1611,132 @@ const HomePage = () => {
               </div>
 
               {mobileTab === 'Claims' && (
-                <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
-                  <div className='space-y-4'>
-                    <div>
-                      <label className='block text-sm font-bold text-gray-900 mb-2'>
-                        Select an item*
-                      </label>
-                      <div className='relative' ref={claimSearchRef}>
-                        <input
-                          type='text'
-                          placeholder='Search items...'
-                          value={claimSearchQuery}
-                          onChange={(e) => setClaimSearchQuery(e.target.value)}
-                          onFocus={() => setClaimSearchOpen(true)}
-                          className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
-                        />
-                        {claimSearchOpen && (
-                          <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-auto'>
-                            {unclaimedItems
-                              .filter((item) =>
-                                `${item.itemName} ${item.author?.name || 'Unknown'}`
-                                  .toLowerCase()
-                                  .includes(claimSearchQuery.toLowerCase()),
-                              )
-                              .map((item) => (
-                                <div
-                                  key={item.id}
-                                  onClick={() => {
-                                    setSelectedItemForClaim(item);
-                                    setClaimSearchQuery(
-                                      `${item.itemName} - ${item.author?.name || 'Unknown'}`,
-                                    );
-                                    setClaimSearchOpen(false);
-                                  }}
-                                  className='px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100'
-                                >
-                                  <p className='font-medium text-black text-sm'>
-                                    {item.itemName}
-                                  </p>
-                                  <p className='text-xs  text-gray-500'>
-                                    {item.author?.name || 'Unknown'}
-                                  </p>
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {selectedItemForClaim && (
-                      <div className='p-3 bg-gray-50 rounded-md'>
-                        <p className='font-bold text-sm'>
-                          {selectedItemForClaim.itemName}
-                        </p>
-                        <p className='text-xs text-gray-500 mt-1'>
-                          {truncate(selectedItemForClaim.description, 80)}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <label className='block text-sm font-bold text-gray-900 mb-2'>
-                        Claim explanation*
-                      </label>
-                      <textarea
-                        onChange={(v) => setClaimComment(v.target.value)}
-                        value={claimComment}
-                        rows={4}
-                        placeholder='Explain why this item belongs to you...'
-                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
+                <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3'>
+                  <h3 className='font-bold text-black'>Submit a Claim</h3>
+                  <div>
+                    <label className='block text-xs font-bold text-gray-900 mb-1'>
+                      Select an item*
+                    </label>
+                    <div className='relative' ref={claimSearchRef}>
+                      <input
+                        type='text'
+                        placeholder='Search items...'
+                        value={claimSearchQuery}
+                        onChange={(e) => setClaimSearchQuery(e.target.value)}
+                        onFocus={() => setClaimSearchOpen(true)}
+                        className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
                       />
+                      {claimSearchOpen && (
+                        <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-auto'>
+                          {unclaimedItems
+                            .filter((item) =>
+                              `${item.itemName} ${item.author?.name || 'Unknown'}`
+                                .toLowerCase()
+                                .includes(claimSearchQuery.toLowerCase()),
+                            )
+                            .map((item) => (
+                              <div
+                                key={item.id}
+                                onClick={() => {
+                                  setSelectedItemForClaim(item);
+                                  setClaimSearchQuery(
+                                    `${item.itemName} - ${item.author?.name || 'Unknown'}`,
+                                  );
+                                  setClaimSearchOpen(false);
+                                }}
+                                className='px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0'
+                              >
+                                <p className='font-medium text-black text-sm'>
+                                  {item.itemName}
+                                </p>
+                                <p className='text-xs text-gray-500'>
+                                  {item.author?.name || 'Unknown'}
+                                </p>
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => createClaimForm()}
-                      className='w-full bg-indigo-600 text-white py-3 rounded-md font-bold'
-                    >
-                      Submit Claim
-                    </button>
                   </div>
+                  {selectedItemForClaim && (
+                    <div className='p-3 bg-gray-50 rounded-md border border-gray-200'>
+                      <p className='font-bold text-sm text-black'>
+                        {selectedItemForClaim.itemName}
+                      </p>
+                      <p className='text-xs text-gray-500 mt-1'>
+                        {truncate(selectedItemForClaim.description, 80)}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <label className='block text-xs font-bold text-gray-900 mb-1'>
+                      Claim explanation*
+                    </label>
+                    <textarea
+                      onChange={(v) => setClaimComment(v.target.value)}
+                      value={claimComment}
+                      rows={3}
+                      placeholder='Explain why this item belongs to you...'
+                      className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      createClaimForm();
+                      setMobileTab('Your Claims');
+                    }}
+                    className='w-full bg-indigo-600 text-white py-2 rounded-md font-bold text-sm'
+                  >
+                    Submit Claim
+                  </button>
                 </div>
               )}
 
               {mobileTab === 'Your Claims' && (
-                <div className='space-y-4'>
+                <div className='space-y-3'>
                   {userClaims.length ? (
                     userClaims.map((claim: IClaimForm, i) => (
                       <div
                         key={i}
                         className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
                       >
-                        <div className='flex justify-between items-start'>
-                          <div className='flex-1'>
-                            <h3 className='font-bold text-black'>
+                        <div className='flex justify-between items-start gap-2'>
+                          <div className='flex-1 min-w-0'>
+                            <h3 className='font-bold text-black truncate'>
                               {claim.item?.itemName}
                             </h3>
-                            <p className='text-sm text-gray-500 mt-1'>
-                              {truncate(claim.comment, 80)}
-                            </p>
-                            <p className='text-xs  text-gray-500 mt-2'>
-                              {dayjs(claim.createdAt).format('MM/DD/YYYY')}
+                            <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                              {truncate(claim.comment, 60)}
                             </p>
                           </div>
-                          <div
-                            className={`px-2 py-1 rounded text-xs font-bold ${
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
                               claim.isOpen
                                 ? 'bg-blue-100 text-blue-800'
                                 : 'bg-gray-100 text-gray-800'
                             }`}
                           >
                             {claim.isOpen ? 'Open' : 'Closed'}
-                          </div>
+                          </span>
                         </div>
+                        <div className='mt-2 text-xs text-gray-500'>
+                          {dayjs(claim.createdAt).format('MM/DD/YYYY h:mm a')}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedClaim(claim);
+                            setDetailModalType('claim');
+                            setShowDetailModal(true);
+                          }}
+                          className='w-full mt-3 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600'
+                        >
+                          View Details
+                        </button>
                       </div>
                     ))
                   ) : (
-                    <div className='text-center py-8  text-gray-500'>
-                      No claims found
+                    <div className='text-center py-12 text-gray-500'>
+                      <p className='text-sm font-medium'>No claims found</p>
                     </div>
                   )}
                 </div>
@@ -1644,205 +1745,286 @@ const HomePage = () => {
           )}
 
           {current === 'Chats' && (
-            <div className='bg-white flex flex-col flex-1 w-full h-full rounded-lg border border-gray-200 shadow-sm p-4'>
+            <div className='bg-white h-full w-full flex flex-col rounded-lg border border-gray-200 shadow-sm p-4'>
               <ItemChats />
             </div>
           )}
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2'>
-          <div className='flex justify-around'>
+        <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40'>
+          <div className='grid grid-cols-4 gap-1 p-2'>
             {[
               {
                 name: 'All Items',
-                icon: (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'
-                    />
-                  </svg>
-                ),
+                label: 'Items',
+                icon: <HomeIcon className='w-5 h-5' />,
               },
               {
                 name: 'Reports',
-                icon: (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
-                    />
-                  </svg>
-                ),
+                label: 'Reports',
+                icon: <DocumentTextIcon className='w-5 h-5' />,
               },
               {
                 name: 'Claims',
-                icon: (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                    />
-                  </svg>
-                ),
+                label: 'Claims',
+                icon: <CheckBadgeIcon className='w-5 h-5' />,
               },
               {
                 name: 'Chats',
-                icon: (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
-                    />
-                  </svg>
-                ),
+                label: 'Chats',
+                icon: <ChatBubbleLeftRightIcon className='w-5 h-5' />,
               },
             ].map((tab) => (
               <button
                 key={tab.name}
                 onClick={() => handleCurrentChange(tab.name)}
-                className={`flex flex-col hover:cursor-pointer items-center py-1 px-2 rounded ${
-                  current === tab.name ? 'text-indigo-600' : ' text-gray-500'
+                className={`flex flex-col items-center justify-center gap-1 rounded py-2 text-xs font-semibold transition-colors ${
+                  current === tab.name
+                    ? 'bg-indigo-500 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                <div className='mb-1'>{tab.icon}</div>
-                <div className='text-xs font-medium'>{tab.name}</div>
+                {tab.icon}
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Claim Modal */}
-      <Modal open={showClaimModal} setOpen={setShowClaimModal}>
-        <div className='max-w-md mx-auto bg-white rounded-lg p-6'>
-          <h2 className='text-xl font-bold text-black mb-4'>
-            Claim Item: {selectedItemForClaim?.itemName}
-          </h2>
-          <div className='space-y-4'>
-            <div>
-              <label className='block text-sm font-bold text-black mb-2'>
-                Claim explanation*
-              </label>
-              <textarea
-                onChange={(v) => setClaimComment(v.target.value)}
-                value={claimComment}
-                rows={4}
-                placeholder='Explain why this item belongs to you...'
-                className='w-full placeholder-gray-400 text-black rounded-md border border-gray-300 px-3 py-2 text-sm'
-              />
-            </div>
-            <div className='flex space-x-3'>
-              <button
-                onClick={() => {
-                  createClaimForm();
-                  setShowClaimModal(false);
-                }}
-                className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white py-2 rounded-md font-semibold'
-              >
-                Submit Claim
-              </button>
-              <button
-                onClick={() => {
-                  setShowClaimModal(false);
-                  setClaimComment('');
-                }}
-                className='flex-1 bg-gray-400 hover:bg-gray-500 hover:cursor-pointer text-white py-2 rounded-md font-semibold'
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Mobile Item Modal */}
-      <Modal open={showItemModal} setOpen={setShowItemModal}>
-        {selectedItem && (
-          <div className='max-w-md mx-auto bg-white rounded-lg p-6'>
-            <h2 className='text-xl font-bold text-black mb-4'>
-              {selectedItem.itemName}
-            </h2>
-            <div className='space-y-4'>
-              <div>
-                <p className='text-sm font-semibold text-black'>Description:</p>
-                <p className='text-sm text-black'>{selectedItem.description}</p>
-              </div>
-              <div>
-                <p className='text-sm font-semibold text-black'>Posted by:</p>
-                <p className='text-sm text-black'>
-                  {selectedItem.author?.name || 'Unknown'}
-                </p>
-              </div>
-              <div>
-                <p className='text-sm font-semibold text-black'>Date:</p>
-                <p className='text-sm text-black'>
-                  {dayjs(selectedItem.createdAt).format('MM/DD/YYYY h:mm a')}
-                </p>
-              </div>
-              {selectedItem.photos && selectedItem.photos.length > 0 && (
+        {/* Detail Modal */}
+        <Modal open={showDetailModal} setOpen={setShowDetailModal}>
+          <div className='bg-white rounded-lg p-6 max-w-2xl mx-auto max-h-[90vh] overflow-y-auto'>
+            {detailModalType === 'item' && selectedItem && (
+              <div className='space-y-4'>
                 <div>
-                  <p className='text-sm font-semibold text-black mb-2'>
-                    Photos ({selectedItem.photos.length}):
+                  <h2 className='text-2xl font-bold text-black'>
+                    {selectedItem.itemName}
+                  </h2>
+                  <p className='text-sm text-gray-600 mt-1'>
+                    Posted by: {selectedItem.author?.name || 'Unknown'}
                   </p>
-                  <div className='grid grid-cols-2 gap-2'>
-                    {selectedItem.photos.map((photo) => (
-                      <img
-                        key={photo.id}
-                        src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                        alt='photo'
-                        className='w-full h-24 object-cover rounded cursor-pointer'
+                </div>
+                <div className='space-y-3 border-t border-gray-200 pt-4'>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>
+                      Date Posted
+                    </p>
+                    <p className='text-sm text-gray-600 mt-1'>
+                      {dayjs(selectedItem.createdAt).format(
+                        'dddd, MMMM D, YYYY',
+                      )}{' '}
+                      at {dayjs(selectedItem.createdAt).format('h:mm a')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>
+                      Description
+                    </p>
+                    <p className='text-sm text-gray-600 mt-1 whitespace-pre-wrap'>
+                      {selectedItem.description}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>Location</p>
+                    <p className='text-sm text-gray-600 mt-1'>
+                      {selectedItem.location?.name || 'Unknown'}
+                      {selectedItem.location?.teacher && (
+                        <span className='block text-xs text-gray-500'>
+                          {selectedItem.location.teacher}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {selectedItem.photos && selectedItem.photos.length > 0 && (
+                    <div>
+                      <p className='font-semibold text-black text-sm'>
+                        Photos ({selectedItem.photos.length})
+                      </p>
+                      <div className='grid grid-cols-2 gap-2 mt-2'>
+                        {selectedItem.photos.map((photo) => (
+                          <div
+                            key={photo.id}
+                            className='cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow'
+                            onClick={() => {
+                              setSelectedImageData(
+                                `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                              );
+                              setShowImageModal(true);
+                            }}
+                          >
+                            <img
+                              src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                              alt='photo'
+                              className='w-full h-32 object-cover'
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className='flex gap-2 border-t border-gray-200 pt-4'>
+                  {selectedItem.author?.id !==
+                    JSON.parse(localStorage.getItem('user') || '{}').id &&
+                  !hasUserClaimedItem(selectedItem.id) ? (
+                    <>
+                      <button
                         onClick={() => {
-                          setSelectedImageData(
-                            `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
-                          );
-                          setShowImageModal(true);
-                          setShowItemModal(false);
+                          setShowDetailModal(false);
+                          setSelectedItemForClaim(selectedItem);
+                          setShowClaimModal(true);
                         }}
-                      />
-                    ))}
+                        className='flex-1 bg-green-500 text-white px-3 py-2 rounded font-semibold hover:bg-green-600'
+                      >
+                        Claim This Item
+                      </button>
+                      <button
+                        onClick={() => setShowDetailModal(false)}
+                        className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300'
+                      >
+                        Close
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setShowDetailModal(false)}
+                      className='w-full bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300'
+                    >
+                      Close
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {detailModalType === 'report' && selectedUserReport && (
+              <div className='space-y-4'>
+                <div>
+                  <h2 className='text-2xl font-bold text-black'>
+                    {selectedUserReport.itemName}
+                  </h2>
+                  <span
+                    className={`inline-block mt-2 px-2 py-1 rounded text-xs font-semibold ${
+                      selectedUserReport.approvalStatus === 'PENDING'
+                        ? 'bg-orange-100 text-orange-800'
+                        : selectedUserReport.approvalStatus === 'APPROVED'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {selectedUserReport.approvalStatus}
+                  </span>
+                </div>
+                <div className='space-y-3 border-t border-gray-200 pt-4'>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>
+                      Date Submitted
+                    </p>
+                    <p className='text-sm text-gray-600 mt-1'>
+                      {dayjs(selectedUserReport.createdAt).format(
+                        'dddd, MMMM D, YYYY',
+                      )}{' '}
+                      at {dayjs(selectedUserReport.createdAt).format('h:mm a')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>
+                      Description
+                    </p>
+                    <p className='text-sm text-gray-600 mt-1 whitespace-pre-wrap'>
+                      {selectedUserReport.description}
+                    </p>
+                  </div>
+                  {selectedUserReport.photos &&
+                    selectedUserReport.photos.length > 0 && (
+                      <div>
+                        <p className='font-semibold text-black text-sm'>
+                          Photos ({selectedUserReport.photos.length})
+                        </p>
+                        <div className='grid grid-cols-2 gap-2 mt-2'>
+                          {selectedUserReport.photos.map((photo) => (
+                            <div
+                              key={photo.id}
+                              className='cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow'
+                              onClick={() => {
+                                setSelectedImageData(
+                                  `data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`,
+                                );
+                                setShowImageModal(true);
+                              }}
+                            >
+                              <img
+                                src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
+                                alt='photo'
+                                className='w-full h-32 object-cover'
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className='w-full bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300'
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
+            {detailModalType === 'claim' && selectedClaim && (
+              <div className='space-y-4'>
+                <div>
+                  <h2 className='text-2xl font-bold text-black'>
+                    {selectedClaim.item?.itemName}
+                  </h2>
+                  <p className='text-sm text-gray-600 mt-1'>
+                    Posted by: {selectedClaim.item?.author?.name || 'Unknown'}
+                  </p>
+                  <span
+                    className={`inline-block mt-2 px-2 py-1 rounded text-xs font-semibold ${
+                      selectedClaim.isOpen
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {selectedClaim.isOpen ? 'Open' : 'Closed'}
+                  </span>
+                </div>
+                <div className='space-y-3 border-t border-gray-200 pt-4'>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>
+                      Claim Comment
+                    </p>
+                    <p className='text-sm text-gray-600 mt-1 whitespace-pre-wrap'>
+                      {selectedClaim.comment}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='font-semibold text-black text-sm'>
+                      Date Claimed
+                    </p>
+                    <p className='text-sm text-gray-600 mt-1'>
+                      {dayjs(selectedClaim.createdAt).format(
+                        'dddd, MMMM D, YYYY',
+                      )}{' '}
+                      at {dayjs(selectedClaim.createdAt).format('h:mm a')}
+                    </p>
                   </div>
                 </div>
-              )}
-              <button
-                onClick={() => setShowItemModal(false)}
-                className='w-full bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white py-2 rounded-md font-semibold'
-              >
-                Close
-              </button>
-            </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className='w-full bg-gray-200 text-gray-700 px-3 py-2 rounded font-semibold hover:bg-gray-300'
+                >
+                  Close
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </Modal>
+        </Modal>
+      </div>
 
       <Modal open={showLocationFilterModal} setOpen={closeLocationFilterModal}>
         <div className='max-w-md mx-auto bg-white rounded-lg p-6 space-y-5'>
@@ -1890,9 +2072,13 @@ const HomePage = () => {
                       locationFilter === loc.id ? 'bg-indigo-50' : ''
                     }`}
                   >
-                    <div className='font-medium text-gray-900 text-sm'>{loc.name}</div>
+                    <div className='font-medium text-gray-900 text-sm'>
+                      {loc.name}
+                    </div>
                     {loc.teacher && (
-                      <div className='text-xs text-gray-500'>Teacher: {loc.teacher}</div>
+                      <div className='text-xs text-gray-500'>
+                        Teacher: {loc.teacher}
+                      </div>
                     )}
                   </button>
                 ))}
@@ -1903,14 +2089,19 @@ const HomePage = () => {
                   (loc.teacher ?? '').toLowerCase().includes(q)
                 );
               }).length === 0 && (
-                <div className='px-3 py-2 text-sm text-gray-500'>No locations found</div>
+                <div className='px-3 py-2 text-sm text-gray-500'>
+                  No locations found
+                </div>
               )}
             </div>
           </div>
           <div className='flex gap-2'>
             <button
               type='button'
-              onClick={() => { setLocationFilter(null); setFilterSearchQuery(''); }}
+              onClick={() => {
+                setLocationFilter(null);
+                setFilterSearchQuery('');
+              }}
               className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
             >
               Clear

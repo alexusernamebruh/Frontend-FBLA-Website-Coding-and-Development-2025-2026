@@ -106,7 +106,6 @@ export default function SideNav({
     }
   }, []);
 
-  // Auto-open the group that contains the active item
   useEffect(() => {
     const layout = type === 'admin' ? adminLayout : userLayout;
     layout.forEach((entry) => {

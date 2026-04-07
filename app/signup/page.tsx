@@ -26,8 +26,8 @@ export default function Signup() {
     <>
       <div className='flex flex-col lg:flex-row min-h-screen h-full bg-white'>
         <div className='bg-grid flex-1 lg:w-1/2 bg-white'>
-          <div className='mx-auto max-w-120 h-full w-full my-auto'>
-            <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
+          <div className='mx-auto w-full max-w-120'>
+            <div className='flex min-h-screen flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
               <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
                 <h2 className='hover:cursor-pointer mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900'>
                   Sign Up

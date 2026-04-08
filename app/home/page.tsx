@@ -512,7 +512,7 @@ const HomePage = () => {
                                 disabled
                                 className='bg-gray-400 text-white font-bold px-4 py-2 rounded-md cursor-not-allowed'
                               >
-                                Your Item
+                                Your Report
                               </button>
                             ) : hasUserClaimedItem(selectedItem.id) ? (
                               <button
@@ -816,7 +816,7 @@ const HomePage = () => {
                                   }}
                                   className='px-3 py-2 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-b-0'
                                 >
-                                  <p className='font-medium text-black'>
+                                  <p className='font-medium text-black overflow-x-auto scrollbar-hide'>
                                     {item.itemName}
                                   </p>
                                   <p className='text-xs  text-gray-500'>
@@ -892,7 +892,7 @@ const HomePage = () => {
                             className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
                           >
                             <div className='group-hover:cursor-pointer'>
-                              <p className='font-bold group-hover:underline text-black'>
+                              <p className='font-bold group-hover:underline text-black overflow-x-auto scrollbar-hide'>
                                 {v.itemName}
                               </p>
                               <p className='font-medium mt-2 text-sm/6 text-black'>
@@ -967,6 +967,19 @@ const HomePage = () => {
                             )}
                           </p>
                         </div>
+                        {selectedUserReport.location && (
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold text-black'>
+                              Location Found
+                            </p>
+                            <p className='text-sm text-gray-500'>
+                              {selectedUserReport.location.name}
+                              {selectedUserReport.location.teacher
+                                ? ` — ${selectedUserReport.location.teacher}`
+                                : ''}
+                            </p>
+                          </div>
+                        )}
                         <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
                           <p className='text-lg font-bold text-black'>
                             Description
@@ -1356,7 +1369,7 @@ const HomePage = () => {
                               {item.author?.id ===
                               JSON.parse(localStorage.getItem('user') || '{}')
                                 .id
-                                ? 'Your Item'
+                                ? 'Your Report'
                                 : 'Claimed'}
                             </button>
                           )}
@@ -1928,6 +1941,19 @@ const HomePage = () => {
                       at {dayjs(selectedUserReport.createdAt).format('h:mm a')}
                     </p>
                   </div>
+                  {selectedUserReport.location && (
+                    <div>
+                      <p className='font-semibold text-black text-sm'>
+                        Location Found
+                      </p>
+                      <p className='text-sm text-gray-600 mt-1'>
+                        {selectedUserReport.location.name}
+                        {selectedUserReport.location.teacher
+                          ? ` — ${selectedUserReport.location.teacher}`
+                          : ''}
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <p className='font-semibold text-black text-sm'>
                       Description
@@ -2035,7 +2061,7 @@ const HomePage = () => {
               placeholder='Search locations...'
               value={filterSearchQuery}
               onChange={(e) => setFilterSearchQuery(e.target.value)}
-              className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none mb-2'
+              className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none mb-2 text-gray-700'
             />
             <div className='border border-gray-200 rounded-md max-h-64 overflow-y-auto'>
               <button

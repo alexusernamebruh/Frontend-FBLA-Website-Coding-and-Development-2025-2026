@@ -45,14 +45,14 @@ interface IPhoto {
 interface ISubmission {
   id: number;
   userId: number;
-  user: IUser;
+  user?: IUser;
   itemName: string;
   description: string;
   photos: IPhoto[];
   createdAt: Date;
   approvalStatus: ApprovalStatus;
-  location: ILocation;
-  locationId: number;
+  location?: ILocation | null;
+  locationId?: number | null;
 }
 
 interface IClaimForm {

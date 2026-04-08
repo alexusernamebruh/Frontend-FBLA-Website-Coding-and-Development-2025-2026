@@ -63,6 +63,7 @@ export default function Home() {
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationTeacher, setNewLocationTeacher] = useState('');
   const [editLocationName, setEditLocationName] = useState('');
+  const [editLocationTeacher, setEditLocationTeacher] = useState('');
   const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [locationCreateSuccess, setLocationCreateSuccess] = useState(false);
   const [locationEditSuccess, setLocationEditSuccess] = useState(false);
@@ -71,6 +72,7 @@ export default function Home() {
   const [editItemName, setEditItemName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editRemovePhotoIds, setEditRemovePhotoIds] = useState<number[]>([]);
+  const [editLocationId, setEditLocationId] = useState<number | null>(null);
 
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageData, setSelectedImageData] = useState<string>('');
@@ -240,6 +242,7 @@ export default function Home() {
           newItemName: editItemName,
           newDescription: editDescription,
           removePhotoIds: editRemovePhotoIds,
+          locationId: editLocationId,
         },
       );
       if (response) {
@@ -260,6 +263,7 @@ export default function Home() {
     setEditItemName(submission.itemName);
     setEditDescription(submission.description);
     setEditRemovePhotoIds([]);
+    setEditLocationId(submission.locationId || null);
     setIsEditing(true);
   };
 
@@ -276,6 +280,7 @@ export default function Home() {
     setEditItemName('');
     setEditDescription('');
     setEditRemovePhotoIds([]);
+    setEditLocationId(null);
   };
 
   const getAllItemsData = async () => {
@@ -393,11 +398,13 @@ export default function Home() {
     try {
       const { data: response } = await a.put(`/locations/${locationId}`, {
         name: editLocationName,
+        teacher: editLocationTeacher,
       });
       if (response) {
         getLocations();
         setIsEditingLocation(false);
         setEditLocationName('');
+        setEditLocationTeacher('');
         setLocationEditSuccess(true);
         const timer = setTimeout(() => setLocationEditSuccess(false), 3000);
         return () => clearTimeout(timer);
@@ -409,12 +416,14 @@ export default function Home() {
 
   const startEditLocation = (location: ILocation) => {
     setEditLocationName(location.name);
+    setEditLocationTeacher(location.teacher || '');
     setIsEditingLocation(true);
   };
 
   const cancelEditLocation = () => {
     setIsEditingLocation(false);
     setEditLocationName('');
+    setEditLocationTeacher('');
   };
 
   const startEditItem = (item: IItem) => {
@@ -664,59 +673,58 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div className='w-full h-full overflow-auto'>
-                    {filteredItems.filter(
-                      (v) =>
-                        locationFilter === null ||
-                        v.location?.id === locationFilter,
-                    ).length ? (
-                      filteredItems
-                        .filter(
-                          (v) =>
-                            locationFilter === null ||
-                            v.location?.id === locationFilter,
-                        )
-                        .map((v: IItem, i) => {
-                          return (
-                            <div key={i} className='group'>
-                              <div
-                                onClick={() => {
-                                  setSelectedItem(v);
-                                  setIsEditing(false);
-                                }}
-                                className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                              >
-                                <div className='group-hover:cursor-pointer'>
-                                  <p className='font-bold group-hover:underline'>
-                                    {v.itemName}
-                                  </p>
-                                  <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
-                                    {truncate(v.description, 12)}
-                                  </p>
-                                  <p className='font-medium text-xs mt-2 text-gray-500'>
-                                    By: {v.author?.name || 'Unknown User'}
-                                  </p>
+
+                  {filteredItems.filter(
+                    (v) =>
+                      locationFilter === null ||
+                      v.location?.id === locationFilter,
+                  ).length ? (
+                    filteredItems
+                      .filter(
+                        (v) =>
+                          locationFilter === null ||
+                          v.location?.id === locationFilter,
+                      )
+                      .map((v: IItem, i) => {
+                        return (
+                          <div key={i} className='group'>
+                            <div
+                              onClick={() => {
+                                setSelectedItem(v);
+                                setIsEditing(false);
+                              }}
+                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                            >
+                              <div className='group-hover:cursor-pointer'>
+                                <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
+                                  {v.itemName}
+                                </p>
+                                <p className='font-medium mt-2 text-sm/6 text-black'>
+                                  {truncate(v.description, 50)}
+                                </p>
+                                <p className='font-medium text-xs mt-2 text-gray-500'>
+                                  Posted by: {v.author?.name || 'Unknown User'}
+                                </p>
+                                <p className='font-medium text-xs mt-1 text-gray-500'>
+                                  Posted on{' '}
+                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}
+                                </p>
+                                {v.location && (
                                   <p className='font-medium text-xs mt-1 text-gray-500'>
-                                    Created on{' '}
-                                    {dayjs(v.createdAt).format('MM/DD/YYYY')}
+                                    {v.location.name}
+                                    {v.location.teacher
+                                      ? ` — ${v.location.teacher}`
+                                      : ''}
                                   </p>
-                                  {v.location && (
-                                    <p className='font-medium text-xs mt-1 text-gray-500'>
-                                      {v.location.name}
-                                      {v.location.teacher
-                                        ? ` — ${v.location.teacher}`
-                                        : ''}
-                                    </p>
-                                  )}
-                                </div>
+                                )}
                               </div>
                             </div>
-                          );
-                        })
-                    ) : (
-                      <div className='font-semibold'>No items found</div>
-                    )}
-                  </div>
+                          </div>
+                        );
+                      })
+                  ) : (
+                    <div className='font-semibold'>No items found</div>
+                  )}
                 </div>
 
                 <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
@@ -938,10 +946,10 @@ export default function Home() {
                             className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
                           >
                             <div className='group-hover:cursor-pointer'>
-                              <p className='font-bold group-hover:underline'>
+                              <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
                                 {v.itemName}
                               </p>
-                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                              <p className='font-medium mt-2 text-sm/6'>
                                 {truncate(v.description, 12)}
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
@@ -992,6 +1000,30 @@ export default function Home() {
                                   rows={4}
                                   className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
                                 />
+                              </div>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Location
+                                </label>
+                                <select
+                                  value={editLocationId || ''}
+                                  onChange={(e) =>
+                                    setEditLocationId(
+                                      e.target.value
+                                        ? parseInt(e.target.value)
+                                        : null,
+                                    )
+                                  }
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                >
+                                  <option value=''>Select a location...</option>
+                                  {locations.map((loc) => (
+                                    <option key={loc.id} value={loc.id}>
+                                      {loc.name}
+                                      {loc.teacher ? ` — ${loc.teacher}` : ''}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               {selectedPending.photos &&
                                 selectedPending.photos.length > 0 && (
@@ -1097,6 +1129,17 @@ export default function Home() {
                             {dayjs(selectedPending.createdAt).format('h:mm a')}
                           </p>
                         </div>
+                        {selectedPending.location && (
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Location Found</p>
+                            <p className='text-sm text-gray-600'>
+                              {selectedPending.location.name}
+                              {selectedPending.location.teacher
+                                ? ` — ${selectedPending.location.teacher}`
+                                : ''}
+                            </p>
+                          </div>
+                        )}
                         <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
                           <p className='text-lg font-bold'>Description</p>
                           <p className='text-sm text-gray-600 whitespace-pre-wrap'>
@@ -1145,7 +1188,7 @@ export default function Home() {
 
             {currentPage === 'Pending Claims' && (
               <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-auto'>
+                <div className='flex flex-col space-y-4 overflow-y-auto'>
                   {pendingClaims.length ? (
                     pendingClaims.map((c: IClaimForm, i) => {
                       return (
@@ -1158,13 +1201,13 @@ export default function Home() {
                           >
                             <div className='group-hover:cursor-pointer'>
                               <p className='font-bold group-hover:underline'>
-                                {c.item?.itemName || 'Unknown Item'}
+                                {truncate(c.item?.itemName, 20)}
                               </p>
-                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                              <p className='font-medium mt-2 text-sm/6'>
                                 {truncate(c.comment, 12)}
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
-                                By: {c.user?.name || 'Unknown User'}
+                                By: {c.user?.name}
                               </p>
                               <p className='font-medium text-xs mt-1 text-gray-500'>
                                 Created on{' '}
@@ -1179,7 +1222,7 @@ export default function Home() {
                     <div className='font-semibold'>No pending claims</div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
                   {selectedPendingClaim ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1296,7 +1339,7 @@ export default function Home() {
 
             {currentPage === 'Approved Reports' && (
               <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-auto'>
+                <div className='flex flex-col space-y-4 overflow-y-auto'>
                   {approvedSubmissions.length ? (
                     approvedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1306,14 +1349,14 @@ export default function Home() {
                             className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
                           >
                             <div className='group-hover:cursor-pointer'>
-                              <p className='font-bold group-hover:underline'>
+                              <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
                                 {v.itemName}
                               </p>
-                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                              <p className='font-medium mt-2 text-sm/6'>
                                 {truncate(v.description, 12)}
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
-                                Name: {v.user.name}
+                                Name: {v?.user?.name}
                               </p>
                               <p className='font-medium text-xs mt-1 text-gray-500'>
                                 Created on{' '}
@@ -1330,7 +1373,7 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
                   {selectedApproved && (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1358,6 +1401,17 @@ export default function Home() {
                             {dayjs(selectedApproved.createdAt).format('h:mm a')}
                           </p>
                         </div>
+                        {selectedApproved.location && (
+                          <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
+                            <p className='text-lg font-bold'>Location Found</p>
+                            <p className='text-sm text-gray-600'>
+                              {selectedApproved.location.name}
+                              {selectedApproved.location.teacher
+                                ? ` — ${selectedApproved.location.teacher}`
+                                : ''}
+                            </p>
+                          </div>
+                        )}
                         <div className='space-y-1 px-6 py-8 border-b border-gray-300'>
                           <p className='text-lg font-bold'>Description</p>
                           <p className='text-sm text-gray-600 whitespace-pre-wrap'>
@@ -1408,7 +1462,7 @@ export default function Home() {
 
             {currentPage === 'Declined Reports' && (
               <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-auto'>
+                <div className='flex flex-col space-y-4 overflow-y-auto'>
                   {rejectedSubmissions.length ? (
                     rejectedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1418,14 +1472,14 @@ export default function Home() {
                             className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
                           >
                             <div className='group-hover:cursor-pointer'>
-                              <p className='font-bold group-hover:underline'>
+                              <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
                                 {v.itemName}
                               </p>
-                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                              <p className='font-medium mt-2 text-sm/6'>
                                 {truncate(v.description, 12)}
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
-                                {v.user.name}
+                                {v?.user?.name}
                               </p>
                               <p className='font-medium text-xs mt-1 text-gray-500'>
                                 Created on{' '}
@@ -1442,7 +1496,7 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
                   {selectedRejected && (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1535,7 +1589,7 @@ export default function Home() {
                               <p className='font-bold group-hover:underline'>
                                 {c.item?.itemName || 'Unknown Item'}
                               </p>
-                              <p className='font-medium whitespace-nowrap mt-2 text-sm/6'>
+                              <p className='font-medium mt-2 text-sm/6'>
                                 {truncate(c.comment, 12)}
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
@@ -1554,7 +1608,7 @@ export default function Home() {
                     <div className='font-semibold'>No approved claims</div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
                   {selectedApprovedClaim ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1699,6 +1753,20 @@ export default function Home() {
                                   onChange={(e) =>
                                     setEditLocationName(e.target.value)
                                   }
+                                  className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
+                                />
+                              </div>
+                              <div>
+                                <label className='block text-sm font-bold text-gray-900 mb-2'>
+                                  Teacher (Optional)
+                                </label>
+                                <input
+                                  type='text'
+                                  value={editLocationTeacher}
+                                  onChange={(e) =>
+                                    setEditLocationTeacher(e.target.value)
+                                  }
+                                  placeholder='Enter teacher name'
                                   className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
                                 />
                               </div>
@@ -2002,9 +2070,9 @@ export default function Home() {
                       .map((item: IItem, i) => (
                         <div
                           key={i}
-                          className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow'
+                          className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow min-h-[220px] flex flex-col'
                         >
-                          <div className='p-4'>
+                          <div className='p-4 flex flex-col flex-1 justify-between'>
                             <div className='flex justify-between items-start gap-2'>
                               <div className='flex-1 min-w-0'>
                                 <h3 className='font-bold text-base text-black truncate'>
@@ -2015,7 +2083,7 @@ export default function Home() {
                                 </p>
                               </div>
                               <span
-                                className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
+                                className={`px-2 py-1 rounded text-xs font-semibold ${
                                   item.claimed
                                     ? 'bg-blue-100 text-blue-800'
                                     : 'bg-yellow-100 text-yellow-800'
@@ -2981,7 +3049,7 @@ export default function Home() {
                   placeholder='Search locations...'
                   value={filterSearchQuery}
                   onChange={(e) => setFilterSearchQuery(e.target.value)}
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none mb-2'
+                  className='w-full text-gray-700 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none mb-2'
                 />
                 <div className='border border-gray-200 rounded-md max-h-64 overflow-y-auto'>
                   <button

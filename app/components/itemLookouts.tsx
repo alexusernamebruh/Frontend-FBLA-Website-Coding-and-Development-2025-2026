@@ -190,7 +190,10 @@ const ItemLookouts = () => {
                             {dayjs(lookout?.createdAt).format('MMM D, YYYY')}
                           </p>
                           <p className='text-indigo-600 text-xs mt-2'>
-                            {lookout?.items?.length || 0} matches
+                            {lookout?.items?.length || 0} match{' '}
+                            {lookout?.items && lookout.items.length === 1
+                              ? ''
+                              : 'es'}
                           </p>
                         </div>
                         <span

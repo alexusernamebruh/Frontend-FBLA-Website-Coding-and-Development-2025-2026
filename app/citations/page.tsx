@@ -2,7 +2,7 @@ export default function Citations() {
   return (
     <>
       {/* Desktop Version */}
-      <div className='hidden lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
+      <div className='hidden text-gray-700 lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
         <div className='w-full h-screen overflow-hidden'>
           <div className='w-full h-full flex flex-col'>
             <div className='flex w-full h-full p-8'>
@@ -16,48 +16,46 @@ export default function Citations() {
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Compass Video
                     </h3>
-                    <p className='text-sm text-gray-600 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://www.pexels.com/download/video/1793508/
                     </p>
-                    <p className='text-sm text-gray-500'>
-                      By Miguel Á. Padriñán
-                    </p>
+                    <p className='text-sm'>By Miguel Á. Padriñán</p>
                   </div>
                   <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Binocular Picture
                     </h3>
-                    <p className='text-sm text-gray-600 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://images.pexels.com/photos/63901/pexels-photo-63901.jpeg
                     </p>
-                    <p className='text-sm text-gray-500'>By ClickHappy</p>
+                    <p className='text-sm'>By ClickHappy</p>
                   </div>
                   <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Magnifying Glass Picture
                     </h3>
-                    <p className='text-sm text-gray-600 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://images.pexels.com/photos/1194775/pexels-photo-1194775.jpeg
                     </p>
-                    <p className='text-sm text-gray-500'>By lil artsy</p>
+                    <p className='text-sm'>By lil artsy</p>
                   </div>
                   <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Miscellaneous
                     </h3>
-                    <p className='text-sm text-gray-600 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://m.media-amazon.com/images/I/81rSqsn357L._AC_UY1000_.jpg
                     </p>
-                    <p className='text-sm text-gray-500 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://covenantsecurityequipment.com/cdn/shop/files/CSE-AS-ExtraKeys_700x700.png?v=1713479233
                     </p>
-                    <p className='text-sm text-gray-500 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://m.media-amazon.com/images/I/41tp0JPPlmL.jpg
                     </p>
-                    <p className='text-sm text-gray-500 mb-1'>
+                    <p className='text-sm mb-1'>
                       https://cdn.arstechnica.net/wp-content/uploads/2019/09/iPhone-11-back-hand-scaled.jpg
                     </p>
-                    <p className='text-sm text-gray-500'>
+                    <p className='text-sm'>
                       https://m.media-amazon.com/images/I/61BygHH-M2L._AC_UY1000_.jpg
                     </p>
                   </div>
@@ -65,8 +63,8 @@ export default function Citations() {
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Presentation Citations
                     </h3>
-                    <p className='text-sm text-gray-600 mb-1'>Color Theory</p>
-                    <p className='text-sm text-gray-500'>
+                    <p className='text-sm mb-1'>Color Theory</p>
+                    <p className='text-sm'>
                       https://octet.design/journal/indigo-color-meaning/
                     </p>
                   </div>
@@ -281,24 +279,21 @@ export default function Citations() {
                         <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
                           <div className='space-y-2 text-sm'>
                             <p>
-                              <strong>Node.js</strong> - JavaScript runtime
-                              built on Chrome&apos;s V8 engine. Used to run the
-                              backend server and build tooling. (MIT){' '}
+                              <strong>Node.js</strong> - Used to run the backend
+                              server. (MIT){' '}
                               <span className='text-gray-500'>
                                 https://nodejs.org
                               </span>
                             </p>
                             <p>
-                              <strong>Python</strong> - General-purpose
-                              programming language used for the AI embedding
-                              service. (PSF License){' '}
+                              <strong>Python</strong> - Used for the AI
+                              embedding service. (PSF License){' '}
                               <span className='text-gray-500'>
                                 https://www.python.org
                               </span>
                             </p>
                             <p>
-                              <strong>React</strong> - JavaScript library for
-                              building user interfaces. Used as the frontend UI
+                              <strong>React</strong> - Used as the frontend UI
                               runtime. (MIT){' '}
                               <span className='text-gray-500'>
                                 https://react.dev

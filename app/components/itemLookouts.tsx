@@ -272,9 +272,20 @@ const ItemLookouts = () => {
                                 key={item.id}
                                 className='p-3 border border-gray-300 rounded-lg'
                               >
-                                <p className='font-semibold text-black text-sm'>
-                                  {item.itemName}
-                                </p>
+                                <div className='flex items-center gap-2 flex-wrap'>
+                                  <p className='font-semibold text-black text-sm'>
+                                    {item.itemName}
+                                  </p>
+                                  {item.similarity !== undefined && (
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                      item.similarity >= 75 ? 'bg-green-100 text-green-700' :
+                                      item.similarity >= 50  ? 'bg-yellow-100 text-yellow-700' :
+                                      'bg-red-100 text-red-700'
+                                    }`}>
+                                      {Math.round(item.similarity)}% match
+                                    </span>
+                                  )}
+                                </div>
                                 <p className='text-gray-600 text-xs mt-1'>
                                   {truncate(item.description, 100)}
                                 </p>
@@ -440,9 +451,20 @@ const ItemLookouts = () => {
                         key={item.id}
                         className='p-3 border border-gray-300 rounded-lg'
                       >
-                        <p className='font-semibold text-black text-sm'>
-                          {item.itemName}
-                        </p>
+                        <div className='flex items-center gap-2 flex-wrap'>
+                          <p className='font-semibold text-black text-sm'>
+                            {item.itemName}
+                          </p>
+                          {item.similarity !== undefined && (
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                              item.similarity >= 75 ? 'bg-green-100 text-green-700' :
+                              item.similarity >= 50  ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {Math.round(item.similarity)}% match
+                            </span>
+                          )}
+                        </div>
                         <p className='text-gray-600 text-xs mt-1'>
                           {truncate(item.description, 80)}
                         </p>
@@ -537,7 +559,7 @@ const ItemLookouts = () => {
                           >
                             <img
                               src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                              alt='photo'
+                              alt={`Photo of ${selectedItemDetail.itemName} - ID: ${photo.id}`}
                               className='max-h-40 rounded-md'
                             />
                           </div>

@@ -7,6 +7,7 @@ import { a } from '../config';
 import Success from '../components/success';
 import { truncate } from '../helpers';
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import Modal from '../components/modal';
 import {
   DocumentTextIcon,
@@ -14,9 +15,75 @@ import {
   HomeIcon,
   CheckBadgeIcon,
   ChatBubbleLeftRightIcon,
+  BellIcon,
 } from '@heroicons/react/24/solid';
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  ChatBubbleLeftEllipsisIcon,
+  MagnifyingGlassCircleIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import ItemLookouts from '../components/itemLookouts';
 import { MapPinIcon } from '@heroicons/react/24/outline';
+
+dayjs.extend(relativeTime);
+
+type NotifKind =
+  | 'report_approved'
+  | 'report_rejected'
+  | 'claim_approved'
+  | 'chat_message'
+  | 'lookout_match';
+interface INotification {
+  id: string;
+  kind: NotifKind;
+  title: string;
+  body: string;
+  at: Date;
+  read: boolean;
+}
+const SEEN_KEY = 'notif_seen_ids';
+const getSeenIds = (): Set<string> => {
+  try {
+    const r = localStorage.getItem(SEEN_KEY);
+    return new Set(r ? JSON.parse(r) : []);
+  } catch {
+    return new Set();
+  }
+};
+const saveSeenIds = (ids: Set<string>) =>
+  localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(ids)));
+const notifMeta: Record<
+  NotifKind,
+  { icon: React.ElementType; color: string; bg: string }
+> = {
+  report_approved: {
+    icon: CheckCircleIcon,
+    color: 'text-green-600',
+    bg: 'bg-green-50 border-green-200',
+  },
+  report_rejected: {
+    icon: XCircleIcon,
+    color: 'text-red-600',
+    bg: 'bg-red-50 border-red-200',
+  },
+  claim_approved: {
+    icon: CheckCircleIcon,
+    color: 'text-green-600',
+    bg: 'bg-green-50 border-green-200',
+  },
+  chat_message: {
+    icon: ChatBubbleLeftEllipsisIcon,
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-50 border-indigo-200',
+  },
+  lookout_match: {
+    icon: MagnifyingGlassIcon,
+    color: 'text-purple-600',
+    bg: 'bg-purple-50 border-purple-200',
+  },
+};
 
 const HomePage = () => {
   const [current, setCurrent] = useState('All Items');
@@ -69,6 +136,8 @@ const HomePage = () => {
   const [showCreateItemLookout, setShowCreateItemLookout] = useState(false);
   const [createItemLookoutSuccess, setCreateItemLookoutSuccess] =
     useState(false);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   // Mobile modal states
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailModalType, setDetailModalType] = useState<
@@ -214,6 +283,97 @@ const HomePage = () => {
       await getUnclaimedItems();
       await getUserClaims();
       await getLocations();
+      // Build notifications
+      const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+      if (!userId) {
+        setNotificationsLoading(false);
+        return;
+      }
+      const seen = getSeenIds();
+      const notifs: INotification[] = [];
+      try {
+        const { data: reports } = await a.get(
+          `/submissionForms/user/${userId}`,
+        );
+        for (const r of reports) {
+          if (r.approvalStatus === 'APPROVED') {
+            const id = `report_approved_${r.id}`;
+            notifs.push({
+              id,
+              kind: 'report_approved',
+              title: 'Report Approved',
+              body: `Your report for "${r.itemName}" was approved and is now live.`,
+              at: new Date(r.createdAt),
+              read: seen.has(id),
+            });
+          } else if (r.approvalStatus === 'REJECTED') {
+            const id = `report_rejected_${r.id}`;
+            notifs.push({
+              id,
+              kind: 'report_rejected',
+              title: 'Report Rejected',
+              body: `Your report for "${r.itemName}" was rejected by an administrator.`,
+              at: new Date(r.createdAt),
+              read: seen.has(id),
+            });
+          }
+        }
+      } catch {}
+      try {
+        const { data: claims } = await a.get(`/claimForms/user/${userId}`);
+        for (const c of claims) {
+          if (!c.isOpen) {
+            const id = `claim_approved_${c.id}`;
+            notifs.push({
+              id,
+              kind: 'claim_approved',
+              title: 'Claim Approved',
+              body: `Your claim for "${c.item?.itemName ?? 'an item'}" was approved.`,
+              at: new Date(c.createdAt),
+              read: seen.has(id),
+            });
+          }
+        }
+      } catch {}
+      try {
+        const { data: chats } = await a.get(
+          `/chats/getChatsByUserId/${userId}`,
+        );
+        for (const chat of chats) {
+          if (!chat.messages?.length) continue;
+          const last = chat.messages[chat.messages.length - 1];
+          if (last.senderId !== userId) {
+            const id = `chat_message_${chat.id}_${last.id}`;
+            notifs.push({
+              id,
+              kind: 'chat_message',
+              title: 'New Message',
+              body: `${last.sender?.name ?? 'Someone'} sent you a message in "${chat.title}".`,
+              at: new Date(last.createdAt),
+              read: seen.has(id),
+            });
+          }
+        }
+      } catch {}
+      try {
+        const { data: user } = await a.get(`/users/${userId}`);
+        for (const lookout of user.itemLookouts ?? []) {
+          for (const item of lookout.items ?? []) {
+            const id = `lookout_match_${lookout.id}_${item.id}`;
+            notifs.push({
+              id,
+              kind: 'lookout_match',
+              title: 'Item Lookout Match',
+              body: `A potential match was found for your lookout: "${item.itemName}".`,
+              at: new Date(item.createdAt),
+              read: seen.has(id),
+            });
+          }
+        }
+      } catch {}
+      notifs.sort((a, b) => b.at.getTime() - a.at.getTime());
+      setNotifications(notifs);
+      setNotificationsLoading(false);
     })();
   }, []);
 
@@ -301,6 +461,30 @@ const HomePage = () => {
     }
   };
 
+  const markNotifRead = (id: string) => {
+    const seen = getSeenIds();
+    seen.add(id);
+    saveSeenIds(seen);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+  };
+  const markNotifUnread = (id: string) => {
+    const seen = getSeenIds();
+    seen.delete(id);
+    saveSeenIds(seen);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: false } : n)),
+    );
+  };
+  const markAllNotifsRead = () => {
+    const seen = getSeenIds();
+    notifications.forEach((n) => seen.add(n.id));
+    saveSeenIds(seen);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   const selectedLocationName =
     locationFilter !== null
       ? (locations.find((loc) => loc.id === locationFilter)?.name ?? 'None')
@@ -329,13 +513,14 @@ const HomePage = () => {
             current={current}
             setCurrent={handleCurrentChange}
             type={'user'}
+            unreadNotifications={unreadCount}
           />
         </div>
         <div className='w-full h-screen'>
           {current === 'All Items' && (
             <div className='w-full h-full flex flex-col'>
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='w-fit min-w-44 flex flex-col space-y-4 overflow-y-auto text-black'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   <div className='flex space-x-2'>
                     <button
                       onClick={() => {
@@ -461,9 +646,24 @@ const HomePage = () => {
                               className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
                             >
                               <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline text-black'>
-                                  {item.itemName}
-                                </p>
+                                <div className='flex items-center gap-2 flex-wrap'>
+                                  <p className='font-bold group-hover:underline text-black'>
+                                    {item.itemName}
+                                  </p>
+                                  {item.similarity !== undefined && (
+                                    <span
+                                      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                        item.similarity >= 75
+                                          ? 'bg-green-100 text-green-700'
+                                          : item.similarity >= 50
+                                            ? 'bg-yellow-100 text-yellow-700'
+                                            : 'bg-red-100 text-red-700'
+                                      }`}
+                                    >
+                                      {Math.round(item.similarity)}% match
+                                    </span>
+                                  )}
+                                </div>
                                 <p className='font-medium mt-2 text-sm/6 text-black'>
                                   {truncate(item.description, 50)}
                                 </p>
@@ -615,7 +815,7 @@ const HomePage = () => {
           )}
           {current === 'Submit Reports' && (
             <div className='w-full h-full'>
-              <div className='m-8 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+              <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
                     <p className='font-bold text-2xl text-black'>
@@ -770,7 +970,7 @@ const HomePage = () => {
           )}
           {current === 'Submit Claims' && (
             <div className='w-full h-full'>
-              <div className='m-8 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+              <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
                     <p className='font-bold text-2xl text-black'>
@@ -879,8 +1079,8 @@ const HomePage = () => {
           )}
           {current === 'Your Reports' && (
             <div className='w-full h-full flex flex-col'>
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-auto text-black'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'>
                   {userReports.length ? (
                     userReports.map((v: ISubmission, i) => {
                       return (
@@ -1032,8 +1232,8 @@ const HomePage = () => {
           )}
           {current === 'Your Claims' && (
             <div className='w-full h-full flex flex-col'>
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-auto text-black'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'>
                   {userClaims.length ? (
                     userClaims.map((v: IClaimForm, i) => {
                       return (
@@ -1173,8 +1373,98 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Chats' && (
-            <div className='p-8 w-full h-screen'>
+            <div className='p-10 w-full h-screen'>
               <ItemChats />
+            </div>
+          )}
+          {current === 'Notifications' && (
+            <div className='w-full h-full'>
+              <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+                <div className='border-b border-gray-300 h-fit'>
+                  <div className='px-6 py-6 flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                      <p className='font-bold text-2xl text-black'>
+                        Notifications
+                      </p>
+                      {unreadCount > 0 && (
+                        <span className='bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full'>
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllNotifsRead}
+                        className='text-sm font-semibold text-indigo-600 hover:underline hover:cursor-pointer'
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className='divide-y divide-gray-100 overflow-y-auto max-h-[calc(100vh-12rem)]'>
+                  {notificationsLoading ? (
+                    <div className='p-8 text-center text-gray-400 text-sm'>
+                      Loading…
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className='p-12 text-center'>
+                      <p className='text-gray-500 font-semibold'>
+                        No notifications yet
+                      </p>
+                      <p className='text-gray-400 text-sm mt-1'>
+                        Activity from your reports, claims, chats, and item
+                        lookouts will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.map((n) => {
+                      const meta = notifMeta[n.kind];
+                      const Icon = meta.icon;
+                      return (
+                        <div
+                          key={n.id}
+                          className={`flex items-start gap-4 px-8 py-5 transition-colors hover:bg-gray-50 ${!n.read ? 'bg-indigo-50/40' : ''}`}
+                        >
+                          <div
+                            className={`mt-0.5 p-2 rounded-full border ${meta.bg}`}
+                          >
+                            <Icon className={`w-5 h-5 ${meta.color}`} />
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <div className='flex items-center gap-2'>
+                              <p
+                                className={`text-sm font-bold ${n.read ? 'text-gray-700' : 'text-black'}`}
+                              >
+                                {n.title}
+                              </p>
+                              {!n.read && (
+                                <span className='w-2 h-2 rounded-full bg-indigo-500 shrink-0' />
+                              )}
+                            </div>
+                            <p className='text-sm text-gray-600 mt-0.5'>
+                              {n.body}
+                            </p>
+                            <p className='text-xs text-gray-400 mt-1'>
+                              {dayjs(n.at).fromNow()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              n.read
+                                ? markNotifUnread(n.id)
+                                : markNotifRead(n.id)
+                            }
+                            className='shrink-0 text-xs font-semibold text-indigo-500 hover:underline hover:cursor-pointer mt-0.5'
+                          >
+                            {n.read ? 'Mark unread' : 'Mark read'}
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1762,11 +2052,98 @@ const HomePage = () => {
               <ItemChats />
             </div>
           )}
+
+          {current === 'Notifications' && (
+            <div className='w-full space-y-3'>
+              <div className='bg-white rounded-lg border border-gray-200 shadow-sm'>
+                <div className='px-4 py-4 border-b border-gray-200 flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <p className='font-bold text-black'>Notifications</p>
+                    {unreadCount > 0 && (
+                      <span className='bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full'>
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllNotifsRead}
+                      className='text-xs font-semibold text-indigo-600 hover:underline'
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className='divide-y divide-gray-100'>
+                  {notificationsLoading ? (
+                    <div className='p-6 text-center text-gray-400 text-sm'>
+                      Loading…
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className='p-8 text-center'>
+                      <p className='text-gray-500 font-semibold text-sm'>
+                        No notifications yet
+                      </p>
+                      <p className='text-gray-400 text-xs mt-1'>
+                        Activity from your reports, claims, chats, and item
+                        lookouts will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.map((n) => {
+                      const meta = notifMeta[n.kind];
+                      const Icon = meta.icon;
+                      return (
+                        <div
+                          key={n.id}
+                          className={`flex items-start gap-3 px-4 py-4 ${!n.read ? 'bg-indigo-50/40' : ''}`}
+                        >
+                          <div
+                            className={`mt-0.5 p-1.5 rounded-full border ${meta.bg}`}
+                          >
+                            <Icon className={`w-4 h-4 ${meta.color}`} />
+                          </div>
+                          <div className='flex-1'>
+                            <div className='flex items-center gap-2'>
+                              <p
+                                className={`text-sm font-bold ${n.read ? 'text-gray-700' : 'text-black'}`}
+                              >
+                                {n.title}
+                              </p>
+                              {!n.read && (
+                                <span className='w-2 h-2 rounded-full bg-indigo-500 shrink-0' />
+                              )}
+                            </div>
+                            <p className='text-sm text-gray-600 mt-0.5'>
+                              {n.body}
+                            </p>
+                            <p className='text-xs text-gray-400 mt-1'>
+                              {dayjs(n.at).fromNow()}
+                            </p>
+                            <button
+                              onClick={() =>
+                                n.read
+                                  ? markNotifUnread(n.id)
+                                  : markNotifRead(n.id)
+                              }
+                              className='mt-1 text-xs font-semibold text-indigo-500 hover:underline hover:cursor-pointer'
+                            >
+                              {n.read ? 'Mark unread' : 'Mark read'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile Bottom Navigation */}
         <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40'>
-          <div className='grid grid-cols-4 gap-1 p-2'>
+          <div className='grid grid-cols-5 gap-1 p-2'>
             {[
               {
                 name: 'All Items',
@@ -1787,6 +2164,11 @@ const HomePage = () => {
                 name: 'Chats',
                 label: 'Chats',
                 icon: <ChatBubbleLeftRightIcon className='w-5 h-5' />,
+              },
+              {
+                name: 'Notifications',
+                label: 'Alerts',
+                icon: <BellIcon className='w-5 h-5' />,
               },
             ].map((tab) => (
               <button

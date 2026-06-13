@@ -290,7 +290,7 @@ export default function ItemChats() {
                         <img
                           key={photo.id}
                           src={photoSrc}
-                          alt='item'
+                          alt={`Photo of ${selectedChat.item.itemName} - ID: ${photo.id}`}
                           onClick={() => {
                             setEnlargedPhoto(photoSrc);
                             setShowEnlargedPhoto(true);
@@ -310,7 +310,7 @@ export default function ItemChats() {
         <div className='flex items-center justify-center'>
           <img
             src={enlargedPhoto}
-            alt='enlarged item'
+            alt='Enlarged view of selected item photo'
             className='max-w-full max-h-[70vh] object-contain rounded-md'
           />
         </div>

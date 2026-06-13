@@ -10,13 +10,13 @@ import {
   DocumentPlusIcon,
   DocumentTextIcon,
   EnvelopeIcon,
-  MagnifyingGlassCircleIcon,
   MagnifyingGlassIcon,
   MagnifyingGlassPlusIcon,
   MapPinIcon,
-  MegaphoneIcon,
   PlusCircleIcon,
   XCircleIcon,
+  BellIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -47,9 +47,11 @@ const userLayout: NavEntry[] = [
   },
   { name: 'Item Lookouts', icon: MapPinIcon },
   { name: 'Chats', icon: ChatBubbleLeftEllipsisIcon },
+  { name: 'Notifications', icon: BellIcon },
 ];
 
 const adminLayout: NavEntry[] = [
+  { name: 'Analytics', icon: ChartBarIcon },
   { name: 'All Items', icon: BriefcaseIcon },
   {
     group: 'Reports',
@@ -79,18 +81,19 @@ const adminLayout: NavEntry[] = [
 ];
 
 const itemCls =
-  'flex font-semibold items-center gap-2 px-2 py-2 rounded-md cursor-pointer text-sm font-medium w-full text-left';
-const activeCls = 'bg-indigo-600 text-white';
-const inactiveCls = 'text-indigo-200 hover:bg-indigo-600 hover:text-white';
-
+  'flex items-center gap-2 px-3 py-3 rounded-md cursor-pointer text-sm font-semibold w-full text-left transition-colors';
+const activeCls = 'text-white underline underline-offset-2 hover:bg-indigo-700';
+const inactiveCls = 'text-white hover:bg-indigo-700';
 export default function SideNav({
   current,
   setCurrent,
   type,
+  unreadNotifications = 0,
 }: {
   current: string;
   setCurrent: (v: string) => void;
   type: string | undefined | null;
+  unreadNotifications?: number;
 }) {
   const router = useRouter();
   const [name, setName] = useState('Loading...');
@@ -151,7 +154,7 @@ export default function SideNav({
                   )}
                 </button>
                 {isOpen && (
-                  <div className='ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-indigo-400 pl-2'>
+                  <div className='ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-indigo-500 pl-2'>
                     {entry.children.map((child) => {
                       const CIcon = child.icon;
                       return (
@@ -179,7 +182,9 @@ export default function SideNav({
               className={`${itemCls} ${current === entry.name ? activeCls : inactiveCls}`}
             >
               <Icon className='w-4 h-4 shrink-0' />
-              {entry.name}
+              {entry.name === 'Notifications'
+                ? `${entry.name} (${unreadNotifications})`
+                : entry.name}
             </button>
           );
         })}

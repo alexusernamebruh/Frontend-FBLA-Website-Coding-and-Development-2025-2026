@@ -1,21 +1,84 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import Navbar from './components/navbar';
-
 import Footer from './components/footer';
+import {
+  MagnifyingGlassCircleIcon,
+  BellAlertIcon,
+  BookOpenIcon,
+  MegaphoneIcon,
+  CheckCircleIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
+} from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
+  const heroTextRef = useRef<HTMLDivElement>(null);
+  const heroVideoRef = useRef<HTMLDivElement>(null);
+  const confusedRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const howItWorksRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(heroTextRef.current, {
+        opacity: 0,
+        y: 40,
+        duration: 0.8,
+        ease: 'power3.out',
+      });
+      gsap.from(heroVideoRef.current, {
+        opacity: 0,
+        x: 40,
+        duration: 0.8,
+        delay: 0.2,
+        ease: 'power3.out',
+      });
+      gsap.from(featuresRef.current, {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: featuresRef.current, start: 'top 85%' },
+      });
+      gsap.from(howItWorksRef.current, {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: howItWorksRef.current, start: 'top 85%' },
+      });
+      gsap.from(confusedRef.current, {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: confusedRef.current, start: 'top 85%' },
+      });
+    });
+    return () => ctx.revert();
+  }, []);
+
   return (
     <>
-      <div className='md:hidden lg:flex flex-col min-h-screen h-full p-4 bg-indigo-50'>
-        <div className='w-full h-full sticky top-0'>
+      <div className='md:hidden lg:flex flex-col min-h-screen h-full max-w-screen overflow-x-clip p-4 bg-indigo-50'>
+        <div className='w-full h-full sticky top-0 z-2'>
           <Navbar />
           <div className='h-4 w-full bg-indigo-100 blur-2xl' />
         </div>
         <div className='flex flex-col w-full h-full bg-grid bg-white rounded-lg shadow'>
-          <div className='flex w-full h-full space-x-6 px-14 items-center py-22'>
-            <div className='text-left w-1/2 flex flex-col space-y-3 h-full'>
+          {/* Hero Section */}
+          <div className='flex w-full space-x-6 px-14 items-center py-22'>
+            <div
+              ref={heroTextRef}
+              className='text-left w-1/2 flex flex-col space-y-3 h-full'
+            >
               <div className='space-y-3 h-full flex flex-col justify-center'>
                 <p className='font-bold text-6xl text-black'>
                   Lost and <span className='text-indigo-500'>Found</span>
@@ -25,7 +88,8 @@ export default function Home() {
                     For students of South Western High School
                   </p>
                   <p className='font-bold text-md'>
-                    Create an account to claim or report lost items.
+                    Create an account to claim or report lost items in your
+                    school community.
                   </p>
                 </div>
 
@@ -38,7 +102,10 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <div className='w-1/2 flex-col my-auto p-6 rounded-xl bg-indigo-50 shadow-lg shadow-indigo-200'>
+            <div
+              ref={heroVideoRef}
+              className='w-1/2 flex-col my-auto p-6 rounded-xl bg-indigo-50 shadow-lg shadow-indigo-200'
+            >
               <video
                 src='/assets/compass.mp4'
                 className='rounded-xl'
@@ -50,68 +117,453 @@ export default function Home() {
             </div>
           </div>
 
-          <div className='rounded-lg'>
-            <div className='text-center bg-indigo-900 bg-grid flex space-y-3 w-full h-full space-x-6 px-14 items-center pt-16'>
-              <div className='space-y-3 w-full h-full text-white flex text-center flex-col justify-center'>
-                <p className='font-bold text-6xl text-white'>Confused?</p>
-                <div className=''>
-                  <p className='font-bold text-xl'>Read the user guide!</p>
-                </div>
-
-                <div></div>
-                <a
-                  href='/userGuide'
-                  className='bg-indigo-500 mx-auto hover:bg-indigo-600 px-4 py-2 text-white hover:cursor-pointer rounded-lg w-fit font-bold'
-                >
-                  See User Guide
-                </a>
+          {/* Features Section */}
+          <div
+            ref={featuresRef}
+            className='grid grid-cols-3 gap-x-8 gap-y-8 py-14 px-10'
+          >
+            <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-white border border-gray-200 rounded-lg text-black font-semibold justify-between'>
+              <div className='pr-4'>
+                <p>Smart search</p>
+                <p className='text-sm mt-4 text-gray-600'>
+                  Find lost items quickly with similarity searching and location
+                  searching.
+                </p>
+                <p className='text-sm mt-4 text-gray-600'>
+                  You can find your lost items by searching with a picture of
+                  the item, or a short description.
+                </p>
+              </div>
+              <div className='flex justify-center bg-indigo-100 -mr-20 rounded-full'>
+                <MagnifyingGlassCircleIcon className='h-62 w-62 text-indigo-500' />
               </div>
             </div>
-            <Footer />
+            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-indigo-500 rounded-lg font-semibold justify-between'>
+              <div className='pr-4'>
+                <p>User Guide</p>
+                <p className='text-sm mt-4 text-indigo-50'>
+                  Read a comprehensive user guide with step by step
+                  instructions.
+                </p>
+                <p className='text-sm mt-4 text-indigo-50'>
+                  Learn how to use effectively use every feature.
+                </p>
+              </div>
+              <div className='flex shrink-0 justify-center items-center bg-white -mr-20 h-62 w-62 rounded-full'>
+                <BookOpenIcon className='h-42 w-42 text-indigo-500' />
+              </div>
+            </div>
+            <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-white border border-gray-200 rounded-lg text-black font-semibold justify-between'>
+              <div className='pr-4'>
+                <p>Item Lookouts</p>
+                <p className='text-sm mt-4 text-gray-600'>
+                  Get notified when an item matching your lost item is reported.
+                </p>
+                <p className='text-sm mt-4 text-gray-600'>
+                  You will get notified in the website and by email when an item
+                  matching your lost item is reported. Matching can happen by a
+                  description or a photo.
+                </p>
+              </div>
+              <div className='flex shrink-0 justify-center items-center bg-indigo-100 h-62 w-62 -mr-20 rounded-full'>
+                <MegaphoneIcon className='h-38 w-38 text-indigo-500' />
+              </div>
+            </div>
+
+            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-indigo-500 rounded-lg font-semibold justify-between'>
+              <div className='pr-4'>
+                <p>Chats</p>
+                <p className='text-sm mt-4 text-indigo-50'>
+                  Communicate directly with other users to ask questions about
+                  items.
+                </p>
+                <p className='text-sm mt-4 text-indigo-50'>
+                  The chat helps you verify details about lost items.
+                </p>
+              </div>
+              <div className='flex shrink-0 justify-center items-center bg-white -mr-20 h-62 w-62 rounded-full'>
+                <ChatBubbleOvalLeftEllipsisIcon className='h-38 w-38 text-indigo-500' />
+              </div>
+            </div>
+
+            <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-white border border-gray-200 rounded-lg text-black font-semibold justify-between'>
+              <div className='pr-4'>
+                <p>Notifications</p>
+                <p className='text-sm mt-4 text-gray-600'>
+                  View the notification page in the website or get email
+                  notifications about your lookouts.
+                </p>
+                <p className='text-sm mt-4 text-gray-600'>
+                  The notification page quickly updates you on claims, reports,
+                  chats, and lookouts.
+                </p>
+              </div>
+              <div className='flex shrink-0 justify-center items-center bg-indigo-100 -mr-20 h-62 w-62 rounded-full'>
+                <BellAlertIcon className='h-36 w-36 text-indigo-500' />
+              </div>
+            </div>
+            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-indigo-500 rounded-lg font-semibold justify-between'>
+              <div className='pr-4'>
+                <p>Claims</p>
+                <p className='text-sm mt-4 text-indigo-50'>
+                  Use our streamlined claim system and get your items back
+                  quickly.
+                </p>
+                <p className='text-sm mt-4 text-indigo-50'>
+                  Claims should be submitted with verifying details about why
+                  the item belongs to you.
+                </p>
+              </div>
+              <div className='flex shrink-0 justify-center items-center bg-white -mr-20 h-62 w-62 rounded-full'>
+                <CheckCircleIcon className='h-62 w-62 text-indigo-500' />
+              </div>
+            </div>
           </div>
+
+          {/* How It Works Section */}
+          <div
+            ref={howItWorksRef}
+            className='bg-indigo-900 rounded-lg mx-14 mb-10'
+          >
+            <div className='px-14 py-12'>
+              <p className='text-4xl font-bold text-white mb-2'>How It Works</p>
+              <p className='text-indigo-100 mb-8'>
+                Get your lost items back in four simple steps. Learn more in the{' '}
+                <span
+                  className='text-indigo-300 hover:underline cursor-pointer'
+                  onClick={() => router.push('/userGuide')}
+                >
+                  user guide
+                </span>
+                .
+              </p>
+
+              <div className='grid grid-cols-4 gap-6'>
+                <div className='text-center'>
+                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <span className='text-2xl font-bold text-white'>1</span>
+                  </div>
+                  <h3 className='font-bold text-white mb-2'>
+                    Report or Search
+                  </h3>
+                  <p className='text-sm text-indigo-200'>
+                    Found an item? Report it. Lost something? Search our
+                    inventory or use photo matching.
+                  </p>
+                </div>
+
+                <div className='text-center'>
+                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <span className='text-2xl font-bold text-white'>2</span>
+                  </div>
+                  <h3 className='font-bold text-white mb-2'>
+                    Connect & Verify
+                  </h3>
+                  <p className='text-sm text-indigo-200'>
+                    Message other users directly to ask questions and verify
+                    details about items you&apos;re interested in.
+                  </p>
+                </div>
+
+                <div className='text-center'>
+                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <span className='text-2xl font-bold text-white'>3</span>
+                  </div>
+                  <h3 className='font-bold text-white mb-2'>Submit Claim</h3>
+                  <p className='text-sm text-indigo-200'>
+                    Submit a detailed claim explaining why an item belongs to
+                    you. Include identifying details or marks.
+                  </p>
+                </div>
+
+                <div className='text-center'>
+                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <span className='text-2xl font-bold text-white'>4</span>
+                  </div>
+                  <h3 className='font-bold text-white mb-2'>Get It Back</h3>
+                  <p className='text-sm text-indigo-200'>
+                    Once your claim is approved, the admin will contact you to
+                    arrange pickup of your item.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div className='px-14'>
+            <div
+              ref={confusedRef}
+              className='text-center flex space-y-3 w-full h-full space-x-6 px-14 items-center py-16 rounded-lg mb-10'
+            >
+              <div className='space-y-3 w-full h-full text-black flex text-center flex-col justify-center'>
+                <p className='font-bold text-6xl text-black'>
+                  Ready to Get Started?
+                </p>
+                <div className=''>
+                  <p className='font-bold text-xl'>
+                    Join our community and start{' '}
+                    <span className='text-indigo-500'>finding</span> your lost
+                    items today.
+                  </p>
+                </div>
+
+                <div className='flex gap-4 justify-center mt-4'>
+                  <a
+                    href='/signup'
+                    className='bg-indigo-500 hover:bg-indigo-600 px-6 py-3 text-white hover:cursor-pointer rounded-lg font-bold'
+                  >
+                    Create Account
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <Footer />
         </div>
       </div>
 
-      {/* mobile view */}
-      <div className='lg:hidden md:flex flex-col min-h-screen h-full pt-4 bg-gray-100'>
+      {/* Mobile view */}
+      <div className='lg:hidden md:flex flex-col min-h-screen h-full pt-4 bg-indigo-50'>
         <div className='w-full h-full pb-4'>
           <Navbar />
         </div>
         <div className='w-full h-full bg-grid bg-white rounded-lg shadow'>
-          <div className='flex flex-col w-full h-full px-10 items-center pt-16'>
-            <div className='text-center w-full flex flex-col space-y-3 h-full'>
-              <div className='space-y-3 h-full flex flex-col justify-center'>
-                <p className='font-bold text-6xl'>Job Postings</p>
-                <div className='text-gray-600'>
+          {/* Hero Section Mobile */}
+          <div className='flex flex-col w-full px-6 pt-8 pb-8 space-y-8'>
+            <div ref={heroTextRef} className='space-y-6'>
+              <p className='font-bold text-5xl text-black'>
+                Lost and <span className='text-indigo-500'>Found</span>
+              </p>
+              <div className='text-gray-600'>
+                <p className='font-bold text-xl'>
+                  For students of South Western High School
+                </p>
+                <p className='font-bold text-md pt-1'>
+                  Create an account to claim or report lost items in your school
+                  community.
+                </p>
+              </div>
+              <a
+                href='/signup'
+                className='bg-indigo-500 hover:bg-indigo-600 px-4 py-3 text-white hover:cursor-pointer rounded-lg w-full font-bold text-center'
+              >
+                Get Started
+              </a>
+            </div>
+
+            <div
+              ref={heroVideoRef}
+              className='w-full rounded-xl bg-indigo-50 p-4 shadow-lg shadow-indigo-200'
+            >
+              <video
+                src='/assets/compass.mp4'
+                className='rounded-xl w-full'
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            </div>
+
+            {/* Features Mobile */}
+            <div ref={featuresRef} className='space-y-4'>
+              <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-white border border-gray-200 rounded-lg text-black font-semibold'>
+                <div className='mb-4'>
+                  <p className='text-xl font-bold'>Smart search</p>
+                  <p className='text-sm mt-4 text-gray-600'>
+                    Find lost items quickly with similarity searching and
+                    location searching.
+                  </p>
+                  <p className='text-sm mt-4 text-gray-600'>
+                    You can find your lost items by searching with a picture of
+                    the item, or a short description.
+                  </p>
+                </div>
+                <div className='flex justify-center bg-indigo-100 rounded-full p-4'>
+                  <MagnifyingGlassCircleIcon className='h-12 w-12 text-indigo-500' />
+                </div>
+              </div>
+
+              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-indigo-500 rounded-lg font-semibold'>
+                <div className='mb-4'>
+                  <p className='text-xl font-bold'>User Guide</p>
+                  <p className='text-sm mt-4 text-indigo-50'>
+                    Read a comprehensive user guide with step by step
+                    instructions.
+                  </p>
+                  <p className='text-sm mt-4 text-indigo-50'>
+                    Learn how to use effectively use every feature.
+                  </p>
+                </div>
+                <div className='flex shrink-0 justify-center items-center bg-white h-16 w-16 rounded-full mx-auto'>
+                  <BookOpenIcon className='h-8 w-8 text-indigo-500' />
+                </div>
+              </div>
+
+              <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-white border border-gray-200 rounded-lg text-black font-semibold'>
+                <div className='mb-4'>
+                  <p className='text-xl font-bold'>Item Lookouts</p>
+                  <p className='text-sm mt-4 text-gray-600'>
+                    Get notified when an item matching your lost item is
+                    reported.
+                  </p>
+                  <p className='text-sm mt-4 text-gray-600'>
+                    You will get notified in the website and by email when an
+                    item matching your lost item is reported. Matching can
+                    happen by a description or a photo.
+                  </p>
+                </div>
+                <div className='flex shrink-0 justify-center items-center bg-indigo-100 h-16 w-16 rounded-full mx-auto'>
+                  <MegaphoneIcon className='h-8 w-8 text-indigo-500' />
+                </div>
+              </div>
+
+              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-indigo-500 rounded-lg font-semibold'>
+                <div className='mb-4'>
+                  <p className='text-xl font-bold'>Chats</p>
+                  <p className='text-sm mt-4 text-indigo-50'>
+                    Communicate directly with other users to ask questions about
+                    items.
+                  </p>
+                  <p className='text-sm mt-4 text-indigo-50'>
+                    The chat helps you verify details about lost items.
+                  </p>
+                </div>
+                <div className='flex shrink-0 justify-center items-center bg-white h-16 w-16 rounded-full mx-auto'>
+                  <ChatBubbleOvalLeftEllipsisIcon className='h-8 w-8 text-indigo-500' />
+                </div>
+              </div>
+
+              <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-white border border-gray-200 rounded-lg text-black font-semibold'>
+                <div className='mb-4'>
+                  <p className='text-xl font-bold'>Notifications</p>
+                  <p className='text-sm mt-4 text-gray-600'>
+                    View the notification page in the website or get email
+                    notifications about your lookouts.
+                  </p>
+                  <p className='text-sm mt-4 text-gray-600'>
+                    The notification page quickly updates you on claims,
+                    reports, chats, and lookouts.
+                  </p>
+                </div>
+                <div className='flex shrink-0 justify-center items-center bg-indigo-100 h-16 w-16 rounded-full mx-auto'>
+                  <BellAlertIcon className='h-8 w-8 text-indigo-500' />
+                </div>
+              </div>
+
+              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-indigo-500 rounded-lg font-semibold'>
+                <div className='mb-4'>
+                  <p className='text-xl font-bold'>Claims</p>
+                  <p className='text-sm mt-4 text-indigo-50'>
+                    Use our streamlined claim system and get your items back
+                    quickly.
+                  </p>
+                  <p className='text-sm mt-4 text-indigo-50'>
+                    Claims should be submitted with verifying details about why
+                    the item belongs to you.
+                  </p>
+                </div>
+                <div className='flex shrink-0 justify-center items-center bg-white h-16 w-16 rounded-full mx-auto'>
+                  <CheckCircleIcon className='h-12 w-12 text-indigo-500' />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* How It Works Mobile */}
+          <div
+            ref={howItWorksRef}
+            className='px-6 py-8 bg-indigo-900 rounded-lg mx-6'
+          >
+            <p className='text-3xl font-bold text-white mb-2'>How It Works</p>
+            <p className='text-indigo-100 mb-8'>
+              Get your lost items back in four simple steps. Learn more in the{' '}
+              <span
+                className='text-indigo-300 hover:underline cursor-pointer'
+                onClick={() => router.push('/userGuide')}
+              >
+                user guide
+              </span>
+              .
+            </p>
+
+            <div className='space-y-6'>
+              <div className='text-center'>
+                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <span className='text-2xl font-bold text-white'>1</span>
+                </div>
+                <h3 className='font-bold text-white mb-2'>Report or Search</h3>
+                <p className='text-sm text-indigo-200'>
+                  Found an item? Report it. Lost something? Search our inventory
+                  or use photo matching.
+                </p>
+              </div>
+
+              <div className='text-center'>
+                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <span className='text-2xl font-bold text-white'>2</span>
+                </div>
+                <h3 className='font-bold text-white mb-2'>Connect & Verify</h3>
+                <p className='text-sm text-indigo-200'>
+                  Message other users directly to ask questions and verify
+                  details about items you&apos;re interested in.
+                </p>
+              </div>
+
+              <div className='text-center'>
+                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <span className='text-2xl font-bold text-white'>3</span>
+                </div>
+                <h3 className='font-bold text-white mb-2'>Submit Claim</h3>
+                <p className='text-sm text-indigo-200'>
+                  Submit a detailed claim explaining why an item belongs to you.
+                  Include identifying details or marks.
+                </p>
+              </div>
+
+              <div className='text-center'>
+                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <span className='text-2xl font-bold text-white'>4</span>
+                </div>
+                <h3 className='font-bold text-white mb-2'>Get It Back</h3>
+                <p className='text-sm text-indigo-200'>
+                  Once your claim is approved, the admin will contact you to
+                  arrange pickup of your item.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Mobile */}
+          <div className='px-6'>
+            <div
+              ref={confusedRef}
+              className='text-center flex flex-col space-y-3 w-full h-full px-6 items-center py-16 rounded-lg mb-10'
+            >
+              <div className='space-y-3 w-full h-full text-black flex flex-col justify-center'>
+                <p className='font-bold text-5xl text-black'>
+                  Ready to Get Started?
+                </p>
+                <div>
                   <p className='font-bold text-xl'>
-                    By the Guidance Department
-                  </p>
-                  <p className='font-bold text-md pt-4'>
-                    Search for job postings by local companies.
-                  </p>
-                  <p className='font-bold text-md'>
-                    Create an applicant account to apply for a job posting.
+                    Join our community and start{' '}
+                    <span className='text-indigo-500'>finding</span> your lost
+                    items today.
                   </p>
                 </div>
 
-                <div></div>
-                <a
-                  href='/signup'
-                  className='bg-blue-500 hover:bg-blue-600 px-4 py-2 text-white hover:cursor-pointer rounded-lg w-full font-bold'
-                >
-                  Get Started
-                </a>
+                <div className='flex gap-4 flex-col mt-4'>
+                  <a
+                    href='/signup'
+                    className='bg-indigo-500 hover:bg-indigo-600 px-6 py-3 text-white hover:cursor-pointer rounded-lg w-full font-bold'
+                  >
+                    Create Account
+                  </a>
+                </div>
               </div>
             </div>
-
-            <div className='w-full flex-col mt-12 p-6 rounded-xl bg-blue-50'>
-              <img
-                src='https://cdn.pixabay.com/photo/2021/11/14/18/36/telework-6795505_1280.jpg'
-                className='rounded-xl'
-              />
-            </div>
           </div>
-          <Footer />
         </div>
       </div>
     </>

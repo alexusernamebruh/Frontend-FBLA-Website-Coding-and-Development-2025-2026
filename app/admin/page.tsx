@@ -12,13 +12,36 @@ import {
   PhotoIcon,
   HomeIcon,
   CheckBadgeIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/solid';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 
+interface IAnalytics {
+  totalItems: number;
+  claimedItems: number;
+  unclaimedItems: number;
+  returnRate: number;
+  totalSubmissions: number;
+  pendingSubmissions: number;
+  approvedSubmissions: number;
+  rejectedSubmissions: number;
+  totalClaims: number;
+  openClaims: number;
+  approvedClaims: number;
+  totalLookouts: number;
+  openLookouts: number;
+  closedLookouts: number;
+  locationStats: { id: number; name: string; itemCount: number; items: string[] }[];
+  topKeywords: { word: string; count: number }[];
+  submissionTrend: { date: string; count: number }[];
+}
+
 export default function Home() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [analytics, setAnalytics] = useState<IAnalytics | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [password, setPassword] = useState('');
-  const [currentPage, setCurrentPage] = useState('All Items');
+  const [currentPage, setCurrentPage] = useState('Analytics');
   const [approveSuccess, setApproveSuccess] = useState(false);
   const [rejectSuccess, setRejectSuccess] = useState(false);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -58,6 +81,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSearchImage, setSelectedSearchImage] =
     useState<string>('None');
+  const [isSearchingImage, setIsSearchingImage] = useState(false);
+  const [isSearchingText, setIsSearchingText] = useState(false);
+  const [isSearchingDate, setIsSearchingDate] = useState(false);
   const imageSearchRef = useRef<HTMLInputElement>(null);
   const [filteredItems, setFilteredItems] = useState<IItem[]>([]);
   const [newLocationName, setNewLocationName] = useState('');
@@ -67,6 +93,20 @@ export default function Home() {
   const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [locationCreateSuccess, setLocationCreateSuccess] = useState(false);
   const [locationEditSuccess, setLocationEditSuccess] = useState(false);
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [locationItemSearchQuery, setLocationItemSearchQuery] = useState('');
+  const [sortLocationsByItems, setSortLocationsByItems] = useState(false);
+  const [filteredLocations, setFilteredLocations] = useState<ILocation[]>([]);
+
+  // Filter modal states
+  const [showTextFilterModal, setShowTextFilterModal] = useState(false);
+  const [showImageFilterModal, setShowImageFilterModal] = useState(false);
+  const [showLocationFilterModal, setShowLocationFilterModal] = useState(false);
+  const [showDateFilterModal, setShowDateFilterModal] = useState(false);
+  const [showAllLocationsFilterModal, setShowAllLocationsFilterModal] =
+    useState(false);
+  const [dateFilter, setDateFilter] = useState<string>('');
+  const [customDate, setCustomDate] = useState<string>('');
 
   const [isEditing, setIsEditing] = useState(false);
   const [editItemName, setEditItemName] = useState('');
@@ -322,17 +362,21 @@ export default function Home() {
     }
 
     try {
+      setIsSearchingText(true);
       const { data: response } = await a.post('/items/search/text', {
         query,
       });
       setFilteredItems(response);
     } catch (error) {
       console.error('Error searching items:', error);
+    } finally {
+      setIsSearchingText(false);
     }
   };
 
   const searchItemsByImage = async (file: File) => {
     try {
+      setIsSearchingImage(true);
       const formData = new FormData();
       formData.append('image', file);
 
@@ -345,6 +389,22 @@ export default function Home() {
       setSelectedSearchImage(file.name);
     } catch (error) {
       console.error('Error searching items by image:', error);
+    } finally {
+      setIsSearchingImage(false);
+    }
+  };
+
+  const searchItemsByDate = async (filter: string) => {
+    try {
+      setIsSearchingDate(true);
+      const { data: response } = await a.post('/items/search/date', {
+        filter,
+      });
+      setFilteredItems(response);
+    } catch (error) {
+      console.error('Error searching items by date:', error);
+    } finally {
+      setIsSearchingDate(false);
     }
   };
 
@@ -420,6 +480,37 @@ export default function Home() {
     setIsEditingLocation(true);
   };
 
+  const searchLocations = async (
+    nameOrTeacher: string,
+    itemName: string,
+    sortByItems: boolean,
+  ) => {
+    try {
+      const params = new URLSearchParams();
+      if (nameOrTeacher.trim()) {
+        params.append('searchTerm', nameOrTeacher);
+      }
+      if (itemName.trim()) {
+        params.append('itemSearchTerm', itemName);
+      }
+      if (sortByItems) {
+        params.append('sortByItems', 'true');
+      }
+
+      const { data: response } = await a.get(
+        `/locations/search?${params.toString()}`,
+      );
+      setFilteredLocations(response);
+      if (response.length > 0) {
+        setSelectedLocation(response[0]);
+      } else {
+        setSelectedLocation(undefined);
+      }
+    } catch (error) {
+      console.error('Error searching locations:', error);
+    }
+  };
+
   const cancelEditLocation = () => {
     setIsEditingLocation(false);
     setEditLocationName('');
@@ -448,8 +539,18 @@ export default function Home() {
       await getApprovedClaims();
       await getAllItemsData();
       await getLocations();
+      setAnalyticsLoading(true);
+      try {
+        const { data } = await a.get('/analytics');
+        setAnalytics(data);
+      } catch {}
+      setAnalyticsLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    setFilteredLocations(locations);
+  }, [locations]);
 
   return (
     <div className='h-screen bg-white'>
@@ -563,165 +664,236 @@ export default function Home() {
               />
             </div>
 
+            {currentPage === 'Analytics' && (
+              <div className='w-full h-full overflow-auto p-10'>
+                {analyticsLoading || !analytics ? (
+                  <div className='flex items-center justify-center h-64 text-gray-400 text-sm'>Loading analytics…</div>
+                ) : (
+                  <div className='space-y-6'>
+                    {/* Header */}
+                    <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
+                      <p className='text-2xl font-bold text-black'>Analytics Dashboard</p>
+                      <p className='text-sm text-gray-500 mt-1'>Overview of the Lost &amp; Found system</p>
+                    </div>
+
+                    {/* Stat cards */}
+                    <div className='grid grid-cols-4 gap-5'>
+                      {[
+                        { label: 'Total Items', value: analytics.totalItems, sub: 'in system', color: 'text-indigo-600' },
+                        { label: 'Items Returned', value: analytics.claimedItems, sub: `${analytics.returnRate}% return rate`, color: 'text-green-600' },
+                        { label: 'Unclaimed Items', value: analytics.unclaimedItems, sub: 'still available', color: 'text-yellow-600' },
+                        { label: 'Total Reports', value: analytics.totalSubmissions, sub: `${analytics.approvedSubmissions} approved`, color: 'text-blue-600' },
+                        { label: 'Pending Reports', value: analytics.pendingSubmissions, sub: 'awaiting review', color: 'text-orange-500' },
+                        { label: 'Rejected Reports', value: analytics.rejectedSubmissions, sub: 'declined', color: 'text-red-500' },
+                        { label: 'Open Claims', value: analytics.openClaims, sub: 'under review', color: 'text-purple-600' },
+                        { label: 'Approved Claims', value: analytics.approvedClaims, sub: 'resolved', color: 'text-green-600' },
+                      ].map(({ label, value, sub, color }) => (
+                        <div key={label} className='bg-white rounded-lg border border-gray-300 shadow-sm px-6 py-5'>
+                          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>{label}</p>
+                          <p className={`text-3xl font-bold mt-1 ${color}`}>{value}</p>
+                          <p className='text-xs text-gray-400 mt-1'>{sub}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-5'>
+                      {/* Location heatmap */}
+                      <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
+                        <p className='text-lg font-bold text-black mb-4'>Items by Location</p>
+                        {analytics.locationStats.length === 0 ? (
+                          <p className='text-sm text-gray-400'>No location data yet</p>
+                        ) : (
+                          <div className='space-y-3'>
+                            {analytics.locationStats.slice(0, 10).map((loc) => {
+                              const max = analytics.locationStats[0]?.itemCount || 1;
+                              const pct = Math.round((loc.itemCount / max) * 100);
+                              return (
+                                <div key={loc.id}>
+                                  <div className='flex justify-between text-sm mb-1'>
+                                    <span className='font-semibold text-gray-800 truncate max-w-[70%]'>{loc.name}</span>
+                                    <span className='text-gray-500 font-medium'>{loc.itemCount} item{loc.itemCount !== 1 ? 's' : ''}</span>
+                                  </div>
+                                  <div className='w-full bg-gray-100 rounded-full h-2.5'>
+                                    <div
+                                      className='bg-indigo-500 h-2.5 rounded-full transition-all'
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Top keywords / categories */}
+                      <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
+                        <p className='text-lg font-bold text-black mb-1'>Most Common Item Types</p>
+                        <p className='text-xs text-gray-400 mb-4'>Derived from item names and descriptions</p>
+                        {analytics.topKeywords.length === 0 ? (
+                          <p className='text-sm text-gray-400'>No data yet</p>
+                        ) : (
+                          <div className='space-y-3'>
+                            {analytics.topKeywords.map(({ word, count }) => {
+                              const max = analytics.topKeywords[0]?.count || 1;
+                              const pct = Math.round((count / max) * 100);
+                              return (
+                                <div key={word}>
+                                  <div className='flex justify-between text-sm mb-1'>
+                                    <span className='font-semibold text-gray-800 capitalize'>{word}</span>
+                                    <span className='text-gray-500 font-medium'>{count}×</span>
+                                  </div>
+                                  <div className='w-full bg-gray-100 rounded-full h-2.5'>
+                                    <div
+                                      className='bg-purple-500 h-2.5 rounded-full transition-all'
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Submission trend */}
+                    <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
+                      <p className='text-lg font-bold text-black mb-1'>Submission Trend</p>
+                      <p className='text-xs text-gray-400 mb-6'>Reports submitted per day over the last 30 days</p>
+                      {analytics.submissionTrend.length === 0 ? (
+                        <p className='text-sm text-gray-400'>No submissions in the last 30 days</p>
+                      ) : (() => {
+                        const maxCount = Math.max(...analytics.submissionTrend.map(d => d.count));
+                        return (
+                          <div className='flex items-end gap-1 h-32'>
+                            {analytics.submissionTrend.map(({ date, count }) => (
+                              <div key={date} className='flex-1 flex flex-col items-center gap-1 group relative'>
+                                <div
+                                  className='w-full bg-indigo-400 hover:bg-indigo-500 rounded-t transition-all'
+                                  style={{ height: `${Math.max(4, Math.round((count / maxCount) * 100))}%` }}
+                                />
+                                <div className='absolute bottom-full mb-1 hidden group-hover:flex bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10'>
+                                  {dayjs(date).format('MMM D')}: {count}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                      <div className='flex justify-between mt-2 text-xs text-gray-400'>
+                        <span>{analytics.submissionTrend[0] ? dayjs(analytics.submissionTrend[0].date).format('MMM D') : ''}</span>
+                        <span>{analytics.submissionTrend[analytics.submissionTrend.length - 1] ? dayjs(analytics.submissionTrend[analytics.submissionTrend.length - 1].date).format('MMM D') : ''}</span>
+                      </div>
+                    </div>
+
+                    {/* Lookouts summary */}
+                    <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
+                      <p className='text-lg font-bold text-black mb-4'>Item Lookouts</p>
+                      <div className='flex gap-8'>
+                        <div>
+                          <p className='text-3xl font-bold text-indigo-600'>{analytics.totalLookouts}</p>
+                          <p className='text-xs text-gray-400 mt-1'>Total lookouts</p>
+                        </div>
+                        <div>
+                          <p className='text-3xl font-bold text-green-600'>{analytics.openLookouts}</p>
+                          <p className='text-xs text-gray-400 mt-1'>Open</p>
+                        </div>
+                        <div>
+                          <p className='text-3xl font-bold text-gray-400'>{analytics.closedLookouts}</p>
+                          <p className='text-xs text-gray-400 mt-1'>Closed (resolved)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {currentPage === 'All Items' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='w-fit min-w-44 flex flex-col space-y-4 overflow-y-auto text-black'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   <div className='flex space-x-2'>
                     <button
-                      onClick={() => {
-                        setSearchType('text');
-                        setSearchQuery('');
-                        setLocationFilter(null);
-                        getAllItemsData();
-                      }}
-                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
-                        searchType === 'text'
-                          ? 'bg-indigo-500'
-                          : 'bg-gray-400 hover:bg-gray-500'
-                      }`}
+                      onClick={() => setShowTextFilterModal(true)}
+                      disabled={isSearchingText}
+                      className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      title='Search by text'
                     >
                       <DocumentTextIcon className='w-5 h-5 text-gray-100' />
                     </button>
                     <button
-                      onClick={() => {
-                        setSearchType('image');
-                        setSelectedSearchImage('None');
-                        setLocationFilter(null);
-                        getAllItemsData();
-                        if (imageSearchRef.current) {
-                          imageSearchRef.current.value = '';
-                        }
-                      }}
-                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
-                        searchType === 'image'
-                          ? 'bg-indigo-500'
-                          : 'bg-gray-400 hover:bg-gray-500'
-                      }`}
+                      onClick={() => setShowImageFilterModal(true)}
+                      disabled={isSearchingImage}
+                      className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      title='Search by image'
                     >
                       <PhotoIcon className='w-5 h-5 text-gray-100' />
                     </button>
                     <button
-                      type='button'
-                      onClick={() => {
-                        setSearchType('location');
-                        getAllItemsData();
-                      }}
-                      className={`p-2 rounded-md transition-colors hover:cursor-pointer ${
-                        searchType === 'location'
-                          ? 'bg-indigo-500'
-                          : 'bg-gray-400 hover:bg-gray-500'
-                      }`}
+                      onClick={() => setShowLocationFilterModal(true)}
+                      className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors'
+                      title='Filter by location'
                     >
                       <MapPinIcon className='w-5 h-5 text-gray-100' />
                     </button>
-                  </div>
-                  <div className='mb-4'>
-                    {searchType === 'text' && (
-                      <div className='flex gap-2'>
-                        <input
-                          type='text'
-                          placeholder='Search items...'
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            searchItemByText(e.target.value);
-                          }}
-                          className='flex-1 w-fit rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
-                        />
-                      </div>
-                    )}
-                    {searchType === 'image' && (
-                      <div className='flex flex-col gap-2'>
-                        <label>
-                          <input
-                            ref={imageSearchRef}
-                            onChange={(e) => {
-                              if (e.target.files?.[0]) {
-                                setSelectedSearchImage(e.target.files[0].name);
-                                searchItemsByImage(e.target.files[0]);
-                              }
-                            }}
-                            type='file'
-                            accept='.png, .jpg, .jpeg, .webp'
-                            hidden
-                          />
-                          <div className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'>
-                            Select Image
-                          </div>
-                        </label>
-                        <div className='text-black text-xs font-semibold'>
-                          Selected Image: {selectedSearchImage}
-                        </div>
-                      </div>
-                    )}
-                    {searchType === 'location' && (
-                      <div className='flex flex-col gap-2'>
-                        <div
-                          onClick={() => setShowFilterModal(true)}
-                          className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'
-                        >
-                          Select Location
-                        </div>
-                        <div className='text-black text-xs font-semibold'>
-                          Selected Location:{' '}
-                          {locationFilter === null
-                            ? 'None'
-                            : (locations.find(
-                                (loc) => loc.id === locationFilter,
-                              )?.name ?? 'None')}
-                        </div>
-                      </div>
-                    )}
+                    <button
+                      onClick={() => setShowDateFilterModal(true)}
+                      disabled={isSearchingDate}
+                      className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                      title='Filter by date'
+                    >
+                      <CalendarDaysIcon className='w-5 h-5 text-gray-100' />
+                    </button>
                   </div>
 
-                  {filteredItems.filter(
-                    (v) =>
-                      locationFilter === null ||
-                      v.location?.id === locationFilter,
-                  ).length ? (
-                    filteredItems
-                      .filter(
-                        (v) =>
-                          locationFilter === null ||
-                          v.location?.id === locationFilter,
-                      )
-                      .map((v: IItem, i) => {
-                        return (
-                          <div key={i} className='group'>
-                            <div
-                              onClick={() => {
-                                setSelectedItem(v);
-                                setIsEditing(false);
-                              }}
-                              className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
-                            >
-                              <div className='group-hover:cursor-pointer'>
-                                <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
-                                  {v.itemName}
-                                </p>
-                                <p className='font-medium mt-2 text-sm/6 text-black'>
-                                  {truncate(v.description, 50)}
-                                </p>
-                                <p className='font-medium text-xs mt-2 text-gray-500'>
-                                  Posted by: {v.author?.name || 'Unknown User'}
-                                </p>
-                                <p className='font-medium text-xs mt-1 text-gray-500'>
-                                  Posted on{' '}
-                                  {dayjs(v.createdAt).format('MM/DD/YYYY')}
-                                </p>
-                                {v.location && (
-                                  <p className='font-medium text-xs mt-1 text-gray-500'>
-                                    {v.location.name}
-                                    {v.location.teacher
-                                      ? ` — ${v.location.teacher}`
-                                      : ''}
-                                  </p>
-                                )}
-                              </div>
+                  {filteredItems.length ? (
+                    filteredItems.map((v: IItem, i) => (
+                      <div key={i} className='group'>
+                        <div
+                          onClick={() => {
+                            setSelectedItem(v);
+                            setIsEditing(false);
+                          }}
+                          className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                        >
+                          <div className='group-hover:cursor-pointer'>
+                            <div className='flex items-center gap-2 flex-wrap'>
+                              <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
+                                {v.itemName}
+                              </p>
+                              {v.similarity !== undefined && (
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                  v.similarity >= 75 ? 'bg-green-100 text-green-700' :
+                                  v.similarity >= 50  ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {Math.round(v.similarity)}% match
+                                </span>
+                              )}
                             </div>
+                            <p className='font-medium mt-2 text-sm/6 text-black'>
+                              {truncate(v.description, 50)}
+                            </p>
+                            <p className='font-medium text-xs mt-2 text-gray-500'>
+                              Posted by: {v.author?.name || 'Unknown User'}
+                            </p>
+                            <p className='font-medium text-xs mt-1 text-gray-500'>
+                              Posted on{' '}
+                              {dayjs(v.createdAt).format('MM/DD/YYYY')}
+                            </p>
+                            {v.location && (
+                              <p className='font-medium text-xs mt-1 text-gray-500'>
+                                {v.location.name}
+                                {v.location.teacher
+                                  ? ` — ${v.location.teacher}`
+                                  : ''}
+                              </p>
+                            )}
                           </div>
-                        );
-                      })
+                        </div>
+                      </div>
+                    ))
                   ) : (
                     <div className='font-semibold'>No items found</div>
                   )}
@@ -905,7 +1077,7 @@ export default function Home() {
                                   >
                                     <img
                                       src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                      alt='photo'
+                                      alt={`Photo of ${selectedItem.itemName} - ID: ${photo.id}`}
                                       className='max-h-96 rounded-md'
                                     />
                                     <p className='text-xs text-gray-500'>
@@ -932,7 +1104,7 @@ export default function Home() {
             )}
 
             {currentPage === 'Pending Reports' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
+              <div className='flex w-full h-full p-10 gap-10'>
                 <div className='flex flex-col space-y-4 overflow-auto'>
                   {pendingSubmissions.length ? (
                     pendingSubmissions.map((v: ISubmission, i) => {
@@ -1166,7 +1338,7 @@ export default function Home() {
                                   >
                                     <img
                                       src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                      alt='photo'
+                                      alt={`Photo from pending report: ${selectedPending.itemName} - ID: ${photo.id}`}
                                       className='max-h-96 rounded-md'
                                     />
                                     <p className='text-xs text-gray-500'>
@@ -1187,8 +1359,8 @@ export default function Home() {
             )}
 
             {currentPage === 'Pending Claims' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-y-auto'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
                   {pendingClaims.length ? (
                     pendingClaims.map((c: IClaimForm, i) => {
                       return (
@@ -1308,7 +1480,7 @@ export default function Home() {
                                     >
                                       <img
                                         src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                        alt='photo'
+                                        alt={`Photo of claimed item: ${selectedPendingClaim.item.itemName} - ID: ${photo.id}`}
                                         className='max-h-96 rounded-md'
                                       />
                                       <p className='text-xs text-gray-500'>
@@ -1338,8 +1510,8 @@ export default function Home() {
             )}
 
             {currentPage === 'Approved Reports' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-y-auto'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
                   {approvedSubmissions.length ? (
                     approvedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1438,7 +1610,7 @@ export default function Home() {
                                   >
                                     <img
                                       src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                      alt='photo'
+                                      alt={`Photo from approved report: ${selectedApproved.itemName} - ID: ${photo.id}`}
                                       className='max-h-96 rounded-md'
                                     />
                                     <p className='text-xs text-gray-500'>
@@ -1461,8 +1633,8 @@ export default function Home() {
             )}
 
             {currentPage === 'Declined Reports' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-y-auto'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
                   {rejectedSubmissions.length ? (
                     rejectedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1550,7 +1722,7 @@ export default function Home() {
                                   >
                                     <img
                                       src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                      alt='photo'
+                                      alt={`Photo from rejected report: ${selectedRejected.itemName} - ID: ${photo.id}`}
                                       className='max-h-96 rounded-md'
                                     />
                                     <p className='text-xs text-gray-500'>
@@ -1573,7 +1745,7 @@ export default function Home() {
             )}
 
             {currentPage === 'Approved Claims' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
+              <div className='flex w-full h-full p-10 gap-10'>
                 <div className='flex flex-col space-y-4 overflow-auto'>
                   {approvedClaims.length ? (
                     approvedClaims.map((c: IClaimForm, i) => {
@@ -1677,7 +1849,7 @@ export default function Home() {
                                     >
                                       <img
                                         src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                        alt='photo'
+                                        alt={`Photo of claimed item: ${selectedApprovedClaim.item.itemName} - ID: ${photo.id}`}
                                         className='max-h-96 rounded-md'
                                       />
                                       <p className='text-xs text-gray-500'>
@@ -1707,10 +1879,19 @@ export default function Home() {
             )}
 
             {currentPage === 'All Locations' && (
-              <div className='flex w-full h-full p-8 space-x-4'>
-                <div className='flex flex-col space-y-4 overflow-auto'>
-                  {locations.length ? (
-                    locations.map((v: ILocation, i) => {
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+                  <div className='mb-4'>
+                    <button
+                      onClick={() => setShowAllLocationsFilterModal(true)}
+                      className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors'
+                      title='Filter locations'
+                    >
+                      <DocumentTextIcon className='w-5 h-5 text-gray-100' />
+                    </button>
+                  </div>
+                  {filteredLocations.length ? (
+                    filteredLocations.map((v: ILocation, i) => {
                       return (
                         <div key={i} className='group w-fit'>
                           <div
@@ -1733,7 +1914,9 @@ export default function Home() {
                       );
                     })
                   ) : (
-                    <div className='font-semibold'>No locations found</div>
+                    <div className='font-semibold text-gray-500'>
+                      No locations found
+                    </div>
                   )}
                 </div>
                 <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
@@ -1836,7 +2019,7 @@ export default function Home() {
 
             {currentPage === 'Add Location' && (
               <div className='w-full h-full'>
-                <div className='m-8 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+                <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
                   <div className='border-b border-gray-300 h-fit'>
                     <div className='px-6 py-6'>
                       <p className='font-bold text-2xl text-black'>
@@ -2030,12 +2213,21 @@ export default function Home() {
                       type='file'
                       accept='.png, .jpg, .jpeg, .webp'
                       hidden
+                      disabled={isSearchingImage}
                     />
-                    <div className='bg-indigo-500 text-white text-sm font-semibold p-2 rounded-md text-center cursor-pointer hover:bg-indigo-600'>
-                      Select Image
+                    <div
+                      className={`text-white text-sm font-semibold p-2 rounded-md text-center ${
+                        isSearchingImage
+                          ? 'bg-indigo-400 cursor-not-allowed'
+                          : 'bg-indigo-500 cursor-pointer hover:bg-indigo-600'
+                      }`}
+                    >
+                      {isSearchingImage ? 'Searching...' : 'Select Image'}
                     </div>
                     <p className='text-xs text-gray-500 mt-1'>
-                      {selectedSearchImage}
+                      {isSearchingImage
+                        ? 'Searching for similar items...'
+                        : selectedSearchImage}
                     </p>
                   </label>
                 )}
@@ -2054,88 +2246,144 @@ export default function Home() {
 
             {/* Mobile Content */}
             <div className='p-4 space-y-3'>
+              {currentPage === 'Analytics' && (
+                <div className='space-y-4'>
+                  {analyticsLoading || !analytics ? (
+                    <div className='p-8 text-center text-gray-400 text-sm'>Loading analytics…</div>
+                  ) : (
+                    <>
+                      <div className='grid grid-cols-2 gap-3'>
+                        {[
+                          { label: 'Total Items', value: analytics.totalItems, color: 'text-indigo-600' },
+                          { label: 'Returned', value: `${analytics.claimedItems} (${analytics.returnRate}%)`, color: 'text-green-600' },
+                          { label: 'Unclaimed', value: analytics.unclaimedItems, color: 'text-yellow-600' },
+                          { label: 'Pending Reports', value: analytics.pendingSubmissions, color: 'text-orange-500' },
+                          { label: 'Open Claims', value: analytics.openClaims, color: 'text-purple-600' },
+                          { label: 'Lookouts Open', value: analytics.openLookouts, color: 'text-blue-600' },
+                        ].map(({ label, value, color }) => (
+                          <div key={label} className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'>
+                            <p className='text-xs text-gray-500 font-semibold'>{label}</p>
+                            <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'>
+                        <p className='font-bold text-black mb-3'>Items by Location</p>
+                        <div className='space-y-2'>
+                          {analytics.locationStats.slice(0, 8).map((loc) => {
+                            const max = analytics.locationStats[0]?.itemCount || 1;
+                            const pct = Math.round((loc.itemCount / max) * 100);
+                            return (
+                              <div key={loc.id}>
+                                <div className='flex justify-between text-xs mb-1'>
+                                  <span className='font-semibold text-gray-800 truncate max-w-[70%]'>{loc.name}</span>
+                                  <span className='text-gray-500'>{loc.itemCount}</span>
+                                </div>
+                                <div className='w-full bg-gray-100 rounded-full h-2'>
+                                  <div className='bg-indigo-500 h-2 rounded-full' style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'>
+                        <p className='font-bold text-black mb-3'>Most Common Item Types</p>
+                        <div className='space-y-2'>
+                          {analytics.topKeywords.map(({ word, count }) => {
+                            const max = analytics.topKeywords[0]?.count || 1;
+                            const pct = Math.round((count / max) * 100);
+                            return (
+                              <div key={word}>
+                                <div className='flex justify-between text-xs mb-1'>
+                                  <span className='font-semibold text-gray-800 capitalize'>{word}</span>
+                                  <span className='text-gray-500'>{count}×</span>
+                                </div>
+                                <div className='w-full bg-gray-100 rounded-full h-2'>
+                                  <div className='bg-purple-500 h-2 rounded-full' style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               {currentPage === 'All Items' && (
                 <div className='space-y-3'>
-                  {filteredItems.filter(
-                    (v) =>
-                      locationFilter === null ||
-                      v.location?.id === locationFilter,
-                  ).length ? (
-                    filteredItems
-                      .filter(
-                        (v) =>
-                          locationFilter === null ||
-                          v.location?.id === locationFilter,
-                      )
-                      .map((item: IItem, i) => (
-                        <div
-                          key={i}
-                          className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow min-h-[220px] flex flex-col'
-                        >
-                          <div className='p-4 flex flex-col flex-1 justify-between'>
-                            <div className='flex justify-between items-start gap-2'>
-                              <div className='flex-1 min-w-0'>
-                                <h3 className='font-bold text-base text-black truncate'>
-                                  {item.itemName}
-                                </h3>
-                                <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
-                                  {truncate(item.description, 50)}
-                                </p>
-                              </div>
-                              <span
-                                className={`px-2 py-1 rounded text-xs font-semibold ${
-                                  item.claimed
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}
-                              >
-                                {item.claimed ? 'Claimed' : 'Unclaimed'}
-                              </span>
-                            </div>
-                            <div className='mt-2 flex flex-wrap gap-1 text-xs text-gray-500'>
-                              <span>By: {item.author?.name || 'Unknown'}</span>
-                              <span>•</span>
-                              <span>
-                                {dayjs(item.createdAt).format('MM/DD/YY')}
-                              </span>
-                            </div>
-                            {item.location && (
-                              <p className='text-xs text-indigo-600 mt-1'>
-                                {item.location.name}
+                  {filteredItems.length ? (
+                    filteredItems.map((item: IItem, i) => (
+                      <div
+                        key={i}
+                        className='bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow min-h-[220px] flex flex-col'
+                      >
+                        <div className='p-4 flex flex-col flex-1 justify-between'>
+                          <div className='flex justify-between items-start gap-2'>
+                            <div className='flex-1 min-w-0'>
+                              <h3 className='font-bold text-base text-black truncate'>
+                                {item.itemName}
+                              </h3>
+                              <p className='text-xs text-gray-600 mt-1 line-clamp-2'>
+                                {truncate(item.description, 50)}
                               </p>
-                            )}
-                            <div className='flex gap-2 mt-3'>
-                              <button
-                                onClick={() => {
-                                  setSelectedItem(item);
-                                  setMobileDetailType('item');
-                                  setShowMobileDetailModal(true);
-                                }}
-                                className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
-                              >
-                                View
-                              </button>
-                              <button
-                                onClick={() => {
-                                  startEditItem(item);
-                                  setShowMobileEditModal(true);
-                                }}
-                                className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm font-semibold hover:bg-gray-300 transition-colors'
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() =>
-                                  item.id && deleteItemData(item.id)
-                                }
-                                className='px-3 py-2 bg-red-100 text-red-600 rounded text-sm font-semibold hover:bg-red-200 transition-colors'
-                              >
-                                Delete
-                              </button>
                             </div>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-semibold ${
+                                item.claimed
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}
+                            >
+                              {item.claimed ? 'Claimed' : 'Unclaimed'}
+                            </span>
+                          </div>
+                          <div className='mt-2 flex flex-wrap gap-1 text-xs text-gray-500'>
+                            <span>By: {item.author?.name || 'Unknown'}</span>
+                            <span>•</span>
+                            <span>
+                              {dayjs(item.createdAt).format('MM/DD/YY')}
+                            </span>
+                          </div>
+                          {item.location && (
+                            <p className='text-xs text-indigo-600 mt-1'>
+                              {item.location.name}
+                            </p>
+                          )}
+                          <div className='flex gap-2 mt-3'>
+                            <button
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setMobileDetailType('item');
+                                setShowMobileDetailModal(true);
+                              }}
+                              className='flex-1 bg-indigo-500 text-white px-3 py-2 rounded text-sm font-semibold hover:bg-indigo-600 transition-colors'
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => {
+                                startEditItem(item);
+                                setShowMobileEditModal(true);
+                              }}
+                              className='flex-1 bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm font-semibold hover:bg-gray-300 transition-colors'
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => item.id && deleteItemData(item.id)}
+                              className='px-3 py-2 bg-red-100 text-red-600 rounded text-sm font-semibold hover:bg-red-200 transition-colors'
+                            >
+                              Delete
+                            </button>
                           </div>
                         </div>
-                      ))
+                      </div>
+                    ))
                   ) : (
                     <div className='text-center py-12 text-gray-500'>
                       <p className='text-sm font-medium'>No items found</p>
@@ -2486,6 +2734,12 @@ export default function Home() {
               <div className='grid grid-cols-4 gap-1 p-2'>
                 {[
                   {
+                    name: 'Analytics',
+                    label: 'Analytics',
+                    icon: <CalendarDaysIcon className='w-5 h-5' />,
+                    active: currentPage === 'Analytics',
+                  },
+                  {
                     name: 'All Items',
                     label: 'Items',
                     icon: <HomeIcon className='w-5 h-5' />,
@@ -2604,7 +2858,7 @@ export default function Home() {
                                 >
                                   <img
                                     src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                    alt='photo'
+                                    alt={`Photo of ${selectedItem.itemName} - ID: ${photo.id}`}
                                     className='w-full h-32 object-cover'
                                   />
                                 </div>
@@ -2716,7 +2970,7 @@ export default function Home() {
                                         >
                                           <img
                                             src={`data:image/jpeg;base64,${Buffer.from(Object.values(photo.data)).toString('base64')}`}
-                                            alt='photo'
+                                            alt={`Photo from submission: ${submission?.itemName} - ID: ${photo.id}`}
                                             className='w-full h-32 object-cover'
                                           />
                                         </div>
@@ -3114,13 +3368,282 @@ export default function Home() {
 
           {/* Modals */}
           <div>
+            {/* Text Filter Modal */}
+            <Modal open={showTextFilterModal} setOpen={setShowTextFilterModal}>
+              <div className='bg-white rounded-lg p-6 w-full max-w-md mx-auto space-y-5'>
+                <h2 className='text-xl font-bold text-black'>Search by Text</h2>
+                <div>
+                  <input
+                    type='text'
+                    placeholder='Search items...'
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className='w-full text-gray-700 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                  />
+                </div>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      getAllItemsData();
+                      setShowTextFilterModal(false);
+                    }}
+                    className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => {
+                      searchItemByText(searchQuery);
+                      setShowTextFilterModal(false);
+                    }}
+                    className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold py-2 rounded-md text-sm'
+                  >
+                    Search
+                  </button>
+                </div>
+              </div>
+            </Modal>
+
+            {/* Image Filter Modal */}
+            <Modal
+              open={showImageFilterModal}
+              setOpen={setShowImageFilterModal}
+            >
+              <div className='bg-white rounded-lg p-6 w-full max-w-md mx-auto space-y-5'>
+                <h2 className='text-xl font-bold text-black'>
+                  Search by Image
+                </h2>
+                <div className='flex flex-col gap-2'>
+                  <label>
+                    <input
+                      ref={imageSearchRef}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setSelectedSearchImage(e.target.files[0].name);
+                          searchItemsByImage(e.target.files[0]);
+                          setShowImageFilterModal(false);
+                        }
+                      }}
+                      type='file'
+                      accept='.png, .jpg, .jpeg, .webp'
+                      hidden
+                      disabled={isSearchingImage}
+                    />
+                    <div
+                      className={`flex w-full h-10 px-3 flex-col rounded-md shadow text-white text-sm font-semibold items-center justify-center ${
+                        isSearchingImage
+                          ? 'bg-indigo-400 cursor-not-allowed'
+                          : 'bg-indigo-500 hover:cursor-pointer hover:bg-indigo-600'
+                      }`}
+                    >
+                      {isSearchingImage ? 'Searching...' : 'Select Image'}
+                    </div>
+                  </label>
+                  <div className='text-black text-xs font-semibold'>
+                    {isSearchingImage
+                      ? 'Searching for similar items...'
+                      : `Selected Image: ${selectedSearchImage}`}
+                  </div>
+                </div>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => {
+                      setSelectedSearchImage('None');
+                      getAllItemsData();
+                      if (imageSearchRef.current) {
+                        imageSearchRef.current.value = '';
+                      }
+                      setShowImageFilterModal(false);
+                    }}
+                    className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => setShowImageFilterModal(false)}
+                    className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold py-2 rounded-md text-sm'
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </Modal>
+
+            {/* Location Filter Modal */}
+            <Modal
+              open={showLocationFilterModal}
+              setOpen={setShowLocationFilterModal}
+            >
+              <div className='bg-white rounded-lg p-6 w-full max-w-md mx-auto space-y-5'>
+                <h2 className='text-xl font-bold text-black'>
+                  Filter by Location
+                </h2>
+                <div>
+                  <input
+                    type='text'
+                    placeholder='Search locations...'
+                    value={filterSearchQuery}
+                    onChange={(e) => setFilterSearchQuery(e.target.value)}
+                    className='w-full text-gray-700 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none mb-2'
+                  />
+                  <div className='border border-gray-200 rounded-md max-h-64 overflow-y-auto'>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setLocationFilter(null);
+                        getAllItemsData();
+                        setShowLocationFilterModal(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 hover:bg-gray-50 hover:cursor-pointer text-sm border-b border-gray-100 ${
+                        locationFilter === null
+                          ? 'bg-indigo-50 font-semibold text-indigo-700'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      All Locations
+                    </button>
+                    {locations
+                      .filter((loc) => {
+                        const q = filterSearchQuery.toLowerCase();
+                        return (
+                          loc.name.toLowerCase().includes(q) ||
+                          (loc.teacher ?? '').toLowerCase().includes(q)
+                        );
+                      })
+                      .map((loc) => (
+                        <button
+                          key={loc.id}
+                          type='button'
+                          onClick={() => {
+                            setLocationFilter(loc.id);
+                            // Filter items by location
+                            const filtered = allItems.filter(
+                              (item) => item.locationId === loc.id,
+                            );
+                            setFilteredItems(filtered);
+                            setShowLocationFilterModal(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 hover:bg-gray-50 hover:cursor-pointer border-b border-gray-100 last:border-b-0 ${
+                            locationFilter === loc.id ? 'bg-indigo-50' : ''
+                          }`}
+                        >
+                          <div className='font-medium text-gray-900 text-sm'>
+                            {loc.name}
+                          </div>
+                          {loc.teacher && (
+                            <div className='text-xs text-gray-500'>
+                              Teacher: {loc.teacher}
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => {
+                      setLocationFilter(null);
+                      setFilterSearchQuery('');
+                      getAllItemsData();
+                      setShowLocationFilterModal(false);
+                    }}
+                    className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => setShowLocationFilterModal(false)}
+                    className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold py-2 rounded-md text-sm'
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </Modal>
+
+            {/* Date Filter Modal */}
+            <Modal open={showDateFilterModal} setOpen={setShowDateFilterModal}>
+              <div className='bg-white rounded-lg p-6 w-full max-w-md mx-auto space-y-5'>
+                <h2 className='text-xl font-bold text-black'>Filter by Date</h2>
+                <div className='space-y-3'>
+                  <button
+                    onClick={() => {
+                      searchItemsByDate('3days');
+                      setDateFilter('3days');
+                      setShowDateFilterModal(false);
+                    }}
+                    className='text-gray-700 w-full hover:cursor-pointer text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium'
+                  >
+                    Last 3 days
+                  </button>
+                  <button
+                    onClick={() => {
+                      searchItemsByDate('1week');
+                      setDateFilter('1week');
+                      setShowDateFilterModal(false);
+                    }}
+                    className='text-gray-700 w-full hover:cursor-pointer text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium'
+                  >
+                    Last week
+                  </button>
+                  <button
+                    onClick={() => {
+                      searchItemsByDate('1month');
+                      setDateFilter('1month');
+                      setShowDateFilterModal(false);
+                    }}
+                    className='text-gray-700 w-full hover:cursor-pointer text-left px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium'
+                  >
+                    Last month
+                  </button>
+                  <div className='border-t pt-3'>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Custom Date (YYYY-MM-DD)
+                    </label>
+                    <input
+                      type='date'
+                      value={customDate}
+                      onChange={(e) => setCustomDate(e.target.value)}
+                      className='w-full text-gray-700 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                    />
+                  </div>
+                </div>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => {
+                      setDateFilter('');
+                      setCustomDate('');
+                      getAllItemsData();
+                      setShowDateFilterModal(false);
+                    }}
+                    className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (customDate) {
+                        searchItemsByDate(customDate);
+                        setDateFilter(customDate);
+                      }
+                      setShowDateFilterModal(false);
+                    }}
+                    className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold py-2 rounded-md text-sm'
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </Modal>
+
             <Modal open={showImageModal} setOpen={setShowImageModal}>
               <div className='flex flex-col items-center justify-center space-y-4'>
                 {selectedImageData && (
                   <>
                     <img
                       src={selectedImageData}
-                      alt='Enlarged view'
+                      alt='Enlarged view of selected item or report photo'
                       className='max-w-full max-h-[70vh] rounded-lg'
                     />
                     <button
@@ -3131,6 +3654,92 @@ export default function Home() {
                     </button>
                   </>
                 )}
+              </div>
+            </Modal>
+
+            <Modal
+              open={showAllLocationsFilterModal}
+              setOpen={setShowAllLocationsFilterModal}
+            >
+              <div className='bg-white rounded-lg p-6 w-full max-w-md mx-auto space-y-5'>
+                <h2 className='text-xl font-bold text-black'>
+                  Filter Locations
+                </h2>
+                <div className='space-y-4'>
+                  <input
+                    type='text'
+                    placeholder='Search by name or teacher...'
+                    value={locationSearchQuery}
+                    onChange={(e) => {
+                      setLocationSearchQuery(e.target.value);
+                      searchLocations(
+                        e.target.value,
+                        locationItemSearchQuery,
+                        sortLocationsByItems,
+                      );
+                    }}
+                    className='w-full text-gray-700 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                  />
+                  <input
+                    type='text'
+                    placeholder='Search by items found...'
+                    value={locationItemSearchQuery}
+                    onChange={(e) => {
+                      setLocationItemSearchQuery(e.target.value);
+                      searchLocations(
+                        locationSearchQuery,
+                        e.target.value,
+                        sortLocationsByItems,
+                      );
+                    }}
+                    className='w-full text-gray-700 rounded-md border border-gray-300 px-3 py-2 text-sm outline-none'
+                  />
+                  <div className='flex items-center space-x-2'>
+                    <input
+                      type='checkbox'
+                      id='sortByItemsModal'
+                      checked={sortLocationsByItems}
+                      onChange={(e) => {
+                        setSortLocationsByItems(e.target.checked);
+                        searchLocations(
+                          locationSearchQuery,
+                          locationItemSearchQuery,
+                          e.target.checked,
+                        );
+                      }}
+                      className='h-4 w-4 rounded border-gray-300 text-indigo-600'
+                    />
+                    <label
+                      htmlFor='sortByItemsModal'
+                      className='text-sm font-semibold text-gray-900'
+                    >
+                      Most items found
+                    </label>
+                  </div>
+                </div>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => {
+                      setLocationSearchQuery('');
+                      setLocationItemSearchQuery('');
+                      setSortLocationsByItems(false);
+                      setFilteredLocations(locations);
+                      if (locations.length > 0) {
+                        setSelectedLocation(locations[0]);
+                      }
+                      setShowAllLocationsFilterModal(false);
+                    }}
+                    className='flex-1 bg-gray-100 hover:bg-gray-200 hover:cursor-pointer text-gray-700 font-semibold py-2 rounded-md text-sm'
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => setShowAllLocationsFilterModal(false)}
+                    className='flex-1 bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold py-2 rounded-md text-sm'
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
             </Modal>
           </div>

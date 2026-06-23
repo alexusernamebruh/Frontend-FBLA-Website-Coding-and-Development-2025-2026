@@ -14,59 +14,112 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
 } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/navigation';
-
-gsap.registerPlugin(ScrollTrigger);
+import { useTutorial } from './hooks/useTutorial';
 
 export default function Home() {
-  const heroTextRef = useRef<HTMLDivElement>(null);
-  const heroVideoRef = useRef<HTMLDivElement>(null);
-  const confusedRef = useRef<HTMLDivElement>(null);
-  const featuresRef = useRef<HTMLDivElement>(null);
-  const howItWorksRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  const { startTutorial } = useTutorial([
+    {
+      element: 'header h1, .animate-hero-text > p:first-child',
+      intro: 'Welcome to the Lost & Found portal! This is where you can report or find lost items at South Western High School.',
+      position: 'bottom',
+    },
+    {
+      element: 'a[href="/signup"]',
+      intro: 'Click "Get Started" to create an account and start using the system.',
+      position: 'bottom',
+    },
+    {
+      element: '.animate-features',
+      intro: 'Explore the key features: Smart search, User Guide, Item Lookouts, Chats, Notifications, and Claims.',
+      position: 'top',
+    },
+    {
+      element: '.animate-how',
+      intro: 'Learn how the system works in 4 simple steps: Report or Search, Connect & Verify, Submit Claim, and Get It Back.',
+      position: 'top',
+    },
+    {
+      element: '.animate-cta',
+      intro: 'Ready to get started? Sign up today and find your lost items!',
+      position: 'top',
+    },
+    {
+      element: '.animate-hero-video',
+      intro: 'Watch a quick demo video to see the platform in action.',
+      position: 'left',
+    },
+  ]);
+
   useEffect(() => {
+    // ensure plugin registered on client
+    gsap.registerPlugin(ScrollTrigger);
+
     const ctx = gsap.context(() => {
-      gsap.from(heroTextRef.current, {
-        opacity: 0,
-        y: 40,
-        duration: 0.8,
-        ease: 'power3.out',
+      const heroTexts = gsap.utils.toArray('.animate-hero-text');
+      if (heroTexts.length) {
+        gsap.from(heroTexts, {
+          opacity: 0,
+          y: 40,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.08,
+        });
+      }
+
+      const heroVideos = gsap.utils.toArray('.animate-hero-video');
+      if (heroVideos.length) {
+        gsap.from(heroVideos, {
+          opacity: 0,
+          x: 40,
+          duration: 0.8,
+          delay: 0.2,
+          ease: 'power3.out',
+          stagger: 0.08,
+        });
+      }
+
+      const featureEls = gsap.utils.toArray('.animate-features');
+      featureEls.forEach((el) => {
+        gsap.from(el as HTMLElement, {
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: el as HTMLElement, start: 'top 85%' },
+        });
       });
-      gsap.from(heroVideoRef.current, {
-        opacity: 0,
-        x: 40,
-        duration: 0.8,
-        delay: 0.2,
-        ease: 'power3.out',
+
+      const howEls = gsap.utils.toArray('.animate-how');
+      howEls.forEach((el) => {
+        gsap.from(el as HTMLElement, {
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: el as HTMLElement, start: 'top 85%' },
+        });
       });
-      gsap.from(featuresRef.current, {
-        opacity: 0,
-        y: 50,
-        duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: featuresRef.current, start: 'top 85%' },
+
+      const ctaEls = gsap.utils.toArray('.animate-cta');
+      ctaEls.forEach((el) => {
+        gsap.from(el as HTMLElement, {
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: el as HTMLElement, start: 'top 85%' },
+        });
       });
-      gsap.from(howItWorksRef.current, {
-        opacity: 0,
-        y: 50,
-        duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: howItWorksRef.current, start: 'top 85%' },
-      });
-      gsap.from(confusedRef.current, {
-        opacity: 0,
-        y: 50,
-        duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: confusedRef.current, start: 'top 85%' },
-      });
-    });
+    }, containerRef);
+
     return () => ctx.revert();
   }, []);
 
   return (
-    <>
+    <div ref={containerRef}>
       <div className='md:hidden lg:flex flex-col min-h-screen h-full max-w-screen overflow-x-clip p-4 bg-indigo-50'>
         <div className='w-full h-full sticky top-0 z-2'>
           <Navbar />
@@ -75,10 +128,7 @@ export default function Home() {
         <div className='flex flex-col w-full h-full bg-grid bg-white rounded-lg shadow'>
           {/* Hero Section */}
           <div className='flex w-full space-x-6 px-14 items-center py-22'>
-            <div
-              ref={heroTextRef}
-              className='text-left w-1/2 flex flex-col space-y-3 h-full'
-            >
+            <div className='text-left w-1/2 flex flex-col space-y-3 h-full animate-hero-text'>
               <div className='space-y-3 h-full flex flex-col justify-center'>
                 <p className='font-bold text-6xl text-black'>
                   Lost and <span className='text-indigo-500'>Found</span>
@@ -102,10 +152,7 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <div
-              ref={heroVideoRef}
-              className='w-1/2 flex-col my-auto p-6 rounded-xl bg-indigo-50 shadow-lg shadow-indigo-200'
-            >
+            <div className='w-1/2 flex-col my-auto p-6 rounded-xl bg-indigo-50 shadow-lg shadow-indigo-200 animate-hero-video'>
               <video
                 src='/assets/compass.mp4'
                 className='rounded-xl'
@@ -116,12 +163,8 @@ export default function Home() {
               />
             </div>
           </div>
-
           {/* Features Section */}
-          <div
-            ref={featuresRef}
-            className='grid grid-cols-3 gap-x-8 gap-y-8 py-14 px-10'
-          >
+          <div className='grid grid-cols-3 gap-x-8 gap-y-8 py-14 px-10 animate-features'>
             <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-white border border-gray-200 rounded-lg text-black font-semibold justify-between'>
               <div className='pr-4'>
                 <p>Smart search</p>
@@ -130,7 +173,6 @@ export default function Home() {
                   searching.
                 </p>
                 <p className='text-sm mt-4 text-gray-600'>
-                  You can find your lost items by searching with a picture of
                   the item, or a short description.
                 </p>
               </div>
@@ -221,10 +263,7 @@ export default function Home() {
           </div>
 
           {/* How It Works Section */}
-          <div
-            ref={howItWorksRef}
-            className='bg-indigo-900 rounded-lg mx-14 mb-10'
-          >
+          <div className='bg-indigo-900 rounded-lg mx-14 mb-10 animate-how'>
             <div className='px-14 py-12'>
               <p className='text-4xl font-bold text-white mb-2'>How It Works</p>
               <p className='text-indigo-100 mb-8'>
@@ -292,10 +331,7 @@ export default function Home() {
 
           {/* CTA Section */}
           <div className='px-14'>
-            <div
-              ref={confusedRef}
-              className='text-center flex space-y-3 w-full h-full space-x-6 px-14 items-center py-16 rounded-lg mb-10'
-            >
+            <div className='text-center flex space-y-3 w-full h-full space-x-6 px-14 items-center py-16 rounded-lg mb-10 animate-cta'>
               <div className='space-y-3 w-full h-full text-black flex text-center flex-col justify-center'>
                 <p className='font-bold text-6xl text-black'>
                   Ready to Get Started?
@@ -331,7 +367,7 @@ export default function Home() {
         <div className='w-full h-full bg-grid bg-white rounded-lg shadow'>
           {/* Hero Section Mobile */}
           <div className='flex flex-col w-full px-6 pt-8 pb-8 space-y-8'>
-            <div ref={heroTextRef} className='space-y-6'>
+            <div className='space-y-6 animate-hero-text'>
               <p className='font-bold text-5xl text-black'>
                 Lost and <span className='text-indigo-500'>Found</span>
               </p>
@@ -352,10 +388,7 @@ export default function Home() {
               </a>
             </div>
 
-            <div
-              ref={heroVideoRef}
-              className='w-full rounded-xl bg-indigo-50 p-4 shadow-lg shadow-indigo-200'
-            >
+            <div className='w-full rounded-xl bg-indigo-50 p-4 shadow-lg shadow-indigo-200 animate-hero-video'>
               <video
                 src='/assets/compass.mp4'
                 className='rounded-xl w-full'
@@ -367,7 +400,7 @@ export default function Home() {
             </div>
 
             {/* Features Mobile */}
-            <div ref={featuresRef} className='space-y-4'>
+            <div className='space-y-4 animate-features'>
               <div className='shadow overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-white border border-gray-200 rounded-lg text-black font-semibold'>
                 <div className='mb-4'>
                   <p className='text-xl font-bold'>Smart search</p>
@@ -472,10 +505,7 @@ export default function Home() {
           </div>
 
           {/* How It Works Mobile */}
-          <div
-            ref={howItWorksRef}
-            className='px-6 py-8 bg-indigo-900 rounded-lg mx-6'
-          >
+          <div className='px-6 py-8 bg-indigo-900 rounded-lg mx-6 animate-how'>
             <p className='text-3xl font-bold text-white mb-2'>How It Works</p>
             <p className='text-indigo-100 mb-8'>
               Get your lost items back in four simple steps. Learn more in the{' '}
@@ -537,10 +567,7 @@ export default function Home() {
 
           {/* CTA Mobile */}
           <div className='px-6'>
-            <div
-              ref={confusedRef}
-              className='text-center flex flex-col space-y-3 w-full h-full px-6 items-center py-16 rounded-lg mb-10'
-            >
+            <div className='text-center flex flex-col space-y-3 w-full h-full px-6 items-center py-16 rounded-lg mb-10 animate-cta'>
               <div className='space-y-3 w-full h-full text-black flex flex-col justify-center'>
                 <p className='font-bold text-5xl text-black'>
                   Ready to Get Started?
@@ -566,6 +593,15 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </>
+
+      {/* Tutorial button */}
+      <button
+        onClick={startTutorial}
+        className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer"
+        title="Take a tour"
+      >
+        ?
+      </button>
+    </div>
   );
 }

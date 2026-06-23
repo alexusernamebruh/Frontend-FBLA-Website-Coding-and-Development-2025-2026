@@ -15,6 +15,8 @@ import {
   CalendarDaysIcon,
 } from '@heroicons/react/24/solid';
 import { MapPinIcon } from '@heroicons/react/24/outline';
+import { useTutorial } from '../hooks/useTutorial';
+import AdminCharts from '../components/adminCharts';
 
 interface IAnalytics {
   totalItems: number;
@@ -530,6 +532,44 @@ export default function Home() {
     setFilterSearchQuery('');
   };
 
+  const { startTutorial } = useTutorial([
+    {
+      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6 > p:first-child',
+      intro: 'Welcome to the Analytics Dashboard. This is your central hub for monitoring all Lost & Found activity.',
+      position: 'bottom',
+    },
+    {
+      element: '.grid.grid-cols-4.gap-5',
+      intro: 'These stat cards give you a quick overview: total items, return rate, pending reports, open claims, and more.',
+      position: 'top',
+    },
+    {
+      element: '#analytics-charts',
+      intro: 'Visual charts help you understand item claims, location distribution, and submission trends at a glance.',
+      position: 'top',
+    },
+    {
+      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(3) .grid',
+      intro: 'The Items by Location section shows which areas have the most lost-and-found activity.',
+      position: 'top',
+    },
+    {
+      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(4)',
+      intro: 'Common item types are derived from descriptions, helping you spot patterns.',
+      position: 'top',
+    },
+    {
+      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(5)',
+      intro: 'The submission trend chart shows how many reports have been filed over the last 30 days.',
+      position: 'top',
+    },
+    {
+      element: '.bg-indigo-500.w-fit.h-full',
+      intro: 'Use the sidebar to navigate between Analytics, Items, Reports, Claims, and Locations management.',
+      position: 'right',
+    },
+  ]);
+
   useEffect(() => {
     (async () => {
       await getPendingSubmissions();
@@ -694,6 +734,11 @@ export default function Home() {
                           <p className='text-xs text-gray-400 mt-1'>{sub}</p>
                         </div>
                       ))}
+                    </div>
+
+                    {/* Chart.js charts */}
+                    <div id="analytics-charts">
+                      <AdminCharts analytics={analytics} />
                     </div>
 
                     <div className='grid grid-cols-2 gap-5'>
@@ -3745,6 +3790,15 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Tutorial button */}
+      <button
+        onClick={startTutorial}
+        className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer"
+        title="Take a tour"
+      >
+        ?
+      </button>
     </div>
   );
 }

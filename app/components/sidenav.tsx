@@ -128,7 +128,7 @@ export default function SideNav({
   const layout = type === 'admin' ? adminLayout : userLayout;
 
   return (
-    <div className='flex flex-col bg-indigo-500 h-full py-6 px-4 w-60'>
+    <div className='flex flex-col bg-[#5a5df0] h-full py-6 px-4 w-60'>
       <p className='font-bold text-white text-sm mb-4 px-1'>Lost and Found</p>
 
       <nav className='flex flex-col gap-0.5 flex-1'>

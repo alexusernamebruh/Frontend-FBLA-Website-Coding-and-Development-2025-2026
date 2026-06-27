@@ -520,9 +520,12 @@ const HomePage = () => {
           {current === 'All Items' && (
             <div className='w-full h-full flex flex-col'>
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+<div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   <div className='flex space-x-2'>
                     <button
+                      type='button'
+                      title='Filter by text'
+                      aria-label='Filter by text'
                       onClick={() => {
                         setSearchType('text');
                         setSearchQuery('');
@@ -539,6 +542,9 @@ const HomePage = () => {
                       <DocumentTextIcon className='w-5 h-5 text-gray-100' />
                     </button>
                     <button
+                      type='button'
+                      title='Filter by image'
+                      aria-label='Filter by image'
                       onClick={() => {
                         setSearchType('image');
                         setSelectedSearchImage('None');
@@ -557,6 +563,8 @@ const HomePage = () => {
                     </button>
                     <button
                       type='button'
+                      title='Filter by location'
+                      aria-label='Filter by location'
                       onClick={() => {
                         setSearchType('location');
                         setFilteredItems(unclaimedItems);
@@ -610,14 +618,23 @@ const HomePage = () => {
                         </div>
                       </div>
                     )}
-                    {searchType === 'location' && (
+{searchType === 'location' && (
                       <div className='flex flex-col gap-2'>
                         <div
-                          onClick={() => setShowLocationFilterModal(true)}
-                          className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'
-                        >
-                          Select Location
-                        </div>
+                        role='button'
+                        tabIndex={0}
+                        title='Select a location to filter items'
+                        aria-label='Select a location to filter items'
+                        onClick={() => setShowLocationFilterModal(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            setShowLocationFilterModal(true);
+                          }
+                        }}
+                        className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'
+                      >
+                        Select Location
+                      </div>
                         <div className='text-black text-xs font-semibold'>
                           Selected Location: {selectedLocationName}
                         </div>
@@ -1500,7 +1517,10 @@ const HomePage = () => {
               {/* Search Bar */}
               <div className='bg-white rounded-lg border border-gray-200 p-3 space-y-2'>
                 <div className='flex space-x-2'>
-                  <button
+<button
+                    type='button'
+                    title='Filter by text'
+                    aria-label='Filter by text'
                     onClick={() => {
                       setSearchType('text');
                       setSearchQuery('');
@@ -1517,6 +1537,9 @@ const HomePage = () => {
                     <span>Text</span>
                   </button>
                   <button
+                    type='button'
+                    title='Filter by image'
+                    aria-label='Filter by image'
                     onClick={() => {
                       setSearchType('image');
                       setSelectedSearchImage('None');
@@ -1532,6 +1555,9 @@ const HomePage = () => {
                     <span>Image</span>
                   </button>
                   <button
+                    type='button'
+                    title='Filter by location'
+                    aria-label='Filter by location'
                     onClick={() => {
                       setSearchType('location');
                       setFilteredItems(unclaimedItems);
@@ -1580,8 +1606,11 @@ const HomePage = () => {
                     </p>
                   </label>
                 )}
-                {searchType === 'location' && (
+{searchType === 'location' && (
                   <button
+                    type='button'
+                    title='Select a location to filter items'
+                    aria-label='Select a location to filter items'
                     onClick={() => setShowLocationFilterModal(true)}
                     className='w-full bg-indigo-500 text-white text-sm font-semibold p-2 rounded-md hover:bg-indigo-600'
                   >

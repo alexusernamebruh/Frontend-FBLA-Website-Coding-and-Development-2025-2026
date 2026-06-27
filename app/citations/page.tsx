@@ -2,80 +2,121 @@ export default function Citations() {
   return (
     <>
       {/* Desktop Version */}
-      <div className='hidden text-gray-700 lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
+      <div className='hidden lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
         <div className='w-full h-screen overflow-hidden'>
           <div className='w-full h-full flex flex-col'>
             <div className='flex w-full h-full p-8'>
               <div className='w-full h-full overflow-auto bg-white rounded-lg border border-gray-300 shadow-md p-8'>
-                <h1 className='text-2xl font-bold text-black mb-8'>
+                <h1
+                  id='citations-title'
+                  className='text-2xl font-bold text-black mb-8'
+                >
                   Citations
                 </h1>
                 <div className='space-y-6'>
                   {/* Media Citations */}
-                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+                  <div
+                    id='citations-media'
+                    data-citations-reveal='true'
+                    className='bg-gray-50 p-6 rounded-lg border border-gray-200'
+                  >
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Compass Video
                     </h3>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://www.pexels.com/download/video/1793508/
                     </p>
-                    <p className='text-sm'>By Miguel Á. Padriñán</p>
+                    <p className='text-sm text-gray-800'>
+                      By Miguel Á. Padriñán
+                    </p>
                   </div>
-                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+
+                  <div
+                    data-citations-reveal='true'
+                    className='bg-gray-50 p-6 rounded-lg border border-gray-200'
+                  >
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Binocular Picture
                     </h3>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://images.pexels.com/photos/63901/pexels-photo-63901.jpeg
                     </p>
-                    <p className='text-sm'>By ClickHappy</p>
+                    <p className='text-sm text-gray-800'>By ClickHappy</p>
                   </div>
-                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+
+                  <div
+                    data-citations-reveal='true'
+                    className='bg-gray-50 p-6 rounded-lg border border-gray-200'
+                  >
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Magnifying Glass Picture
                     </h3>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://images.pexels.com/photos/1194775/pexels-photo-1194775.jpeg
                     </p>
-                    <p className='text-sm'>By lil artsy</p>
+                    <p className='text-sm text-gray-800'>By lil artsy</p>
                   </div>
-                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+
+                  <div
+                    data-citations-reveal='true'
+                    className='bg-gray-50 p-6 rounded-lg border border-gray-200'
+                  >
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Miscellaneous
                     </h3>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://m.media-amazon.com/images/I/81rSqsn357L._AC_UY1000_.jpg
                     </p>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://covenantsecurityequipment.com/cdn/shop/files/CSE-AS-ExtraKeys_700x700.png?v=1713479233
                     </p>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://m.media-amazon.com/images/I/41tp0JPPlmL.jpg
                     </p>
-                    <p className='text-sm mb-1'>
+                    <p className='text-sm mb-1 text-gray-800'>
                       https://cdn.arstechnica.net/wp-content/uploads/2019/09/iPhone-11-back-hand-scaled.jpg
                     </p>
-                    <p className='text-sm'>
+                    <p className='text-sm text-gray-800'>
                       https://m.media-amazon.com/images/I/61BygHH-M2L._AC_UY1000_.jpg
                     </p>
                   </div>
-                  <div className='bg-gray-50 p-6 rounded-lg border border-gray-200'>
+
+                  {/* Presentation Citations */}
+                  <div
+                    id='citations-presentation'
+                    data-citations-reveal='true'
+                    className='bg-gray-50 p-6 rounded-lg border border-gray-200'
+                  >
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Presentation Citations
                     </h3>
-                    <p className='text-sm mb-1'>Color Theory</p>
-                    <p className='text-sm'>
+
+                    <p
+                      id='citations-presentation-link'
+                      className='text-sm mb-1 text-gray-800'
+                    >
+                      <span className='font-bold text-black'>
+                        Color Theory:
+                      </span>{' '}
+                      <span className='text-gray-800'>
+                        Color contrast reference (WCAG 2.2 minimum contrast).
+                      </span>
+                    </p>
+                    <p className='text-sm text-gray-800'>
                       https://octet.design/journal/indigo-color-meaning/
+                      <br />
+                      https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
                     </p>
                   </div>
+
                   {/* Library Citations */}
-                  <div className='mt-8'>
+                  <div id='citations-library' className='mt-8'>
                     <h2 className='text-2xl font-bold text-black mb-6'>
                       Library Citations
                     </h2>
 
                     <div className='space-y-6'>
-                      <div>
+                      <div data-citations-reveal='true'>
                         <h3 className='text-xl font-bold text-black mb-4'>
                           Backend Dependencies
                         </h3>
@@ -84,32 +125,44 @@ export default function Citations() {
                             <h4 className='font-bold text-black'>
                               Production Dependencies
                             </h4>
-                            <div className='mt-2 space-y-2 text-sm'>
+                            <div className='mt-2 space-y-2 text-sm text-gray-800'>
                               <p>
-                                <strong>@prisma/adapter-pg</strong> (v7.3.0) -
-                                PostgreSQL adapter for Prisma ORM (Apache-2.0)
-                              </p>
-                              <p>
-                                <strong>@prisma/client</strong> (v7.3.0) -
-                                Auto-generated database client for Prisma
+                                <span className='font-bold text-black'>
+                                  @prisma/adapter-pg
+                                </span>{' '}
+                                (v7.3.0) - PostgreSQL adapter for Prisma ORM
                                 (Apache-2.0)
                               </p>
                               <p>
-                                <strong>express</strong> (v5.1.0) - Fast web
-                                framework for Node.js (MIT)
+                                <span className='font-bold text-black'>
+                                  @prisma/client
+                                </span>{' '}
+                                (v7.3.0) - Auto-generated database client for
+                                Prisma (Apache-2.0)
                               </p>
                               <p>
-                                <strong>multer</strong> (v1.4.5-lts.1) -
-                                Middleware for handling multipart/form-data
+                                <span className='font-bold text-black'>
+                                  express
+                                </span>{' '}
+                                (v5.1.0) - Fast web framework for Node.js (MIT)
+                              </p>
+                              <p>
+                                <span className='font-bold text-black'>
+                                  multer
+                                </span>{' '}
+                                (v1.4.5-lts.1) - Middleware for handling
+                                multipart/form-data (MIT)
+                              </p>
+                              <p>
+                                <span className='font-bold text-black'>pg</span>{' '}
+                                (v8.17.2) - PostgreSQL client for Node.js (MIT)
+                              </p>
+                              <p>
+                                <span className='font-bold text-black'>
+                                  nodemailer
+                                </span>{' '}
+                                (v8.0.4) - Email sending library for Node.js
                                 (MIT)
-                              </p>
-                              <p>
-                                <strong>pg</strong> (v8.17.2) - PostgreSQL
-                                client for Node.js (MIT)
-                              </p>
-                              <p>
-                                <strong>nodemailer</strong> (v8.0.4) - Email
-                                sending library for Node.js (MIT)
                               </p>
                             </div>
                           </div>
@@ -117,81 +170,119 @@ export default function Citations() {
                             <h4 className='font-bold text-black'>
                               Development Dependencies
                             </h4>
-                            <div className='mt-2 space-y-2 text-sm'>
+                            <div className='mt-2 space-y-2 text-sm text-gray-800'>
                               <p>
-                                <strong>@types/cors</strong> (v2.8.19) -
-                                TypeScript definitions for cors (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/cors
+                                </span>{' '}
+                                (v2.8.19) - TypeScript definitions for cors
+                                (MIT)
                               </p>
                               <p>
-                                <strong>@types/express</strong> (v5.0.5) -
-                                TypeScript definitions for Express (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/express
+                                </span>{' '}
+                                (v5.0.5) - TypeScript definitions for Express
+                                (MIT)
                               </p>
                               <p>
-                                <strong>@types/multer</strong> (v1.4.12) -
-                                TypeScript definitions for multer (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/multer
+                                </span>{' '}
+                                (v1.4.12) - TypeScript definitions for multer
+                                (MIT)
                               </p>
                               <p>
-                                <strong>@types/node</strong> (v24.10.1) -
-                                TypeScript definitions for Node.js (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/node
+                                </span>{' '}
+                                (v24.10.1) - TypeScript definitions for Node.js
+                                (MIT)
                               </p>
                               <p>
-                                <strong>@types/pg</strong> (v8.16.0) -
-                                TypeScript definitions for pg (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/pg
+                                </span>{' '}
+                                (v8.16.0) - TypeScript definitions for pg (MIT)
                               </p>
                               <p>
-                                <strong>prisma</strong> (v7.3.0) - Database
-                                toolkit and ORM (Apache-2.0)
+                                <span className='font-bold text-black'>
+                                  prisma
+                                </span>{' '}
+                                (v7.3.0) - Database toolkit and ORM (Apache-2.0)
                               </p>
                               <p>
-                                <strong>ts-node-dev</strong> (v2.0.0) -
-                                TypeScript execution with hot reload (MIT)
+                                <span className='font-bold text-black'>
+                                  ts-node-dev
+                                </span>{' '}
+                                (v2.0.0) - TypeScript execution with hot reload
+                                (MIT)
                               </p>
                               <p>
-                                <strong>typescript</strong> (v5.9.3) -
-                                TypeScript language and compiler (Apache-2.0)
+                                <span className='font-bold text-black'>
+                                  typescript
+                                </span>{' '}
+                                (v5.9.3) - TypeScript language and compiler
+                                (Apache-2.0)
                               </p>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div>
+                      <div data-citations-reveal='true'>
                         <h3 className='text-xl font-bold text-black mb-4'>
                           Python Dependencies
                         </h3>
                         <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
-                          <div className='space-y-2 text-sm'>
+                          <div className='space-y-2 text-sm text-gray-800'>
                             <p>
-                              <strong>torch</strong> (v2.0.0) - Open source
-                              machine learning framework (BSD-3-Clause)
-                            </p>
-                            <p>
-                              <strong>torchvision</strong> (v0.15.0) - Computer
-                              vision library for PyTorch (BSD-3-Clause)
-                            </p>
-                            <p>
-                              <strong>clip-by-openai</strong> (v0.3.0) - OpenAI
-                              CLIP model for image and text embeddings (MIT)
-                            </p>
-                            <p>
-                              <strong>Pillow</strong> (v9.0.0) - Python Imaging
-                              Library fork for image processing (HPND)
-                            </p>
-                            <p>
-                              <strong>Flask</strong> (v2.3.0) - Lightweight WSGI
-                              web application framework for Python
+                              <span className='font-bold text-black'>
+                                torch
+                              </span>{' '}
+                              (v2.0.0) - Open source machine learning framework
                               (BSD-3-Clause)
                             </p>
                             <p>
-                              <strong>numpy</strong> (v1.24.0) - Fundamental
-                              package for scientific computing with Python
+                              <span className='font-bold text-black'>
+                                torchvision
+                              </span>{' '}
+                              (v0.15.0) - Computer vision library for PyTorch
                               (BSD-3-Clause)
+                            </p>
+                            <p>
+                              <span className='font-bold text-black'>
+                                clip-by-openai
+                              </span>{' '}
+                              (v0.3.0) - OpenAI CLIP model for image and text
+                              embeddings (MIT)
+                            </p>
+                            <p>
+                              <span className='font-bold text-black'>
+                                Pillow
+                              </span>{' '}
+                              (v9.0.0) - Python Imaging Library fork for image
+                              processing (HPND)
+                            </p>
+                            <p>
+                              <span className='font-bold text-black'>
+                                Flask
+                              </span>{' '}
+                              (v2.3.0) - Lightweight WSGI web application
+                              framework for Python (BSD-3-Clause)
+                            </p>
+                            <p>
+                              <span className='font-bold text-black'>
+                                numpy
+                              </span>{' '}
+                              (v1.24.0) - Fundamental package for scientific
+                              computing with Python (BSD-3-Clause)
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div>
+                      <div data-citations-reveal='true'>
                         <h3 className='text-xl font-bold text-black mb-4'>
                           Frontend Dependencies
                         </h3>
@@ -200,34 +291,67 @@ export default function Citations() {
                             <h4 className='font-bold text-black'>
                               Production Dependencies
                             </h4>
-                            <div className='mt-2 space-y-2 text-sm'>
+                            <div className='mt-2 space-y-2 text-sm text-gray-800'>
                               <p>
-                                <strong>next</strong> (v16.1.1) - React
-                                framework for production (MIT)
+                                <span className='font-bold text-black'>
+                                  next
+                                </span>{' '}
+                                (v16.1.1) - React framework for production (MIT)
                               </p>
                               <p>
-                                <strong>react</strong> (v19.2.3) - JavaScript
-                                library for building user interfaces (MIT)
+                                <span className='font-bold text-black'>
+                                  react
+                                </span>{' '}
+                                (v19.2.3) - JavaScript library for building user
+                                interfaces (MIT)
                               </p>
                               <p>
-                                <strong>react-dom</strong> (v19.2.3) - React
-                                package for working with the DOM (MIT)
+                                <span className='font-bold text-black'>
+                                  react-dom
+                                </span>{' '}
+                                (v19.2.3) - React package for working with the
+                                DOM (MIT)
                               </p>
                               <p>
-                                <strong>@headlessui/react</strong> (v2.2.0) -
-                                Unstyled, accessible UI components (MIT)
+                                <span className='font-bold text-black'>
+                                  @headlessui/react
+                                </span>{' '}
+                                (v2.2.0) - Unstyled, accessible UI components
+                                (MIT)
                               </p>
                               <p>
-                                <strong>@heroicons/react</strong> (v2.2.0) -
-                                Beautiful SVG icons for React (MIT)
+                                <span className='font-bold text-black'>
+                                  @heroicons/react
+                                </span>{' '}
+                                (v2.2.0) - Beautiful SVG icons for React (MIT)
                               </p>
                               <p>
-                                <strong>axios</strong> (v1.7.9) - Promise-based
-                                HTTP client (MIT)
+                                <span className='font-bold text-black'>
+                                  axios
+                                </span>{' '}
+                                (v1.7.9) - Promise-based HTTP client (MIT)
                               </p>
                               <p>
-                                <strong>dayjs</strong> (v1.11.13) - Minimalist
-                                JavaScript date library (MIT)
+                                <span className='font-bold text-black'>
+                                  dayjs
+                                </span>{' '}
+                                (v1.11.13) - Minimalist JavaScript date library
+                                (MIT)
+                              </p>
+                              <p>
+                                <span className='font-bold text-black'>
+                                  gsap
+                                </span>{' '}
+                                (v3.12.5) - Professional-grade JavaScript
+                                animation for the modern web (Standard GreenSock
+                                License)
+                              </p>
+                              <p>
+                                <span className='font-bold text-black'>
+                                  intro.js
+                                </span>{' '}
+                                (v7.2.0) - Step-by-step user guide and feature
+                                introduction library (MIT / Commercial)
                               </p>
                             </div>
                           </div>
@@ -235,67 +359,93 @@ export default function Citations() {
                             <h4 className='font-bold text-black'>
                               Development Dependencies
                             </h4>
-                            <div className='mt-2 space-y-2 text-sm'>
+                            <div className='mt-2 space-y-2 text-sm text-gray-800'>
                               <p>
-                                <strong>@tailwindcss/postcss</strong> (v4) -
-                                PostCSS plugin for Tailwind CSS (MIT)
+                                <span className='font-bold text-black'>
+                                  @tailwindcss/postcss
+                                </span>{' '}
+                                (v4) - PostCSS plugin for Tailwind CSS (MIT)
                               </p>
                               <p>
-                                <strong>@types/node</strong> (v20) - TypeScript
-                                definitions for Node.js (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/node
+                                </span>{' '}
+                                (v20) - TypeScript definitions for Node.js (MIT)
                               </p>
                               <p>
-                                <strong>@types/react</strong> (v19) - TypeScript
-                                definitions for React (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/react
+                                </span>{' '}
+                                (v19) - TypeScript definitions for React (MIT)
                               </p>
                               <p>
-                                <strong>@types/react-dom</strong> (v19) -
-                                TypeScript definitions for React DOM (MIT)
+                                <span className='font-bold text-black'>
+                                  @types/react-dom
+                                </span>{' '}
+                                (v19) - TypeScript definitions for React DOM
+                                (MIT)
                               </p>
                               <p>
-                                <strong>eslint</strong> (v9) - JavaScript and
-                                TypeScript linter (MIT)
+                                <span className='font-bold text-black'>
+                                  eslint
+                                </span>{' '}
+                                (v9) - JavaScript and TypeScript linter (MIT)
                               </p>
                               <p>
-                                <strong>eslint-config-next</strong> (v16.1.1) -
-                                ESLint configuration for Next.js (MIT)
+                                <span className='font-bold text-black'>
+                                  eslint-config-next
+                                </span>{' '}
+                                (v16.1.1) - ESLint configuration for Next.js
+                                (MIT)
                               </p>
                               <p>
-                                <strong>tailwindcss</strong> (v4) -
-                                Utility-first CSS framework (MIT)
+                                <span className='font-bold text-black'>
+                                  tailwindcss
+                                </span>{' '}
+                                (v4) - Utility-first CSS framework (MIT)
                               </p>
                               <p>
-                                <strong>typescript</strong> (v5) - TypeScript
-                                language and compiler (Apache-2.0)
+                                <span className='font-bold text-black'>
+                                  typescript
+                                </span>{' '}
+                                (v5) - TypeScript language and compiler
+                                (Apache-2.0)
                               </p>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div>
+
+                      <div data-citations-reveal='true'>
                         <h3 className='text-xl font-bold text-black mb-4'>
                           Runtimes
                         </h3>
                         <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
-                          <div className='space-y-2 text-sm'>
+                          <div className='space-y-2 text-sm text-gray-800'>
                             <p>
-                              <strong>Node.js</strong> - Used to run the backend
-                              server. (MIT){' '}
-                              <span className='text-gray-500'>
+                              <span className='font-bold text-black'>
+                                Node.js
+                              </span>{' '}
+                              - Used to run the backend server. (MIT){' '}
+                              <span className='text-gray-600 ml-1'>
                                 https://nodejs.org
                               </span>
                             </p>
                             <p>
-                              <strong>Python</strong> - Used for the AI
-                              embedding service. (PSF License){' '}
-                              <span className='text-gray-500'>
+                              <span className='font-bold text-black'>
+                                Python
+                              </span>{' '}
+                              - Used for the AI embedding service. (PSF License){' '}
+                              <span className='text-gray-600 ml-1'>
                                 https://www.python.org
                               </span>
                             </p>
                             <p>
-                              <strong>React</strong> - Used as the frontend UI
-                              runtime. (MIT){' '}
-                              <span className='text-gray-500'>
+                              <span className='font-bold text-black'>
+                                React
+                              </span>{' '}
+                              - Used as the frontend UI runtime. (MIT){' '}
+                              <span className='text-gray-600 ml-1'>
                                 https://react.dev
                               </span>
                             </p>
@@ -303,14 +453,16 @@ export default function Citations() {
                         </div>
                       </div>
 
-                      <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
-                        <h4 className='font-bold text-black mb-2'>
-                          Acknowledgments
-                        </h4>
-                        <p className='text-sm text-gray-700'>
-                          This project was built using open-source libraries and
-                          frameworks.
-                        </p>
+                      <div data-citations-reveal='true'>
+                        <div className='bg-gray-50 p-4 rounded-lg border border-gray-200'>
+                          <h4 className='font-bold text-black mb-2'>
+                            Acknowledgments
+                          </h4>
+                          <p className='text-sm text-gray-800'>
+                            This project was built using open-source libraries
+                            and frameworks.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -324,38 +476,55 @@ export default function Citations() {
       {/* Mobile Version */}
       <div className='lg:hidden bg-white min-h-screen pb-4'>
         <div className='bg-indigo-600 text-white p-4 shadow-lg'>
-          <h1 className='text-xl font-bold'>Citations</h1>
+          <h1 id='citations-title' className='text-xl font-bold'>
+            Citations
+          </h1>
         </div>
         <div className='p-4'>
           <div className='space-y-4'>
             {/* Media Citations */}
-            <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
+            <div
+              id='citations-media'
+              data-citations-reveal='true'
+              className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+            >
               <h3 className='font-bold text-black mb-2'>Compass Video</h3>
-              <p className='text-sm text-gray-600 mb-1'>
+              <p className='text-sm text-gray-800 mb-1'>
                 https://www.pexels.com/download/video/1793508/
               </p>
-              <p className='text-sm text-gray-500'>By Miguel Á. Padriñán</p>
+              <p className='text-sm text-gray-600'>By Miguel Á. Padriñán</p>
             </div>
-            <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
+
+            <div
+              className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+              data-citations-reveal='true'
+            >
               <h3 className='font-bold text-black mb-2'>Binocular Picture</h3>
-              <p className='text-sm text-gray-600 mb-1'>
+              <p className='text-sm text-gray-800 mb-1'>
                 https://images.pexels.com/photos/63901/pexels-photo-63901.jpeg
               </p>
-              <p className='text-sm text-gray-500'>By ClickHappy</p>
+              <p className='text-sm text-gray-600'>By ClickHappy</p>
             </div>
-            <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
+
+            <div
+              className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'
+              data-citations-reveal='true'
+            >
               <h3 className='font-bold text-black mb-2'>
                 Magnifying Glass Picture
               </h3>
-              <p className='text-sm text-gray-600 mb-1'>
+              <p className='text-sm text-gray-800 mb-1'>
                 https://images.pexels.com/photos/1194775/pexels-photo-1194775.jpeg
               </p>
-              <p className='text-sm text-gray-500'>By lil artsy</p>
+              <p className='text-sm text-gray-600'>By lil artsy</p>
             </div>
 
             {/* Library Citations */}
             <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
-              <h2 className='text-lg font-bold text-black mb-4'>
+              <h2
+                className='text-lg font-bold text-black mb-4'
+                id='citations-library'
+              >
                 Library Citations
               </h2>
 
@@ -364,28 +533,34 @@ export default function Citations() {
                   <h3 className='font-bold text-black mb-2'>
                     Backend Dependencies
                   </h3>
-                  <div className='text-xs space-y-1 text-gray-700'>
+                  <div className='text-xs space-y-1 text-gray-800'>
                     <p>
-                      <strong>@prisma/adapter-pg</strong> (v7.3.0) - PostgreSQL
-                      adapter (Apache-2.0)
+                      <span className='font-bold text-black'>
+                        @prisma/adapter-pg
+                      </span>{' '}
+                      (v7.3.0) - PostgreSQL adapter (Apache-2.0)
                     </p>
                     <p>
-                      <strong>@prisma/client</strong> (v7.3.0) - Database client
-                      (Apache-2.0)
+                      <span className='font-bold text-black'>
+                        @prisma/client
+                      </span>{' '}
+                      (v7.3.0) - Database client (Apache-2.0)
                     </p>
                     <p>
-                      <strong>express</strong> (v5.1.0) - Web framework (MIT)
+                      <span className='font-bold text-black'>express</span>{' '}
+                      (v5.1.0) - Web framework (MIT)
                     </p>
                     <p>
-                      <strong>multer</strong> (v1.4.5-lts.1) - File upload
-                      middleware (MIT)
+                      <span className='font-bold text-black'>multer</span>{' '}
+                      (v1.4.5-lts.1) - File upload middleware (MIT)
                     </p>
                     <p>
-                      <strong>pg</strong> (v8.17.2) - PostgreSQL client (MIT)
+                      <span className='font-bold text-black'>pg</span> (v8.17.2)
+                      - PostgreSQL client (MIT)
                     </p>
                     <p>
-                      <strong>typescript</strong> (v5.9.3) - TypeScript compiler
-                      (Apache-2.0)
+                      <span className='font-bold text-black'>typescript</span>{' '}
+                      (v5.9.3) - TypeScript compiler (Apache-2.0)
                     </p>
                   </div>
                 </div>
@@ -394,45 +569,67 @@ export default function Citations() {
                   <h3 className='font-bold text-black mb-2'>
                     Python / AI Service Dependencies
                   </h3>
-                  <div className='text-xs space-y-1 text-gray-700'>
+                  <div className='text-xs space-y-1 text-gray-800'>
                     <p>
-                      <strong>torch</strong> (&gt;=2.0.0) - ML framework
+                      <span className='font-bold text-black'>torch</span> (
+                      {`>=2.0.0`}) - ML framework (BSD-3-Clause)
+                    </p>
+                    <p>
+                      <span className='font-bold text-black'>torchvision</span>{' '}
+                      ({`>=0.15.0`}) - Computer vision for PyTorch
                       (BSD-3-Clause)
                     </p>
                     <p>
-                      <strong>torchvision</strong> (&gt;=0.15.0) - Computer
-                      vision for PyTorch (BSD-3-Clause)
+                      <span className='font-bold text-black'>
+                        clip-by-openai
+                      </span>{' '}
+                      ({` text-black >= `}0.3.0) - CLIP embeddings (MIT)
                     </p>
                     <p>
-                      <strong>clip-by-openai</strong> (&gt;=0.3.0) - CLIP
-                      embeddings (MIT)
+                      <span className='font-bold text-black'>Pillow</span> (
+                      {`>=9.0.0`}) - Image processing (HPND)
                     </p>
                     <p>
-                      <strong>Pillow</strong> (&gt;=9.0.0) - Image processing
-                      (HPND)
+                      <span className='font-bold text-black'>Flask</span> (
+                      {`>=2.3.0`}) - Python web framework (BSD-3-Clause)
                     </p>
                     <p>
-                      <strong>Flask</strong> (&gt;=2.3.0) - Python web framework
-                      (BSD-3-Clause)
-                    </p>
-                    <p>
-                      <strong>numpy</strong> (&gt;=1.24.0) - Scientific
-                      computing (BSD-3-Clause)
+                      <span className='font-bold text-black'>numpy</span> (
+                      {`>=1.24.0`}) - Scientific computing (BSD-3-Clause)
                     </p>
                   </div>
                 </div>
 
+                {/* Presentation Citations (Mobile) */}
+                <div id='citations-presentation' data-citations-reveal='true'>
+                  <h3 className='font-bold text-black mb-2'>
+                    Presentation Citations
+                  </h3>
+                  <p
+                    id='citations-presentation-link'
+                    className='text-sm mb-1 text-black font-semibold'
+                  >
+                    Color Theory
+                  </p>
+                  <p className='text-sm text-gray-800'>
+                    https://octet.design/journal/indigo-color-meaning/
+                  </p>
+                </div>
+
                 <div>
                   <h3 className='font-bold text-black mb-2'>Runtimes</h3>
-                  <div className='text-xs text-gray-700 space-y-1'>
+                  <div className='text-xs text-gray-800 space-y-1'>
                     <p>
-                      <strong>Node.js</strong> - JavaScript runtime (MIT)
+                      <span className='font-bold text-black'>Node.js</span> -
+                      JavaScript runtime (MIT)
                     </p>
                     <p>
-                      <strong>Python</strong> - AI service runtime (PSF License)
+                      <span className='font-bold text-black'>Python</span> - AI
+                      service runtime (PSF License)
                     </p>
                     <p>
-                      <strong>React</strong> - Frontend UI runtime (MIT)
+                      <span className='font-bold text-black'>React</span> -
+                      Frontend UI runtime (MIT)
                     </p>
                   </div>
                 </div>
@@ -441,35 +638,53 @@ export default function Citations() {
                   <h3 className='font-bold text-black mb-2'>
                     Frontend Dependencies
                   </h3>
-                  <div className='text-xs text-gray-700 space-y-1'>
+                  <div className='text-xs text-gray-800 space-y-1'>
                     <p>
-                      <strong>next</strong> (v16.1.1) - React framework (MIT)
+                      <span className='font-bold text-black'>next</span>{' '}
+                      (v16.1.1) - React framework (MIT)
                     </p>
                     <p>
-                      <strong>react</strong> (v19.2.3) - UI library (MIT)
+                      <span className='font-bold text-black'>react</span>{' '}
+                      (v19.2.3) - UI library (MIT)
                     </p>
                     <p>
-                      <strong>@headlessui/react</strong> (v2.2.0) - UI
-                      components (MIT)
+                      <span className='font-bold text-black'>
+                        @headlessui/react
+                      </span>{' '}
+                      (v2.2.0) - UI components (MIT)
                     </p>
                     <p>
-                      <strong>@heroicons/react</strong> (v2.2.0) - SVG icons
-                      (MIT)
+                      <span className='font-bold text-black'>
+                        @heroicons/react
+                      </span>{' '}
+                      (v2.2.0) - SVG icons (MIT)
                     </p>
                     <p>
-                      <strong>axios</strong> (v1.7.9) - HTTP client (MIT)
+                      <span className='font-bold text-black'>axios</span>{' '}
+                      (v1.7.9) - HTTP client (MIT)
                     </p>
                     <p>
-                      <strong>dayjs</strong> (v1.11.13) - Date library (MIT)
+                      <span className='font-bold text-black'>dayjs</span>{' '}
+                      (v1.11.13) - Date library (MIT)
                     </p>
                     <p>
-                      <strong>tailwindcss</strong> (v4) - CSS framework (MIT)
+                      <span className='font-bold text-black'>gsap</span>{' '}
+                      (v3.12.5) - Animation framework (Standard GreenSock
+                      License)
+                    </p>
+                    <p>
+                      <span className='font-bold text-black'>intro.js</span>{' '}
+                      (v7.2.0) - Onboarding tours (MIT)
+                    </p>
+                    <p>
+                      <span className='font-bold text-black'>tailwindcss</span>{' '}
+                      (v4) - CSS framework (MIT)
                     </p>
                   </div>
                 </div>
 
                 <div className='bg-gray-50 p-3 rounded border border-gray-200'>
-                  <p className='text-xs text-gray-700'>
+                  <p className='text-xs text-gray-800'>
                     This project uses open-source libraries.
                   </p>
                 </div>

@@ -23,22 +23,26 @@ export default function Home() {
   const { startTutorial } = useTutorial([
     {
       element: 'header h1, .animate-hero-text > p:first-child',
-      intro: 'Welcome to the Lost & Found portal! This is where you can report or find lost items at South Western High School.',
+      intro:
+        'Welcome to the Lost & Found portal! This is where you can report or find lost items at South Western High School.',
       position: 'bottom',
     },
     {
       element: 'a[href="/signup"]',
-      intro: 'Click "Get Started" to create an account and start using the system.',
+      intro:
+        'Click "Get Started" to create an account and start using the system.',
       position: 'bottom',
     },
     {
       element: '.animate-features',
-      intro: 'Explore the key features: Smart search, User Guide, Item Lookouts, Chats, Notifications, and Claims.',
+      intro:
+        'Explore the key features: Smart search, User Guide, Item Lookouts, Chats, Notifications, and Claims.',
       position: 'top',
     },
     {
       element: '.animate-how',
-      intro: 'Learn how the system works in 4 simple steps: Report or Search, Connect & Verify, Submit Claim, and Get It Back.',
+      intro:
+        'Learn how the system works in 4 simple steps: Report or Search, Connect & Verify, Submit Claim, and Get It Back.',
       position: 'top',
     },
     {
@@ -146,7 +150,7 @@ export default function Home() {
                 <div></div>
                 <a
                   href='/signup'
-                  className='bg-indigo-500 hover:bg-indigo-600 px-4 py-2 text-white hover:cursor-pointer rounded-lg w-fit font-bold'
+                  className='bg-[#5a5df0] hover:bg-indigo-600 px-4 py-2 text-white hover:cursor-pointer rounded-lg w-fit font-bold'
                 >
                   Get Started
                 </a>
@@ -180,14 +184,14 @@ export default function Home() {
                 <MagnifyingGlassCircleIcon className='h-62 w-62 text-indigo-500' />
               </div>
             </div>
-            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-indigo-500 rounded-lg font-semibold justify-between'>
+            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-[#5a5df0] rounded-lg font-semibold justify-between'>
               <div className='pr-4'>
                 <p>User Guide</p>
-                <p className='text-sm mt-4 text-indigo-50'>
+                <p className='text-sm mt-4 text-white'>
                   Read a comprehensive user guide with step by step
                   instructions.
                 </p>
-                <p className='text-sm mt-4 text-indigo-50'>
+                <p className='text-sm mt-4 text-white'>
                   Learn how to use effectively use every feature.
                 </p>
               </div>
@@ -212,14 +216,14 @@ export default function Home() {
               </div>
             </div>
 
-            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-indigo-500 rounded-lg font-semibold justify-between'>
+            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-[#5a5df0] rounded-lg font-semibold justify-between'>
               <div className='pr-4'>
                 <p>Chats</p>
-                <p className='text-sm mt-4 text-indigo-50'>
+                <p className='text-sm mt-4 text-white'>
                   Communicate directly with other users to ask questions about
                   items.
                 </p>
-                <p className='text-sm mt-4 text-indigo-50'>
+                <p className='text-sm mt-4 text-white'>
                   The chat helps you verify details about lost items.
                 </p>
               </div>
@@ -244,14 +248,14 @@ export default function Home() {
                 <BellAlertIcon className='h-36 w-36 text-indigo-500' />
               </div>
             </div>
-            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-indigo-500 rounded-lg font-semibold justify-between'>
+            <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex bg-[#5a5df0] rounded-lg font-semibold justify-between'>
               <div className='pr-4'>
                 <p>Claims</p>
-                <p className='text-sm mt-4 text-indigo-50'>
+                <p className='text-sm mt-4 text-white'>
                   Use our streamlined claim system and get your items back
                   quickly.
                 </p>
-                <p className='text-sm mt-4 text-indigo-50'>
+                <p className='text-sm mt-4 text-white'>
                   Claims should be submitted with verifying details about why
                   the item belongs to you.
                 </p>
@@ -279,48 +283,48 @@ export default function Home() {
 
               <div className='grid grid-cols-4 gap-6'>
                 <div className='text-center'>
-                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                     <span className='text-2xl font-bold text-white'>1</span>
                   </div>
                   <h3 className='font-bold text-white mb-2'>
                     Report or Search
                   </h3>
-                  <p className='text-sm text-indigo-200'>
+                  <p className='text-sm text-indigo-50'>
                     Found an item? Report it. Lost something? Search our
                     inventory or use photo matching.
                   </p>
                 </div>
 
                 <div className='text-center'>
-                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                     <span className='text-2xl font-bold text-white'>2</span>
                   </div>
                   <h3 className='font-bold text-white mb-2'>
                     Connect & Verify
                   </h3>
-                  <p className='text-sm text-indigo-200'>
+                  <p className='text-sm text-indigo-50'>
                     Message other users directly to ask questions and verify
                     details about items you&apos;re interested in.
                   </p>
                 </div>
 
                 <div className='text-center'>
-                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                     <span className='text-2xl font-bold text-white'>3</span>
                   </div>
                   <h3 className='font-bold text-white mb-2'>Submit Claim</h3>
-                  <p className='text-sm text-indigo-200'>
+                  <p className='text-sm text-indigo-50'>
                     Submit a detailed claim explaining why an item belongs to
                     you. Include identifying details or marks.
                   </p>
                 </div>
 
                 <div className='text-center'>
-                  <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                     <span className='text-2xl font-bold text-white'>4</span>
                   </div>
                   <h3 className='font-bold text-white mb-2'>Get It Back</h3>
-                  <p className='text-sm text-indigo-200'>
+                  <p className='text-sm text-indigo-50'>
                     Once your claim is approved, the admin will contact you to
                     arrange pickup of your item.
                   </p>
@@ -347,7 +351,7 @@ export default function Home() {
                 <div className='flex gap-4 justify-center mt-4'>
                   <a
                     href='/signup'
-                    className='bg-indigo-500 hover:bg-indigo-600 px-6 py-3 text-white hover:cursor-pointer rounded-lg font-bold'
+                    className='bg-[#5a5df0] hover:bg-indigo-600 px-6 py-3 text-white hover:cursor-pointer rounded-lg font-bold'
                   >
                     Create Account
                   </a>
@@ -382,7 +386,7 @@ export default function Home() {
               </div>
               <a
                 href='/signup'
-                className='bg-indigo-500 hover:bg-indigo-600 px-4 py-3 text-white hover:cursor-pointer rounded-lg w-full font-bold text-center'
+                className='bg-[#5a5df0] hover:bg-indigo-600 px-4 py-3 text-white hover:cursor-pointer rounded-lg w-full font-bold text-center'
               >
                 Get Started
               </a>
@@ -418,14 +422,14 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-indigo-500 rounded-lg font-semibold'>
+              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-[#5a5df0] rounded-lg font-semibold'>
                 <div className='mb-4'>
                   <p className='text-xl font-bold'>User Guide</p>
-                  <p className='text-sm mt-4 text-indigo-50'>
+                  <p className='text-sm mt-4 text-white'>
                     Read a comprehensive user guide with step by step
                     instructions.
                   </p>
-                  <p className='text-sm mt-4 text-indigo-50'>
+                  <p className='text-sm mt-4 text-white'>
                     Learn how to use effectively use every feature.
                   </p>
                 </div>
@@ -452,14 +456,14 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-indigo-500 rounded-lg font-semibold'>
+              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-[#5a5df0] rounded-lg font-semibold'>
                 <div className='mb-4'>
                   <p className='text-xl font-bold'>Chats</p>
-                  <p className='text-sm mt-4 text-indigo-50'>
+                  <p className='text-sm mt-4 text-white'>
                     Communicate directly with other users to ask questions about
                     items.
                   </p>
-                  <p className='text-sm mt-4 text-indigo-50'>
+                  <p className='text-sm mt-4 text-white'>
                     The chat helps you verify details about lost items.
                   </p>
                 </div>
@@ -485,14 +489,14 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-indigo-500 rounded-lg font-semibold'>
+              <div className='shadow text-white overflow-hidden shadow-indigo-200 px-4 py-6 flex flex-col bg-[#5a5df0] rounded-lg font-semibold'>
                 <div className='mb-4'>
                   <p className='text-xl font-bold'>Claims</p>
-                  <p className='text-sm mt-4 text-indigo-50'>
+                  <p className='text-sm mt-4 text-white'>
                     Use our streamlined claim system and get your items back
                     quickly.
                   </p>
-                  <p className='text-sm mt-4 text-indigo-50'>
+                  <p className='text-sm mt-4 text-white'>
                     Claims should be submitted with verifying details about why
                     the item belongs to you.
                   </p>
@@ -520,44 +524,44 @@ export default function Home() {
 
             <div className='space-y-6'>
               <div className='text-center'>
-                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                   <span className='text-2xl font-bold text-white'>1</span>
                 </div>
                 <h3 className='font-bold text-white mb-2'>Report or Search</h3>
-                <p className='text-sm text-indigo-200'>
+                <p className='text-sm text-indigo-50'>
                   Found an item? Report it. Lost something? Search our inventory
                   or use photo matching.
                 </p>
               </div>
 
               <div className='text-center'>
-                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                   <span className='text-2xl font-bold text-white'>2</span>
                 </div>
                 <h3 className='font-bold text-white mb-2'>Connect & Verify</h3>
-                <p className='text-sm text-indigo-200'>
+                <p className='text-sm text-indigo-50'>
                   Message other users directly to ask questions and verify
                   details about items you&apos;re interested in.
                 </p>
               </div>
 
               <div className='text-center'>
-                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                   <span className='text-2xl font-bold text-white'>3</span>
                 </div>
                 <h3 className='font-bold text-white mb-2'>Submit Claim</h3>
-                <p className='text-sm text-indigo-200'>
+                <p className='text-sm text-indigo-100'>
                   Submit a detailed claim explaining why an item belongs to you.
                   Include identifying details or marks.
                 </p>
               </div>
 
               <div className='text-center'>
-                <div className='w-16 h-16 bg-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <div className='w-16 h-16 bg-[#5a5df0] rounded-full flex items-center justify-center mx-auto mb-4'>
                   <span className='text-2xl font-bold text-white'>4</span>
                 </div>
                 <h3 className='font-bold text-white mb-2'>Get It Back</h3>
-                <p className='text-sm text-indigo-200'>
+                <p className='text-sm text-indigo-50'>
                   Once your claim is approved, the admin will contact you to
                   arrange pickup of your item.
                 </p>
@@ -583,7 +587,7 @@ export default function Home() {
                 <div className='flex gap-4 flex-col mt-4'>
                   <a
                     href='/signup'
-                    className='bg-indigo-500 hover:bg-indigo-600 px-6 py-3 text-white hover:cursor-pointer rounded-lg w-full font-bold'
+                    className='bg-[#5a5df0] hover:bg-indigo-600 px-6 py-3 text-white hover:cursor-pointer rounded-lg w-full font-bold'
                   >
                     Create Account
                   </a>
@@ -597,8 +601,8 @@ export default function Home() {
       {/* Tutorial button */}
       <button
         onClick={startTutorial}
-        className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer"
-        title="Take a tour"
+        className='fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-[#5a5df0] text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer'
+        title='Take a tour'
       >
         ?
       </button>

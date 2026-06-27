@@ -33,7 +33,12 @@ interface IAnalytics {
   totalLookouts: number;
   openLookouts: number;
   closedLookouts: number;
-  locationStats: { id: number; name: string; itemCount: number; items: string[] }[];
+  locationStats: {
+    id: number;
+    name: string;
+    itemCount: number;
+    items: string[];
+  }[];
   topKeywords: { word: string; count: number }[];
   submissionTrend: { date: string; count: number }[];
 }
@@ -534,38 +539,49 @@ export default function Home() {
 
   const { startTutorial } = useTutorial([
     {
-      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6 > p:first-child',
-      intro: 'Welcome to the Analytics Dashboard. This is your central hub for monitoring all Lost & Found activity.',
+      element:
+        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6 > p:first-child',
+      intro:
+        'Welcome to the Analytics Dashboard. This is your central hub for monitoring all Lost & Found activity.',
       position: 'bottom',
     },
     {
       element: '.grid.grid-cols-4.gap-5',
-      intro: 'These stat cards give you a quick overview: total items, return rate, pending reports, open claims, and more.',
+      intro:
+        'These stat cards give you a quick overview: total items, return rate, pending reports, open claims, and more.',
       position: 'top',
     },
     {
       element: '#analytics-charts',
-      intro: 'Visual charts help you understand item claims, location distribution, and submission trends at a glance.',
+      intro:
+        'Visual charts help you understand item claims, location distribution, and submission trends at a glance.',
       position: 'top',
     },
     {
-      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(3) .grid',
-      intro: 'The Items by Location section shows which areas have the most lost-and-found activity.',
+      element:
+        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(3) .grid',
+      intro:
+        'The Items by Location section shows which areas have the most lost-and-found activity.',
       position: 'top',
     },
     {
-      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(4)',
-      intro: 'Common item types are derived from descriptions, helping you spot patterns.',
+      element:
+        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(4)',
+      intro:
+        'Common item types are derived from descriptions, helping you spot patterns.',
       position: 'top',
     },
     {
-      element: '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(5)',
-      intro: 'The submission trend chart shows how many reports have been filed over the last 30 days.',
+      element:
+        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(5)',
+      intro:
+        'The submission trend chart shows how many reports have been filed over the last 30 days.',
       position: 'top',
     },
     {
       element: '.bg-indigo-500.w-fit.h-full',
-      intro: 'Use the sidebar to navigate between Analytics, Items, Reports, Claims, and Locations management.',
+      intro:
+        'Use the sidebar to navigate between Analytics, Items, Reports, Claims, and Locations management.',
       position: 'right',
     },
   ]);
@@ -595,11 +611,8 @@ export default function Home() {
   return (
     <div className='h-screen bg-white'>
       {authenticated === false ? (
-        <div className='bg-grid h-screen w-full flex flex-col'>
-          <div
-            className={`mx-auto min-w-[25vw] my-auto p-8 border border-gray-300 shadow-md bg-white rounded-lg
-             `}
-          >
+        <div className='bg-grid h-screen w-full flex items-center justify-center'>
+          <div className='p-8 border border-gray-300 shadow-md bg-white rounded-lg'>
             <div className='text-center text-black text-2xl font-bold mb-5'>
               Admin Panel
             </div>
@@ -707,56 +720,121 @@ export default function Home() {
             {currentPage === 'Analytics' && (
               <div className='w-full h-full overflow-auto p-10'>
                 {analyticsLoading || !analytics ? (
-                  <div className='flex items-center justify-center h-64 text-gray-400 text-sm'>Loading analytics…</div>
+                  <div className='flex items-center justify-center h-64 text-gray-400 text-sm'>
+                    Loading analytics…
+                  </div>
                 ) : (
                   <div className='space-y-6'>
                     {/* Header */}
                     <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
-                      <p className='text-2xl font-bold text-black'>Analytics Dashboard</p>
-                      <p className='text-sm text-gray-500 mt-1'>Overview of the Lost &amp; Found system</p>
+                      <p className='text-2xl font-bold text-black'>
+                        Analytics Dashboard
+                      </p>
+                      <p className='text-sm text-gray-500 mt-1'>
+                        Overview of the Lost &amp; Found system
+                      </p>
                     </div>
 
                     {/* Stat cards */}
                     <div className='grid grid-cols-4 gap-5'>
                       {[
-                        { label: 'Total Items', value: analytics.totalItems, sub: 'in system', color: 'text-indigo-600' },
-                        { label: 'Items Returned', value: analytics.claimedItems, sub: `${analytics.returnRate}% return rate`, color: 'text-green-600' },
-                        { label: 'Unclaimed Items', value: analytics.unclaimedItems, sub: 'still available', color: 'text-yellow-600' },
-                        { label: 'Total Reports', value: analytics.totalSubmissions, sub: `${analytics.approvedSubmissions} approved`, color: 'text-blue-600' },
-                        { label: 'Pending Reports', value: analytics.pendingSubmissions, sub: 'awaiting review', color: 'text-orange-500' },
-                        { label: 'Rejected Reports', value: analytics.rejectedSubmissions, sub: 'declined', color: 'text-red-500' },
-                        { label: 'Open Claims', value: analytics.openClaims, sub: 'under review', color: 'text-purple-600' },
-                        { label: 'Approved Claims', value: analytics.approvedClaims, sub: 'resolved', color: 'text-green-600' },
+                        {
+                          label: 'Total Items',
+                          value: analytics.totalItems,
+                          sub: 'in system',
+                          color: 'text-indigo-600',
+                        },
+                        {
+                          label: 'Items Returned',
+                          value: analytics.claimedItems,
+                          sub: `${analytics.returnRate}% return rate`,
+                          color: 'text-green-600',
+                        },
+                        {
+                          label: 'Unclaimed Items',
+                          value: analytics.unclaimedItems,
+                          sub: 'still available',
+                          color: 'text-yellow-600',
+                        },
+                        {
+                          label: 'Total Reports',
+                          value: analytics.totalSubmissions,
+                          sub: `${analytics.approvedSubmissions} approved`,
+                          color: 'text-blue-600',
+                        },
+                        {
+                          label: 'Pending Reports',
+                          value: analytics.pendingSubmissions,
+                          sub: 'awaiting review',
+                          color: 'text-orange-500',
+                        },
+                        {
+                          label: 'Rejected Reports',
+                          value: analytics.rejectedSubmissions,
+                          sub: 'declined',
+                          color: 'text-red-500',
+                        },
+                        {
+                          label: 'Open Claims',
+                          value: analytics.openClaims,
+                          sub: 'under review',
+                          color: 'text-purple-600',
+                        },
+                        {
+                          label: 'Approved Claims',
+                          value: analytics.approvedClaims,
+                          sub: 'resolved',
+                          color: 'text-green-600',
+                        },
                       ].map(({ label, value, sub, color }) => (
-                        <div key={label} className='bg-white rounded-lg border border-gray-300 shadow-sm px-6 py-5'>
-                          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>{label}</p>
-                          <p className={`text-3xl font-bold mt-1 ${color}`}>{value}</p>
+                        <div
+                          key={label}
+                          className='bg-white rounded-lg border border-gray-300 shadow-sm px-6 py-5'
+                        >
+                          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>
+                            {label}
+                          </p>
+                          <p className={`text-3xl font-bold mt-1 ${color}`}>
+                            {value}
+                          </p>
                           <p className='text-xs text-gray-400 mt-1'>{sub}</p>
                         </div>
                       ))}
                     </div>
 
                     {/* Chart.js charts */}
-                    <div id="analytics-charts">
+                    <div id='analytics-charts'>
                       <AdminCharts analytics={analytics} />
                     </div>
 
                     <div className='grid grid-cols-2 gap-5'>
                       {/* Location heatmap */}
                       <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
-                        <p className='text-lg font-bold text-black mb-4'>Items by Location</p>
+                        <p className='text-lg font-bold text-black mb-4'>
+                          Items by Location
+                        </p>
                         {analytics.locationStats.length === 0 ? (
-                          <p className='text-sm text-gray-400'>No location data yet</p>
+                          <p className='text-sm text-gray-400'>
+                            No location data yet
+                          </p>
                         ) : (
                           <div className='space-y-3'>
                             {analytics.locationStats.slice(0, 10).map((loc) => {
-                              const max = analytics.locationStats[0]?.itemCount || 1;
-                              const pct = Math.round((loc.itemCount / max) * 100);
+                              const max =
+                                analytics.locationStats[0]?.itemCount || 1;
+                              const pct = Math.round(
+                                (loc.itemCount / max) * 100,
+                              );
                               return (
                                 <div key={loc.id}>
                                   <div className='flex justify-between text-sm mb-1'>
-                                    <span className='font-semibold text-gray-800 truncate max-w-[70%]'>{loc.name}</span>
-                                    <span className='text-gray-500 font-medium'>{loc.itemCount} item{loc.itemCount !== 1 ? 's' : ''}</span>
+                                    <span className='font-semibold text-gray-800 truncate max-w-[70%]'>
+                                      {loc.name}
+                                    </span>
+                                    <span className='text-gray-500 font-medium'>
+                                      {loc.itemCount} item
+                                      {loc.itemCount !== 1 ? 's' : ''}
+                                    </span>
                                   </div>
                                   <div className='w-full bg-gray-100 rounded-full h-2.5'>
                                     <div
@@ -773,8 +851,12 @@ export default function Home() {
 
                       {/* Top keywords / categories */}
                       <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
-                        <p className='text-lg font-bold text-black mb-1'>Most Common Item Types</p>
-                        <p className='text-xs text-gray-400 mb-4'>Derived from item names and descriptions</p>
+                        <p className='text-lg font-bold text-black mb-1'>
+                          Most Common Item Types
+                        </p>
+                        <p className='text-xs text-gray-400 mb-4'>
+                          Derived from item names and descriptions
+                        </p>
                         {analytics.topKeywords.length === 0 ? (
                           <p className='text-sm text-gray-400'>No data yet</p>
                         ) : (
@@ -785,8 +867,12 @@ export default function Home() {
                               return (
                                 <div key={word}>
                                   <div className='flex justify-between text-sm mb-1'>
-                                    <span className='font-semibold text-gray-800 capitalize'>{word}</span>
-                                    <span className='text-gray-500 font-medium'>{count}×</span>
+                                    <span className='font-semibold text-gray-800 capitalize'>
+                                      {word}
+                                    </span>
+                                    <span className='text-gray-500 font-medium'>
+                                      {count}×
+                                    </span>
                                   </div>
                                   <div className='w-full bg-gray-100 rounded-full h-2.5'>
                                     <div
@@ -804,49 +890,94 @@ export default function Home() {
 
                     {/* Submission trend */}
                     <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
-                      <p className='text-lg font-bold text-black mb-1'>Submission Trend</p>
-                      <p className='text-xs text-gray-400 mb-6'>Reports submitted per day over the last 30 days</p>
+                      <p className='text-lg font-bold text-black mb-1'>
+                        Submission Trend
+                      </p>
+                      <p className='text-xs text-gray-400 mb-6'>
+                        Reports submitted per day over the last 30 days
+                      </p>
                       {analytics.submissionTrend.length === 0 ? (
-                        <p className='text-sm text-gray-400'>No submissions in the last 30 days</p>
-                      ) : (() => {
-                        const maxCount = Math.max(...analytics.submissionTrend.map(d => d.count));
-                        return (
-                          <div className='flex items-end gap-1 h-32'>
-                            {analytics.submissionTrend.map(({ date, count }) => (
-                              <div key={date} className='flex-1 flex flex-col items-center gap-1 group relative'>
-                                <div
-                                  className='w-full bg-indigo-400 hover:bg-indigo-500 rounded-t transition-all'
-                                  style={{ height: `${Math.max(4, Math.round((count / maxCount) * 100))}%` }}
-                                />
-                                <div className='absolute bottom-full mb-1 hidden group-hover:flex bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10'>
-                                  {dayjs(date).format('MMM D')}: {count}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
+                        <p className='text-sm text-gray-400'>
+                          No submissions in the last 30 days
+                        </p>
+                      ) : (
+                        (() => {
+                          const maxCount = Math.max(
+                            ...analytics.submissionTrend.map((d) => d.count),
+                          );
+                          return (
+                            <div className='flex items-end gap-1 h-32'>
+                              {analytics.submissionTrend.map(
+                                ({ date, count }) => (
+                                  <div
+                                    key={date}
+                                    className='flex-1 flex flex-col items-center gap-1 group relative'
+                                  >
+                                    <div
+                                      className='w-full bg-indigo-400 hover:bg-indigo-500 rounded-t transition-all'
+                                      style={{
+                                        height: `${Math.max(4, Math.round((count / maxCount) * 100))}%`,
+                                      }}
+                                    />
+                                    <div className='absolute bottom-full mb-1 hidden group-hover:flex bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10'>
+                                      {dayjs(date).format('MMM D')}: {count}
+                                    </div>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
                       <div className='flex justify-between mt-2 text-xs text-gray-400'>
-                        <span>{analytics.submissionTrend[0] ? dayjs(analytics.submissionTrend[0].date).format('MMM D') : ''}</span>
-                        <span>{analytics.submissionTrend[analytics.submissionTrend.length - 1] ? dayjs(analytics.submissionTrend[analytics.submissionTrend.length - 1].date).format('MMM D') : ''}</span>
+                        <span>
+                          {analytics.submissionTrend[0]
+                            ? dayjs(analytics.submissionTrend[0].date).format(
+                                'MMM D',
+                              )
+                            : ''}
+                        </span>
+                        <span>
+                          {analytics.submissionTrend[
+                            analytics.submissionTrend.length - 1
+                          ]
+                            ? dayjs(
+                                analytics.submissionTrend[
+                                  analytics.submissionTrend.length - 1
+                                ].date,
+                              ).format('MMM D')
+                            : ''}
+                        </span>
                       </div>
                     </div>
 
                     {/* Lookouts summary */}
                     <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
-                      <p className='text-lg font-bold text-black mb-4'>Item Lookouts</p>
+                      <p className='text-lg font-bold text-black mb-4'>
+                        Item Lookouts
+                      </p>
                       <div className='flex gap-8'>
                         <div>
-                          <p className='text-3xl font-bold text-indigo-600'>{analytics.totalLookouts}</p>
-                          <p className='text-xs text-gray-400 mt-1'>Total lookouts</p>
+                          <p className='text-3xl font-bold text-indigo-600'>
+                            {analytics.totalLookouts}
+                          </p>
+                          <p className='text-xs text-gray-400 mt-1'>
+                            Total lookouts
+                          </p>
                         </div>
                         <div>
-                          <p className='text-3xl font-bold text-green-600'>{analytics.openLookouts}</p>
+                          <p className='text-3xl font-bold text-green-600'>
+                            {analytics.openLookouts}
+                          </p>
                           <p className='text-xs text-gray-400 mt-1'>Open</p>
                         </div>
                         <div>
-                          <p className='text-3xl font-bold text-gray-400'>{analytics.closedLookouts}</p>
-                          <p className='text-xs text-gray-400 mt-1'>Closed (resolved)</p>
+                          <p className='text-3xl font-bold text-gray-400'>
+                            {analytics.closedLookouts}
+                          </p>
+                          <p className='text-xs text-gray-400 mt-1'>
+                            Closed (resolved)
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -860,33 +991,41 @@ export default function Home() {
                 <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   <div className='flex space-x-2'>
                     <button
+                      type='button'
                       onClick={() => setShowTextFilterModal(true)}
                       disabled={isSearchingText}
                       className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                       title='Search by text'
+                      aria-label='Search by text'
                     >
                       <DocumentTextIcon className='w-5 h-5 text-gray-100' />
                     </button>
                     <button
+                      type='button'
                       onClick={() => setShowImageFilterModal(true)}
                       disabled={isSearchingImage}
                       className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                       title='Search by image'
+                      aria-label='Search by image'
                     >
                       <PhotoIcon className='w-5 h-5 text-gray-100' />
                     </button>
-                    <button
+<button
+                      type='button'
                       onClick={() => setShowLocationFilterModal(true)}
                       className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors'
                       title='Filter by location'
+                      aria-label='Filter by location'
                     >
                       <MapPinIcon className='w-5 h-5 text-gray-100' />
                     </button>
-                    <button
+<button
+                      type='button'
                       onClick={() => setShowDateFilterModal(true)}
                       disabled={isSearchingDate}
                       className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                       title='Filter by date'
+                      aria-label='Filter by date'
                     >
                       <CalendarDaysIcon className='w-5 h-5 text-gray-100' />
                     </button>
@@ -908,11 +1047,15 @@ export default function Home() {
                                 {v.itemName}
                               </p>
                               {v.similarity !== undefined && (
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                  v.similarity >= 75 ? 'bg-green-100 text-green-700' :
-                                  v.similarity >= 50  ? 'bg-yellow-100 text-yellow-700' :
-                                  'bg-red-100 text-red-700'
-                                }`}>
+                                <span
+                                  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                    v.similarity >= 75
+                                      ? 'bg-green-100 text-green-700'
+                                      : v.similarity >= 50
+                                        ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-red-100 text-red-700'
+                                  }`}
+                                >
                                   {Math.round(v.similarity)}% match
                                 </span>
                               )}
@@ -1150,7 +1293,7 @@ export default function Home() {
 
             {currentPage === 'Pending Reports' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='flex flex-col space-y-4 overflow-auto'>
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   {pendingSubmissions.length ? (
                     pendingSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1405,7 +1548,7 @@ export default function Home() {
 
             {currentPage === 'Pending Claims' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
+                <div className='w-60 shrink-0 flex flex-col space-y-4 overflow-y-auto'>
                   {pendingClaims.length ? (
                     pendingClaims.map((c: IClaimForm, i) => {
                       return (
@@ -1556,7 +1699,7 @@ export default function Home() {
 
             {currentPage === 'Approved Reports' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
+                <div className='w-60 shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   {approvedSubmissions.length ? (
                     approvedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1679,14 +1822,14 @@ export default function Home() {
 
             {currentPage === 'Declined Reports' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
+                <div className='w-\[calc\(\(100\%-\(2_*_)\)\/_6\)\] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
                   {rejectedSubmissions.length ? (
                     rejectedSubmissions.map((v: ISubmission, i) => {
                       return (
                         <div key={i} className='group'>
                           <div
                             onClick={() => setSelectedRejected(v)}
-                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-full h-fit rounded-lg border border-gray-300 px-8 py-6'
+                            className='shadow-sm group-hover:cursor-pointer group-hover:shadow-md flex flex-col bg-white w-60 h-fit rounded-lg border border-gray-300 px-8 py-6'
                           >
                             <div className='group-hover:cursor-pointer'>
                               <p className='font-bold group-hover:underline overflow-x-auto scrollbar-hide'>
@@ -1791,7 +1934,7 @@ export default function Home() {
 
             {currentPage === 'Approved Claims' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='flex flex-col space-y-4 overflow-auto'>
+                <div className='w-60 shrink-0 flex flex-col space-y-4 overflow-auto'>
                   {approvedClaims.length ? (
                     approvedClaims.map((c: IClaimForm, i) => {
                       return (
@@ -1842,9 +1985,6 @@ export default function Home() {
                             Item owner:{' '}
                             {selectedApprovedClaim.item?.author?.name ||
                               'Unknown User'}
-                          </p>
-                          <p className='font-medium text-green-600 mt-2 text-sm'>
-                            ✓ Claim Approved
                           </p>
                         </div>
                       </div>
@@ -1925,7 +2065,7 @@ export default function Home() {
 
             {currentPage === 'All Locations' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+                <div className='shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   <div className='mb-4'>
                     <button
                       onClick={() => setShowAllLocationsFilterModal(true)}
@@ -1938,7 +2078,7 @@ export default function Home() {
                   {filteredLocations.length ? (
                     filteredLocations.map((v: ILocation, i) => {
                       return (
-                        <div key={i} className='group w-fit'>
+                        <div key={i} className='group w-60'>
                           <div
                             onClick={() => {
                               setSelectedLocation(v);
@@ -1952,6 +2092,9 @@ export default function Home() {
                               </p>
                               <p className='font-medium text-xs mt-2 text-gray-500'>
                                 Items: {v.items.length}
+                              </p>
+                              <p className='font-medium text-xs text-gray-500'>
+                                Teacher: {v.teacher || 'No teacher'}
                               </p>
                             </div>
                           </div>
@@ -2294,39 +2437,82 @@ export default function Home() {
               {currentPage === 'Analytics' && (
                 <div className='space-y-4'>
                   {analyticsLoading || !analytics ? (
-                    <div className='p-8 text-center text-gray-400 text-sm'>Loading analytics…</div>
+                    <div className='p-8 text-center text-gray-400 text-sm'>
+                      Loading analytics…
+                    </div>
                   ) : (
                     <>
                       <div className='grid grid-cols-2 gap-3'>
                         {[
-                          { label: 'Total Items', value: analytics.totalItems, color: 'text-indigo-600' },
-                          { label: 'Returned', value: `${analytics.claimedItems} (${analytics.returnRate}%)`, color: 'text-green-600' },
-                          { label: 'Unclaimed', value: analytics.unclaimedItems, color: 'text-yellow-600' },
-                          { label: 'Pending Reports', value: analytics.pendingSubmissions, color: 'text-orange-500' },
-                          { label: 'Open Claims', value: analytics.openClaims, color: 'text-purple-600' },
-                          { label: 'Lookouts Open', value: analytics.openLookouts, color: 'text-blue-600' },
+                          {
+                            label: 'Total Items',
+                            value: analytics.totalItems,
+                            color: 'text-indigo-600',
+                          },
+                          {
+                            label: 'Returned',
+                            value: `${analytics.claimedItems} (${analytics.returnRate}%)`,
+                            color: 'text-green-600',
+                          },
+                          {
+                            label: 'Unclaimed',
+                            value: analytics.unclaimedItems,
+                            color: 'text-yellow-600',
+                          },
+                          {
+                            label: 'Pending Reports',
+                            value: analytics.pendingSubmissions,
+                            color: 'text-orange-500',
+                          },
+                          {
+                            label: 'Open Claims',
+                            value: analytics.openClaims,
+                            color: 'text-purple-600',
+                          },
+                          {
+                            label: 'Lookouts Open',
+                            value: analytics.openLookouts,
+                            color: 'text-blue-600',
+                          },
                         ].map(({ label, value, color }) => (
-                          <div key={label} className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'>
-                            <p className='text-xs text-gray-500 font-semibold'>{label}</p>
-                            <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
+                          <div
+                            key={label}
+                            className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'
+                          >
+                            <p className='text-xs text-gray-500 font-semibold'>
+                              {label}
+                            </p>
+                            <p className={`text-2xl font-bold mt-1 ${color}`}>
+                              {value}
+                            </p>
                           </div>
                         ))}
                       </div>
 
                       <div className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'>
-                        <p className='font-bold text-black mb-3'>Items by Location</p>
+                        <p className='font-bold text-black mb-3'>
+                          Items by Location
+                        </p>
                         <div className='space-y-2'>
                           {analytics.locationStats.slice(0, 8).map((loc) => {
-                            const max = analytics.locationStats[0]?.itemCount || 1;
+                            const max =
+                              analytics.locationStats[0]?.itemCount || 1;
                             const pct = Math.round((loc.itemCount / max) * 100);
                             return (
                               <div key={loc.id}>
                                 <div className='flex justify-between text-xs mb-1'>
-                                  <span className='font-semibold text-gray-800 truncate max-w-[70%]'>{loc.name}</span>
-                                  <span className='text-gray-500'>{loc.itemCount}</span>
+                                  <span className='font-semibold text-gray-800 truncate max-w-[70%]'>
+                                    {loc.name}
+                                  </span>
+                                  <span className='text-gray-500'>
+                                    {loc.itemCount}
+                                  </span>
                                 </div>
                                 <div className='w-full bg-gray-100 rounded-full h-2'>
-                                  <div className='bg-indigo-500 h-2 rounded-full' style={{ width: `${pct}%` }} />
+                                  <div
+                                    className='bg-indigo-500 h-2 rounded-full'
+                                    style={{ width: `${pct}%` }}
+                                  />
                                 </div>
                               </div>
                             );
@@ -2335,7 +2521,9 @@ export default function Home() {
                       </div>
 
                       <div className='bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-4'>
-                        <p className='font-bold text-black mb-3'>Most Common Item Types</p>
+                        <p className='font-bold text-black mb-3'>
+                          Most Common Item Types
+                        </p>
                         <div className='space-y-2'>
                           {analytics.topKeywords.map(({ word, count }) => {
                             const max = analytics.topKeywords[0]?.count || 1;
@@ -2343,11 +2531,18 @@ export default function Home() {
                             return (
                               <div key={word}>
                                 <div className='flex justify-between text-xs mb-1'>
-                                  <span className='font-semibold text-gray-800 capitalize'>{word}</span>
-                                  <span className='text-gray-500'>{count}×</span>
+                                  <span className='font-semibold text-gray-800 capitalize'>
+                                    {word}
+                                  </span>
+                                  <span className='text-gray-500'>
+                                    {count}×
+                                  </span>
                                 </div>
                                 <div className='w-full bg-gray-100 rounded-full h-2'>
-                                  <div className='bg-purple-500 h-2 rounded-full' style={{ width: `${pct}%` }} />
+                                  <div
+                                    className='bg-purple-500 h-2 rounded-full'
+                                    style={{ width: `${pct}%` }}
+                                  />
                                 </div>
                               </div>
                             );
@@ -3794,8 +3989,8 @@ export default function Home() {
       {/* Tutorial button */}
       <button
         onClick={startTutorial}
-        className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer"
-        title="Take a tour"
+        className='fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer'
+        title='Take a tour'
       >
         ?
       </button>

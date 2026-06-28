@@ -129,6 +129,8 @@ export default function Home() {
     'item' | 'submission' | 'claim'
   >('item');
   const [showMobileEditModal, setShowMobileEditModal] = useState(false);
+  const [gridMargins, setGridMargins] = useState({ top: 0, left: 0 });
+  const [isMounted, setIsMounted] = useState(false);
 
   const authenticate = async () => {
     if (password === 'password') {
@@ -608,14 +610,46 @@ export default function Home() {
     setFilteredLocations(locations);
   }, [locations]);
 
+  useEffect(() => {
+    setIsMounted(true);
+
+    const calculateMargins = () => {
+      const cardWidth = 440;
+      const cardHeight = 280;
+      const gridSize = 40;
+
+      const top =
+        Math.round((window.innerHeight / 2 - cardHeight / 2) / gridSize) *
+        gridSize;
+      const left =
+        Math.round((window.innerWidth / 2 - cardWidth / 2) / gridSize) *
+        gridSize;
+
+      setGridMargins({ top, left });
+    };
+
+    calculateMargins();
+
+    window.addEventListener('resize', calculateMargins);
+    return () => window.removeEventListener('resize', calculateMargins);
+  }, []);
+
   return (
     <div className='h-screen bg-white'>
       {authenticated === false ? (
-        <div className='bg-grid h-screen w-full flex items-center justify-center'>
-          <div className='p-8 border border-gray-300 shadow-md bg-white rounded-lg'>
-            <div className='text-center text-black text-2xl font-bold mb-5'>
+        <div className='bg-grid h-screen w-full flex'>
+          <div
+            style={{
+              marginTop: isMounted ? `${gridMargins.top}px` : '20%',
+              marginLeft: isMounted ? `${gridMargins.left}px` : 'auto',
+              marginRight: isMounted ? '0' : 'auto',
+            }}
+            className='w-[440px] h-[280px] p-6 border border-gray-300 shadow-md bg-white rounded-lg flex flex-col justify-between box-border'
+          >
+            <div className='text-center text-black text-2xl font-bold'>
               Admin Panel
             </div>
+
             <div>
               <div className='flex items-center justify-between'>
                 <label
@@ -640,9 +674,10 @@ export default function Home() {
                 />
               </div>
             </div>
+
             <div
               onClick={() => authenticate()}
-              className='bg-indigo-500 text-center mt-2 hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold rounded-md px-3 py-2'
+              className='bg-indigo-500 text-center hover:bg-indigo-600 hover:cursor-pointer text-white font-semibold rounded-md px-3 py-2'
             >
               Submit
             </div>
@@ -1010,7 +1045,7 @@ export default function Home() {
                     >
                       <PhotoIcon className='w-5 h-5 text-gray-100' />
                     </button>
-<button
+                    <button
                       type='button'
                       onClick={() => setShowLocationFilterModal(true)}
                       className='p-2 rounded-md bg-indigo-500 hover:bg-indigo-600 hover:cursor-pointer transition-colors'
@@ -1019,7 +1054,7 @@ export default function Home() {
                     >
                       <MapPinIcon className='w-5 h-5 text-gray-100' />
                     </button>
-<button
+                    <button
                       type='button'
                       onClick={() => setShowDateFilterModal(true)}
                       disabled={isSearchingDate}

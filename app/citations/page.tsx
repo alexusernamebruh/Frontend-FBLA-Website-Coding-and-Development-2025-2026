@@ -85,28 +85,37 @@ export default function Citations() {
                   <div
                     id='citations-presentation'
                     data-citations-reveal='true'
-                    className='bg-gray-50 p-6 rounded-lg border border-gray-200'
+                    className='bg-gray-50 p-6 rounded-lg border border-gray-200 space-y-4'
                   >
                     <h3 className='font-bold text-lg text-black mb-2'>
                       Presentation Citations
                     </h3>
 
-                    <p
-                      id='citations-presentation-link'
-                      className='text-sm mb-1 text-gray-800'
-                    >
-                      <span className='font-bold text-black'>
-                        Color Theory:
-                      </span>{' '}
-                      <span className='text-gray-800'>
-                        Color contrast reference (WCAG 2.2 minimum contrast).
-                      </span>
-                    </p>
-                    <p className='text-sm text-gray-800'>
-                      https://octet.design/journal/indigo-color-meaning/
-                      <br />
-                      https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
-                    </p>
+                    <div>
+                      <p className='text-sm mb-1 text-gray-800'>
+                        <span className='font-bold text-black'>
+                          Color Theory:
+                        </span>{' '}
+                        Color contrast reference (WCAG 2.2 minimum contrast) & Cameron Chapman's Color Theory for Designers.
+                      </p>
+                      <p className='text-sm text-gray-800'>
+                        https://octet.design/journal/indigo-color-meaning/
+                        <br />
+                        https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
+                      </p>
+                    </div>
+
+                    <div className='border-t border-gray-200 pt-3'>
+                      <p className='text-sm mb-1 text-gray-800'>
+                        <span className='font-bold text-black'>
+                          Machine Learning:
+                        </span>{' '}
+                        Supervised Similarity Framework and DNN Clustering.
+                      </p>
+                      <p className='text-sm text-gray-800'>
+                        https://developers.google.com/machine-learning/clustering/dnn-clustering/supervised-similarity
+                      </p>
+                    </div>
                   </div>
 
                   {/* Library Citations */}
@@ -519,6 +528,35 @@ export default function Citations() {
               <p className='text-sm text-gray-600'>By lil artsy</p>
             </div>
 
+            {/* Presentation Citations (Mobile) */}
+            <div 
+              id='citations-presentation' 
+              data-citations-reveal='true'
+              className='bg-white rounded-lg border border-gray-200 shadow-sm p-4 space-y-3'
+            >
+              <h3 className='font-bold text-black mb-1 text-lg'>
+                Presentation Citations
+              </h3>
+              <div>
+                <p id='citations-presentation-link' className='text-sm mb-1 text-black font-semibold'>
+                  Color Theory
+                </p>
+                <p className='text-xs text-gray-800 line-clamp-2 overflow-hidden break-all'>
+                  https://octet.design/journal/indigo-color-meaning/
+                  <br />
+                  https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum
+                </p>
+              </div>
+              <div className='border-t border-gray-100 pt-2'>
+                <p className='text-sm mb-1 text-black font-semibold'>
+                  Machine Learning
+                </p>
+                <p className='text-xs text-gray-800 break-all'>
+                  https://developers.google.com/machine-learning/clustering/dnn-clustering/supervised-similarity
+                </p>
+              </div>
+            </div>
+
             {/* Library Citations */}
             <div className='bg-white rounded-lg border border-gray-200 shadow-sm p-4'>
               <h2
@@ -600,22 +638,6 @@ export default function Citations() {
                   </div>
                 </div>
 
-                {/* Presentation Citations (Mobile) */}
-                <div id='citations-presentation' data-citations-reveal='true'>
-                  <h3 className='font-bold text-black mb-2'>
-                    Presentation Citations
-                  </h3>
-                  <p
-                    id='citations-presentation-link'
-                    className='text-sm mb-1 text-black font-semibold'
-                  >
-                    Color Theory
-                  </p>
-                  <p className='text-sm text-gray-800'>
-                    https://octet.design/journal/indigo-color-meaning/
-                  </p>
-                </div>
-
                 <div>
                   <h3 className='font-bold text-black mb-2'>Runtimes</h3>
                   <div className='text-xs text-gray-800 space-y-1'>
@@ -681,12 +703,6 @@ export default function Citations() {
                       (v4) - CSS framework (MIT)
                     </p>
                   </div>
-                </div>
-
-                <div className='bg-gray-50 p-3 rounded border border-gray-200'>
-                  <p className='text-xs text-gray-800'>
-                    This project uses open-source libraries.
-                  </p>
                 </div>
               </div>
             </div>

@@ -22,7 +22,6 @@
   }
 }
 
-
 body {
   color: var(--foreground);
   background: var(--background);
@@ -34,6 +33,19 @@ body {
   background-image:
     linear-gradient(to right, rgba(0, 0, 0, 0.04) 2px, transparent 2px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+.snap-to-grid {
+  /*
+    1. calc(50vw - 220px) finds where the left edge sits when centered 
+       (50% width minus half the card width).
+    2. round(nearest, ..., 40px) rounds that exact pixel value to the closest 40px line.
+    3. We subtract the un-rounded center position to get the exact offset delta.
+  */
+  transform: translate(
+    calc(round(nearest, 50vw - 220px, 40px) - (50vw - 220px)),
+    calc(round(nearest, 50vh - 140px, 40px) - (50vh - 140px))
+  );
 }
 
 @utility scrollbar-hide {

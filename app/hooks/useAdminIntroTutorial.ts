@@ -78,21 +78,20 @@ export function useAdminIntroTutorial(params: {
         return [
           commonSideNav,
           {
-            element: '#admin-items-list-container',
+            // Left column for the All Items view: filter/search icons + the items list.
+            element:
+              // Narrow to the specific All Items layout structure.
+              'div.flex.w-full.h-full.p-10.gap-10 > div.w-[240px].shrink-0',
             intro:
-              'This is where all items live. Use filters and search to quickly find items that need review or action.',
+              'This is the All Items workspace. Use the filter/search buttons (text, image, location, and date) to narrow results, then scroll and click an item in the list.',
             position: 'top' as const,
           },
           {
-            element: '#admin-items-filters-row',
+            // Right column for the details view of the selected item.
+            element:
+              'div.flex.w-full.h-full.p-10.gap-10 > div.w-full.h-full.bg-white.overflow-auto.rounded-lg.border.border-gray-300.shadow-md',
             intro:
-              'Use these controls to filter by text, image, location, or date.',
-            position: 'bottom' as const,
-          },
-          {
-            element: '#admin-items-detail-container',
-            intro:
-              'Select an item to view its details. You can then edit or delete it from this panel.',
+              'This is the individual item detailed view. Here you can review the item information (description, status, location, photos) and then edit or delete it.',
             position: 'top' as const,
           },
         ];

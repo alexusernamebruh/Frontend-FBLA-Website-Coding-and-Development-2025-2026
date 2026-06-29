@@ -7,56 +7,40 @@ import { useTutorial } from './useTutorial';
 /**
  * Admin tutorial steps.
  *
+ * Required flow for the admin “All Items” page:
+ * 1) Sidenav
+ * 2) All Items list + filters
+ * 3) Individual detailed item view (right panel)
+ *
  * Note: Intro.js is hash-triggered on the destination page via useFragmentTutorial.
  * This hook only provides the `startTutorial()` implementation + step config.
  */
 export function useAdminTutorial() {
   const steps = [
     {
+      // Sidebar wrapper on the desktop admin layout.
+      // Use the most specific selector available: the admin SideNav container.
       element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6 > p:first-child',
+        'div.hidden.lg\\:flex.bg-grid.text-black.h-full.w-full > div.bg-indigo-500.w-fit.h-full.min-h-screen',
       intro:
-        'Welcome to the Analytics Dashboard. This is your central hub for monitoring all Lost & Found activity.',
-      position: 'bottom' as const,
-    },
-    {
-      element: '.grid.grid-cols-4.gap-5',
-      intro:
-        'These stat cards give you a quick overview: total items, return rate, pending reports, open claims, and more.',
-      position: 'top' as const,
-    },
-    {
-      element: '#analytics-charts',
-      intro:
-        'Visual charts help you understand item claims, location distribution, and submission trends at a glance.',
-      position: 'top' as const,
-    },
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(3) .grid',
-      intro:
-        'The Items by Location section shows which areas have the most lost-and-found activity.',
-      position: 'top' as const,
-    },
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(4)',
-      intro:
-        'Common item types are derived from descriptions, helping you spot patterns.',
-      position: 'top' as const,
-    },
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(5)',
-      intro:
-        'The submission trend chart shows how many reports have been filed over the last 30 days.',
-      position: 'top' as const,
-    },
-    {
-      element: '.bg-indigo-500.w-fit.h-full',
-      intro:
-        'Use the sidebar to navigate between Analytics, Items, Reports, Claims, and Locations management.',
+        'Sidenav: use this menu to switch between Analytics, Items, Reports, Claims, and Locations management.',
       position: 'right' as const,
+    },
+    {
+      // Left column for the All Items view: filter/search button bar + the items list.
+      element:
+        'div.flex.w-full.h-full.p-10.gap-10 > div.w-[240px].shrink-0.space-y-4',
+      intro:
+        'All Items list: this panel shows the items you can manage. Use the filter/search icons at the top (text, image, location, date) to narrow results, then click an item to view details.',
+      position: 'top' as const,
+    },
+    {
+      // Right column for the details view of the selected item.
+      element:
+        'div.flex.w-full.h-full.p-10.gap-10 > div.w-full.h-full.bg-white.overflow-auto.rounded-lg.border.border-gray-300.shadow-md',
+      intro:
+        'Item detailed view: this is the selected item’s information only (description, status, location, and photos). Use Edit/Delete here to take action for that specific item.',
+      position: 'top' as const,
     },
   ];
 

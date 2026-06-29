@@ -21,11 +21,11 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ChatBubbleLeftEllipsisIcon,
-  MagnifyingGlassCircleIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import ItemLookouts from '../components/itemLookouts';
 import { MapPinIcon } from '@heroicons/react/24/outline';
+import { useHomeIntroTutorial } from '../hooks/useHomeIntroTutorial';
 
 dayjs.extend(relativeTime);
 
@@ -87,9 +87,29 @@ const notifMeta: Record<
 
 const HomePage = () => {
   const [current, setCurrent] = useState('All Items');
+
   const [mobileTab, setMobileTab] = useState(() => {
     return 'Reports';
   });
+
+  const { start, running } = useHomeIntroTutorial({
+    getSetters: {
+      setCurrent,
+      setMobileTab,
+    },
+    getIsDesktop: () =>
+      typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
+    getCurrentTab: () => current,
+  });
+
+  useEffect(() => {
+    // Do not auto-start tutorial; it is triggered by the “?” button.
+  }, []);
+
+  const handleTakeTour = () => {
+    if (!running) start();
+  };
+
   const [showItemModal, setShowItemModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [newItemName, setNewItemName] = useState('');
@@ -489,9 +509,18 @@ const HomePage = () => {
     locationFilter !== null
       ? (locations.find((loc) => loc.id === locationFilter)?.name ?? 'None')
       : 'None';
+  // (duplicate tutorial init removed)
 
   return (
     <div className='w-full h-screen'>
+      <button
+        onClick={handleTakeTour}
+        className='fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer'
+        title='Take a tour'
+      >
+        ?
+      </button>
+
       {/* Desktop Version */}
       <div className='hidden lg:flex bg-grid h-screen w-full overflow-hidden bg-white'>
         <div className='absolute top-0 right-0 pointer-events-none'>
@@ -509,18 +538,23 @@ const HomePage = () => {
           />
         </div>
         <div className='w-fit h-screen'>
-          <SideNav
-            current={current}
-            setCurrent={handleCurrentChange}
-            type={'user'}
-            unreadNotifications={unreadCount}
-          />
+          <div id='home-nav' className='contents'>
+            <SideNav
+              current={current}
+              setCurrent={handleCurrentChange}
+              type={'user'}
+              unreadNotifications={unreadCount}
+            />
+          </div>
         </div>
         <div className='w-full h-screen'>
           {current === 'All Items' && (
             <div className='w-full h-full flex flex-col'>
-              <div className='flex w-full h-full p-10 gap-10'>
-<div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+              <div
+                className='flex w-full h-full p-10 gap-10'
+                id='home-unclaimed-items'
+              >
+                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
                   <div className='flex space-x-2'>
                     <button
                       type='button'
@@ -618,23 +652,23 @@ const HomePage = () => {
                         </div>
                       </div>
                     )}
-{searchType === 'location' && (
+                    {searchType === 'location' && (
                       <div className='flex flex-col gap-2'>
                         <div
-                        role='button'
-                        tabIndex={0}
-                        title='Select a location to filter items'
-                        aria-label='Select a location to filter items'
-                        onClick={() => setShowLocationFilterModal(true)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            setShowLocationFilterModal(true);
-                          }
-                        }}
-                        className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'
-                      >
-                        Select Location
-                      </div>
+                          role='button'
+                          tabIndex={0}
+                          title='Select a location to filter items'
+                          aria-label='Select a location to filter items'
+                          onClick={() => setShowLocationFilterModal(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              setShowLocationFilterModal(true);
+                            }
+                          }}
+                          className='flex w-full h-10 px-3 flex-col bg-indigo-500 rounded-md shadow text-white text-sm font-semibold items-center justify-center hover:cursor-pointer hover:bg-indigo-600'
+                        >
+                          Select Location
+                        </div>
                         <div className='text-black text-xs font-semibold'>
                           Selected Location: {selectedLocationName}
                         </div>
@@ -831,7 +865,7 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Submit Reports' && (
-            <div className='w-full h-full'>
+            <div className='w-full h-full' id='home-report-section'>
               <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
@@ -986,7 +1020,7 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Submit Claims' && (
-            <div className='w-full h-full'>
+            <div className='w-full h-full' id='home-claim-section'>
               <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
@@ -1095,7 +1129,7 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Your Reports' && (
-            <div className='w-full h-full flex flex-col'>
+            <div className='w-full h-full flex flex-col' id='home-your-reports'>
               <div className='flex w-full h-full p-10 gap-10'>
                 <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'>
                   {userReports.length ? (
@@ -1248,7 +1282,7 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Your Claims' && (
-            <div className='w-full h-full flex flex-col'>
+            <div className='w-full h-full flex flex-col' id='home-your-claims'>
               <div className='flex w-full h-full p-10 gap-10'>
                 <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'>
                   {userClaims.length ? (
@@ -1385,17 +1419,17 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Item Lookouts' && (
-            <div className='w-full h-full'>
+            <div className='w-full h-full' id='home-item-lookouts'>
               <ItemLookouts />
             </div>
           )}
           {current === 'Chats' && (
-            <div className='p-10 w-full h-screen'>
+            <div className='p-10 w-full h-screen' id='home-chats'>
               <ItemChats />
             </div>
           )}
           {current === 'Notifications' && (
-            <div className='w-full h-full'>
+            <div className='w-full h-full' id='home-notifications'>
               <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6 flex items-center justify-between'>
@@ -1517,7 +1551,7 @@ const HomePage = () => {
               {/* Search Bar */}
               <div className='bg-white rounded-lg border border-gray-200 p-3 space-y-2'>
                 <div className='flex space-x-2'>
-<button
+                  <button
                     type='button'
                     title='Filter by text'
                     aria-label='Filter by text'
@@ -1606,7 +1640,7 @@ const HomePage = () => {
                     </p>
                   </label>
                 )}
-{searchType === 'location' && (
+                {searchType === 'location' && (
                   <button
                     type='button'
                     title='Select a location to filter items'

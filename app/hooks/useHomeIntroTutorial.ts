@@ -51,11 +51,20 @@ export function useHomeIntroTutorial(params: {
         title: 'All Items',
         elementId: 'home-unclaimed-items',
         intro:
-          "All Items is where you see items that haven't been claimed yet. Use the filters (Text, Image, Location) to narrow results fast. Then select an item to view details and decide whether to submit a claim or ignore it.",
+          "All Items is where you see items that haven't been claimed yet. This is the list area—use the filters/search to narrow results quickly (Text, Image, Location). When you find a match, select it to open the detailed view.",
         position: 'top',
         onBefore: () => {
           setCurrent('All Items');
         },
+      },
+
+      {
+        key: 'tab_all_detail',
+        title: 'Item Details',
+        elementId: 'home-item-detail',
+        intro:
+          'This is the individual item detailed view. It shows the selected item’s description, location, dates, and photos. Use this panel to confirm whether the item is truly a match before you submit a claim.',
+        position: 'top',
       },
       {
         key: 'tab_reports',
@@ -166,6 +175,28 @@ export function useHomeIntroTutorial(params: {
       Chats: { mainKey: 'tab_chats', nextKey: 'tab_chats' },
       Notifications: { mainKey: 'tab_alerts', nextKey: 'tab_alerts' },
     };
+
+    // We want EXACTLY 3 steps: nav -> list (incl. filters) -> item details.
+    // For All Items we override the 3-step mapping precisely.
+    if (current === 'All Items') {
+      const sNav = allSteps.find((s) => s.key === 'nav_side')!;
+      const listStep = allSteps.find((s) => s.key === 'tab_all') ?? allSteps[1];
+      const detailStep =
+        allSteps.find((s) => s.key === 'tab_all_detail') ?? listStep;
+
+      return [
+        sNav,
+        {
+          ...listStep,
+          elementId: 'home-unclaimed-items',
+          title: 'All Items + Filters',
+          intro:
+            "All Items is where you see items that haven't been claimed yet. This area includes the filters (Text, Image, Location) so you can narrow results quickly. Select an item to open the detailed view.",
+          position: 'top',
+        },
+        detailStep,
+      ];
+    }
 
     const desired = stepByTab[current] ?? stepByTab['All Items'];
 

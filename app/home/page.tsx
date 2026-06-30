@@ -153,9 +153,6 @@ const HomePage = () => {
   const [selectedUserReport, setSelectedUserReport] = useState<ISubmission>();
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageData, setSelectedImageData] = useState('');
-  const [showCreateItemLookout, setShowCreateItemLookout] = useState(false);
-  const [createItemLookoutSuccess, setCreateItemLookoutSuccess] =
-    useState(false);
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
   // Mobile modal states
@@ -163,10 +160,6 @@ const HomePage = () => {
   const [detailModalType, setDetailModalType] = useState<
     'item' | 'report' | 'claim'
   >('item');
-  const [mobileEditModalType, setMobileEditModalType] = useState<
-    'report' | 'claim' | null
-  >(null);
-
   const [userClaims, setUserClaims] = useState<IClaimForm[]>([]);
   const [selectedClaim, setSelectedClaim] = useState<IClaimForm>();
 
@@ -297,108 +290,129 @@ const HomePage = () => {
     }
   };
 
+  const refetchNotifications = async () => {
+    // Build notifications
+    // keep unread/read state via localStorage (notif_seen_ids)
+    const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+    if (!userId) {
+      setNotificationsLoading(false);
+      setNotifications([]);
+      return;
+    }
+
+    const seen = getSeenIds();
+    const notifs: INotification[] = [];
+
+    try {
+      const { data: reports } = await a.get(
+        `/submissionForms/user/${userId}`,
+      );
+      for (const r of reports) {
+        if (r.approvalStatus === 'APPROVED') {
+          const id = `report_approved_${r.id}`;
+          notifs.push({
+            id,
+            kind: 'report_approved',
+            title: 'Report Approved',
+            body: `Your report for "${r.itemName}" was approved and is now live.`,
+            at: new Date(r.createdAt),
+            read: seen.has(id),
+          });
+        } else if (r.approvalStatus === 'REJECTED') {
+          const id = `report_rejected_${r.id}`;
+          notifs.push({
+            id,
+            kind: 'report_rejected',
+            title: 'Report Rejected',
+            body: `Your report for "${r.itemName}" was rejected by an administrator.`,
+            at: new Date(r.createdAt),
+            read: seen.has(id),
+          });
+        }
+      }
+    } catch {}
+
+    try {
+      const { data: claims } = await a.get(`/claimForms/user/${userId}`);
+      for (const c of claims) {
+        if (!c.isOpen) {
+          const id = `claim_approved_${c.id}`;
+          notifs.push({
+            id,
+            kind: 'claim_approved',
+            title: 'Claim Approved',
+            body: `Your claim for "${c.item?.itemName ?? 'an item'}" was approved.`,
+            at: new Date(c.createdAt),
+            read: seen.has(id),
+          });
+        }
+      }
+    } catch {}
+
+    try {
+      const { data: chats } = await a.get(
+        `/chats/getChatsByUserId/${userId}`,
+      );
+      for (const chat of chats) {
+        if (!chat.messages?.length) continue;
+        const last = chat.messages[chat.messages.length - 1];
+        if (last.senderId !== userId) {
+          const id = `chat_message_${chat.id}_${last.id}`;
+          notifs.push({
+            id,
+            kind: 'chat_message',
+            title: 'New Message',
+            body: `${last.sender?.name ?? 'Someone'} sent you a message in "${chat.title}".`,
+            at: new Date(last.createdAt),
+            read: seen.has(id),
+          });
+        }
+      }
+    } catch {}
+
+    try {
+      const { data: user } = await a.get(`/users/${userId}`);
+      for (const lookout of user.itemLookouts ?? []) {
+        for (const item of lookout.items ?? []) {
+          const id = `lookout_match_${lookout.id}_${item.id}`;
+          notifs.push({
+            id,
+            kind: 'lookout_match',
+            title: 'Item Lookout Match',
+            body: `A potential match was found for your lookout: "${item.itemName}".`,
+            at: new Date(item.createdAt),
+            read: seen.has(id),
+          });
+        }
+      }
+    } catch {}
+
+    // Unread notifications first; newest within each group
+    notifs.sort((a, b) => {
+      if (a.read !== b.read) return a.read ? 1 : -1;
+      return b.at.getTime() - a.at.getTime();
+    });
+
+    setNotifications(notifs);
+  };
+
   useEffect(() => {
     (async () => {
       await getUserReports();
       await getUnclaimedItems();
       await getUserClaims();
       await getLocations();
-      // Build notifications
-      const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
-      if (!userId) {
-        setNotificationsLoading(false);
-        return;
-      }
-      const seen = getSeenIds();
-      const notifs: INotification[] = [];
-      try {
-        const { data: reports } = await a.get(
-          `/submissionForms/user/${userId}`,
-        );
-        for (const r of reports) {
-          if (r.approvalStatus === 'APPROVED') {
-            const id = `report_approved_${r.id}`;
-            notifs.push({
-              id,
-              kind: 'report_approved',
-              title: 'Report Approved',
-              body: `Your report for "${r.itemName}" was approved and is now live.`,
-              at: new Date(r.createdAt),
-              read: seen.has(id),
-            });
-          } else if (r.approvalStatus === 'REJECTED') {
-            const id = `report_rejected_${r.id}`;
-            notifs.push({
-              id,
-              kind: 'report_rejected',
-              title: 'Report Rejected',
-              body: `Your report for "${r.itemName}" was rejected by an administrator.`,
-              at: new Date(r.createdAt),
-              read: seen.has(id),
-            });
-          }
-        }
-      } catch {}
-      try {
-        const { data: claims } = await a.get(`/claimForms/user/${userId}`);
-        for (const c of claims) {
-          if (!c.isOpen) {
-            const id = `claim_approved_${c.id}`;
-            notifs.push({
-              id,
-              kind: 'claim_approved',
-              title: 'Claim Approved',
-              body: `Your claim for "${c.item?.itemName ?? 'an item'}" was approved.`,
-              at: new Date(c.createdAt),
-              read: seen.has(id),
-            });
-          }
-        }
-      } catch {}
-      try {
-        const { data: chats } = await a.get(
-          `/chats/getChatsByUserId/${userId}`,
-        );
-        for (const chat of chats) {
-          if (!chat.messages?.length) continue;
-          const last = chat.messages[chat.messages.length - 1];
-          if (last.senderId !== userId) {
-            const id = `chat_message_${chat.id}_${last.id}`;
-            notifs.push({
-              id,
-              kind: 'chat_message',
-              title: 'New Message',
-              body: `${last.sender?.name ?? 'Someone'} sent you a message in "${chat.title}".`,
-              at: new Date(last.createdAt),
-              read: seen.has(id),
-            });
-          }
-        }
-      } catch {}
-      try {
-        const { data: user } = await a.get(`/users/${userId}`);
-        for (const lookout of user.itemLookouts ?? []) {
-          for (const item of lookout.items ?? []) {
-            const id = `lookout_match_${lookout.id}_${item.id}`;
-            notifs.push({
-              id,
-              kind: 'lookout_match',
-              title: 'Item Lookout Match',
-              body: `A potential match was found for your lookout: "${item.itemName}".`,
-              at: new Date(item.createdAt),
-              read: seen.has(id),
-            });
-          }
-        }
-      } catch {}
-      notifs.sort((a, b) => b.at.getTime() - a.at.getTime());
-      setNotifications(notifs);
+      setNotificationsLoading(true);
+      await refetchNotifications();
       setNotificationsLoading(false);
     })();
   }, []);
 
+  /* NOTE: notifications refresh logic moved to refetchNotifications() */
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+
       if (
         claimSearchRef.current &&
         !claimSearchRef.current.contains(event.target as Node)
@@ -1523,9 +1537,6 @@ const HomePage = () => {
                             <p className='text-sm text-gray-600 mt-0.5'>
                               {n.body}
                             </p>
-                            <p className='text-xs text-gray-400 mt-1'>
-                              {dayjs(n.at).fromNow()}
-                            </p>
                           </div>
                           <button
                             onClick={() =>
@@ -2206,9 +2217,6 @@ const HomePage = () => {
                             </div>
                             <p className='text-sm text-gray-600 mt-0.5'>
                               {n.body}
-                            </p>
-                            <p className='text-xs text-gray-400 mt-1'>
-                              {dayjs(n.at).fromNow()}
                             </p>
                             <button
                               onClick={() =>

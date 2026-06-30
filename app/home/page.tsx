@@ -537,8 +537,8 @@ const HomePage = () => {
             setShow={setCreateClaimSuccess}
           />
         </div>
-        <div className='w-fit h-screen'>
-          <div id='home-nav' className='contents'>
+        <div id='home-nav' className='w-fit h-screen'>
+          <div className='contents'>
             <SideNav
               current={current}
               setCurrent={handleCurrentChange}
@@ -550,11 +550,11 @@ const HomePage = () => {
         <div className='w-full h-screen'>
           {current === 'All Items' && (
             <div className='w-full h-full flex flex-col'>
-              <div
-                className='flex w-full h-full p-10 gap-10'
-                id='home-unclaimed-items'
-              >
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+              <div className='flex w-full h-full p-10 gap-10'>
+                <div
+                  id='home-items-list'
+                  className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'
+                >
                   <div className='flex space-x-2'>
                     <button
                       type='button'
@@ -744,7 +744,10 @@ const HomePage = () => {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'>
+                <div
+                  id='home-item-detail'
+                  className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'
+                >
                   {selectedItem ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -865,8 +868,11 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Submit Reports' && (
-            <div className='w-full h-full' id='home-report-section'>
-              <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+            <div className='w-full h-full'>
+              <div
+                id='home-report-section'
+                className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'
+              >
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
                     <p className='font-bold text-2xl text-black'>
@@ -1020,8 +1026,11 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Submit Claims' && (
-            <div className='w-full h-full' id='home-claim-section'>
-              <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
+            <div className='w-full h-full'>
+              <div
+                id='home-claim-section'
+                className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'
+              >
                 <div className='border-b border-gray-300 h-fit'>
                   <div className='px-6 py-6'>
                     <p className='font-bold text-2xl text-black'>
@@ -1131,7 +1140,10 @@ const HomePage = () => {
           {current === 'Your Reports' && (
             <div className='w-full h-full flex flex-col' id='home-your-reports'>
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'>
+                <div
+                  id='home-reports-list'
+                  className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'
+                >
                   {userReports.length ? (
                     userReports.map((v: ISubmission, i) => {
                       return (
@@ -1167,7 +1179,10 @@ const HomePage = () => {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'>
+                <div
+                  id='home-reports-detail'
+                  className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'
+                >
                   {selectedUserReport ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1284,7 +1299,10 @@ const HomePage = () => {
           {current === 'Your Claims' && (
             <div className='w-full h-full flex flex-col' id='home-your-claims'>
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'>
+                <div
+                  id='home-claims-list'
+                  className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-auto text-black'
+                >
                   {userClaims.length ? (
                     userClaims.map((v: IClaimForm, i) => {
                       return (
@@ -1320,7 +1338,10 @@ const HomePage = () => {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'>
+                <div
+                  id='home-claims-detail'
+                  className='w-full h-full bg-white rounded-lg border overflow-auto border-gray-300 shadow-md'
+                >
                   {selectedClaim ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1424,14 +1445,17 @@ const HomePage = () => {
             </div>
           )}
           {current === 'Chats' && (
-            <div className='p-10 w-full h-screen' id='home-chats'>
+            <div id='home-chats-container' className='p-10 w-full h-screen'>
               <ItemChats />
             </div>
           )}
           {current === 'Notifications' && (
             <div className='w-full h-full' id='home-notifications'>
               <div className='m-10 bg-white flex flex-col rounded-lg border border-gray-300 shadow-md'>
-                <div className='border-b border-gray-300 h-fit'>
+                <div
+                  id='home-notifications-header'
+                  className='border-b border-gray-300 h-fit'
+                >
                   <div className='px-6 py-6 flex items-center justify-between'>
                     <div className='flex items-center gap-3'>
                       <p className='font-bold text-2xl text-black'>
@@ -1453,7 +1477,10 @@ const HomePage = () => {
                     )}
                   </div>
                 </div>
-                <div className='divide-y divide-gray-100 overflow-y-auto max-h-[calc(100vh-12rem)]'>
+                <div
+                  id='home-notifications-list'
+                  className='divide-y divide-gray-100 overflow-y-auto max-h-[calc(100vh-12rem)]'
+                >
                   {notificationsLoading ? (
                     <div className='p-8 text-center text-gray-400 text-sm'>
                       Loading…

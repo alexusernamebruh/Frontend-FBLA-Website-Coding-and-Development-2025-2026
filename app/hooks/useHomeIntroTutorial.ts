@@ -1,25 +1,18 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-
 import type { TutorialPosition } from './useSimpleTutorial';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyIntro = any;
 
 type IntroStep = {
   key: string;
-  title: string;
   elementId: string;
   intro: string;
   position?: TutorialPosition;
-  /** Called right before the step starts (sets `current`/mobileTab, etc). */
   onBefore?: () => void | Promise<void>;
 };
-
-/**
- * intro.js has no TS typings for CSS imports or the instance shape.
- * We keep `AnyIntro` permissive and only rely on the methods we use.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyIntro = any;
 
 export function useHomeIntroTutorial(params: {
   getSetters: {
@@ -36,185 +29,188 @@ export function useHomeIntroTutorial(params: {
   const [running, setRunning] = useState(false);
   const introRef = useRef<AnyIntro | null>(null);
 
-  const allSteps: IntroStep[] = useMemo(
-    () => [
-      {
-        key: 'nav_side',
-        title: 'Navigation',
+  const allSteps = useMemo<Record<string, IntroStep>>(
+    () => ({
+      nav: {
+        key: 'nav',
         elementId: 'home-nav',
         intro:
-          'Start here: use the side navigation (left sidebar) to switch between the main sections of the portal. Each section has its own tools and actions.',
+          'Use the sidebar to navigate between all sections of the Lost & Found portal.',
         position: 'right',
-      },
-      {
-        key: 'tab_all',
-        title: 'All Items',
-        elementId: 'home-unclaimed-items',
-        intro:
-          "All Items is where you see items that haven't been claimed yet. This is the list area—use the filters/search to narrow results quickly (Text, Image, Location). When you find a match, select it to open the detailed view.",
-        position: 'top',
-        onBefore: () => {
-          setCurrent('All Items');
-        },
       },
 
-      {
-        key: 'tab_all_detail',
-        title: 'Item Details',
+      itemsList: {
+        key: 'itemsList',
+        elementId: 'home-items-list',
+        intro:
+          'Browse all currently unclaimed items. Search and filters help narrow down possible matches.',
+        position: 'right',
+        onBefore: () => setCurrent('All Items'),
+      },
+
+      itemsDetail: {
+        key: 'itemsDetail',
         elementId: 'home-item-detail',
         intro:
-          'This is the individual item detailed view. It shows the selected item’s description, location, dates, and photos. Use this panel to confirm whether the item is truly a match before you submit a claim.',
-        position: 'top',
+          'Selecting an item displays its photos, description, location, and claim options.',
+        position: 'left',
       },
-      {
-        key: 'tab_reports',
-        title: 'Reports',
+
+      reportsList: {
+        key: 'reportsList',
+        elementId: 'home-reports-list',
+        intro:
+          'This panel contains every report that you have submitted and their current status.',
+        position: 'right',
+        onBefore: () => setCurrent('Your Reports'),
+      },
+
+      reportsDetail: {
+        key: 'reportsDetail',
+        elementId: 'home-reports-detail',
+        intro:
+          'Selecting a report displays its information and approval status.',
+        position: 'left',
+      },
+
+      submitReport: {
+        key: 'submitReport',
         elementId: 'home-report-section',
         intro:
-          "Reports is where you submit a lost item report. You'll add the item name, a description, and (optionally) choose the best location. Submitting creates a record administrators can approve and match.",
+          'Submit a lost item report by entering information about your item. Administrators can review and approve your report.',
         position: 'top',
-        onBefore: () => {
-          setCurrent('Submit Reports');
-        },
+        onBefore: () => setCurrent('Submit Reports'),
       },
-      {
-        key: 'tab_your_reports',
-        title: 'Your Reports',
-        elementId: 'home-your-reports',
+
+      claimsList: {
+        key: 'claimsList',
+        elementId: 'home-claims-list',
         intro:
-          "Your Reports shows the status of reports you've submitted: Pending (waiting), Approved (now live), or Rejected (not used). Use this to quickly track what's changed and what you may need to resubmit.",
-        position: 'top',
-        onBefore: () => {
-          setCurrent('Your Reports');
-        },
+          'This panel contains all ownership claims that you have submitted.',
+        position: 'right',
+        onBefore: () => setCurrent('Your Claims'),
       },
-      {
-        key: 'tab_claims',
-        title: 'Claims',
+
+      claimsDetail: {
+        key: 'claimsDetail',
+        elementId: 'home-claims-detail',
+        intro: 'Selecting a claim displays its information and review status.',
+        position: 'left',
+      },
+
+      submitClaim: {
+        key: 'submitClaim',
         elementId: 'home-claim-section',
         intro:
-          'Claims is where you submit a claim if you believe an item belongs to you. First, search/select the item, then write a short comment explaining why it matches. Your claim will be reviewed and may be approved or deleted.',
+          'Submit a claim if you believe an item belongs to you. Explain why the item matches and your claim will be reviewed.',
         position: 'top',
-        onBefore: () => {
-          setCurrent('Submit Claims');
-        },
+        onBefore: () => setCurrent('Submit Claims'),
       },
-      {
-        key: 'tab_your_claims',
-        title: 'Your Claims',
-        elementId: 'home-your-claims',
-        intro:
-          'Your Claims shows your claim history. Claims can be Open (still under review) or Closed (resolved). This is the fastest way to see what happened to each claim you submitted.',
-        position: 'top',
-        onBefore: () => {
-          setCurrent('Your Claims');
-        },
-      },
-      {
-        key: 'tab_lookouts',
-        title: 'Item Lookouts',
+
+      lookouts: {
+        key: 'lookouts',
         elementId: 'home-item-lookouts',
         intro:
-          'Item Lookouts help you create a watchlist for potential matches. Instead of checking everything manually, you can track promising items and get notified when similar items appear.',
+          'Create item lookouts and receive notifications when similar items are found.',
         position: 'top',
-        onBefore: () => {
-          setCurrent('Item Lookouts');
-        },
+        onBefore: () => setCurrent('Item Lookouts'),
       },
-      {
-        key: 'tab_chats',
-        title: 'Chats',
-        elementId: 'home-chats',
+
+      chats: {
+        key: 'chats',
+        elementId: 'home-chats-container',
         intro:
-          'Chats are where you communicate with other users about items. If someone needs clarification or additional details, chat is the place to coordinate safely and keep a record of the discussion.',
-        position: 'right',
-        onBefore: () => {
-          setCurrent('Chats');
-        },
+          'Chat with other users to coordinate item pickup and ask questions.',
+        position: 'top',
+        onBefore: () => setCurrent('Chats'),
       },
-      {
-        key: 'tab_alerts',
-        title: 'Alerts',
-        elementId: 'home-notifications',
+
+      notificationsHeader: {
+        key: 'notificationsHeader',
+        elementId: 'home-notifications-header',
         intro:
-          'Alerts show the updates that matter: approvals/rejections on your submissions, new chat messages, and lookout matches. Mark items read to keep your inbox focused.',
+          'Notifications keep you updated about reports, claims, chats, and lookout matches.',
+        position: 'bottom',
+        onBefore: () => setCurrent('Notifications'),
+      },
+
+      notificationsList: {
+        key: 'notificationsList',
+        elementId: 'home-notifications-list',
+        intro:
+          'Your notifications appear here and can be marked as read or unread.',
         position: 'left',
-        onBefore: () => {
-          setCurrent('Notifications');
-        },
       },
-    ],
+    }),
     [setCurrent],
   );
 
   const getStepsForCurrentTab = useCallback(() => {
+    const nav = allSteps.nav;
     const current = getCurrentTab();
 
-    const nav = allSteps.find((s) => s.key === 'nav_side')!;
+    switch (current) {
+      case 'All Items':
+        return [nav, allSteps.itemsList, allSteps.itemsDetail];
 
-    // Build 3 steps per tab: nav (common) + current tab main section + a
-    // “what to do next” sub-step (based on the same section).
-    // If a secondary target doesn't exist on the current render, we fall back
-    // to the main tab step.
-    const stepByTab: Record<string, { mainKey: string; nextKey?: string }> = {
-      'All Items': { mainKey: 'tab_all', nextKey: 'tab_all' },
-      // Reports
-      'Submit Reports': { mainKey: 'tab_reports', nextKey: 'tab_reports' },
-      'Your Reports': {
-        mainKey: 'tab_your_reports',
-        nextKey: 'tab_your_reports',
-      },
-      // Claims
-      'Submit Claims': { mainKey: 'tab_claims', nextKey: 'tab_claims' },
-      'Your Claims': {
-        mainKey: 'tab_your_claims',
-        nextKey: 'tab_your_claims',
-      },
-      // Lookouts / Chat / Alerts
-      'Item Lookouts': { mainKey: 'tab_lookouts', nextKey: 'tab_lookouts' },
-      Chats: { mainKey: 'tab_chats', nextKey: 'tab_chats' },
-      Notifications: { mainKey: 'tab_alerts', nextKey: 'tab_alerts' },
-    };
+      case 'Your Reports':
+        return [nav, allSteps.reportsList, allSteps.reportsDetail];
 
-    // We want EXACTLY 3 steps: nav -> list (incl. filters) -> item details.
-    // For All Items we override the 3-step mapping precisely.
-    if (current === 'All Items') {
-      const sNav = allSteps.find((s) => s.key === 'nav_side')!;
-      const listStep = allSteps.find((s) => s.key === 'tab_all') ?? allSteps[1];
-      const detailStep =
-        allSteps.find((s) => s.key === 'tab_all_detail') ?? listStep;
+      case 'Submit Reports':
+        return [
+          nav,
+          allSteps.submitReport,
+          {
+            ...allSteps.submitReport,
+            key: 'submitReport2',
+            intro:
+              'Complete the required fields and submit the report so administrators can review it.',
+          },
+        ];
 
-      return [
-        sNav,
-        {
-          ...listStep,
-          elementId: 'home-unclaimed-items',
-          title: 'All Items + Filters',
-          intro:
-            "All Items is where you see items that haven't been claimed yet. This area includes the filters (Text, Image, Location) so you can narrow results quickly. Select an item to open the detailed view.",
-          position: 'top',
-        },
-        detailStep,
-      ];
+      case 'Your Claims':
+        return [nav, allSteps.claimsList, allSteps.claimsDetail];
+
+      case 'Submit Claims':
+        return [
+          nav,
+          allSteps.submitClaim,
+          {
+            ...allSteps.submitClaim,
+            key: 'submitClaim2',
+            intro:
+              'Choose the matching item and explain why you believe it belongs to you.',
+          },
+        ];
+
+      case 'Item Lookouts':
+        return [
+          nav,
+          allSteps.lookouts,
+          {
+            ...allSteps.lookouts,
+            key: 'lookouts2',
+            intro:
+              'You can manage your existing lookouts and receive notifications when similar items appear.',
+          },
+        ];
+
+      case 'Chats':
+        return [nav, allSteps.chats];
+
+      case 'Notifications':
+        return [nav, allSteps.notificationsHeader, allSteps.notificationsList];
+
+      default:
+        return [nav, allSteps.itemsList, allSteps.itemsDetail];
     }
-
-    const desired = stepByTab[current] ?? stepByTab['All Items'];
-
-    const mainStep =
-      allSteps.find((s) => s.key === desired.mainKey) ?? allSteps[1];
-    const nextStep =
-      desired.nextKey && allSteps.find((s) => s.key === desired.nextKey);
-
-    const s1 = mainStep;
-    const s2 = nextStep ?? mainStep;
-
-    return [nav, s1, s2];
   }, [allSteps, getCurrentTab]);
 
   const stop = useCallback(() => {
     try {
       introRef.current?.exit();
     } catch {}
+
     introRef.current = null;
     setRunning(false);
   }, []);
@@ -223,75 +219,70 @@ export function useHomeIntroTutorial(params: {
     if (running) return;
 
     const { default: introJs } = await import('intro.js');
-
-    // intro.js has no TS typings for CSS imports.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await import('intro.js/introjs.css');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await import('intro.js/themes/introjs-modern.css');
 
     const intro: AnyIntro = introJs();
 
-    const waitForElement = async (cssSelector: string, timeoutMs = 4000) => {
+    const waitForElement = async (selector: string, timeoutMs = 4000) => {
       const startTime = Date.now();
-      // eslint-disable-next-line no-constant-condition
+
       while (true) {
-        const el = document.querySelector(cssSelector);
-        if (el) return el as HTMLElement;
-        if (Date.now() - startTime > timeoutMs) return null;
+        const el = document.querySelector(selector);
+
+        if (el) {
+          return el as HTMLElement;
+        }
+
+        if (Date.now() - startTime > timeoutMs) {
+          return null;
+        }
+
         await new Promise((r) => setTimeout(r, 50));
       }
     };
 
-    const steps: IntroStep[] = getStepsForCurrentTab().filter(
-      (s): s is IntroStep => Boolean(s && typeof s === 'object'),
-    );
+    const steps = getStepsForCurrentTab();
 
-    const introSteps = steps.map((s) => {
-      return {
+    intro.setOptions({
+      steps: steps.map((s) => ({
         element: `#${s.elementId}`,
         intro: s.intro,
-        position: (s.position ?? 'top') as TutorialPosition,
-      };
-    });
-
-    // Intro.js modifies DOM around the current view; we keep the steps/options
-    // minimal to avoid layout/height side effects.
-    intro.setOptions({
-      steps: introSteps as AnyIntro,
-      // Fix occasional layout/overlay spacing issues by disabling Intro's helper scroll behavior.
-      // (This prevents the page from gaining extra bottom space in some routes.)
-      scrollToElement: false,
+        position: s.position ?? 'top',
+      })),
       showProgress: true,
       showBullets: true,
       exitOnOverlayClick: false,
       disableInteraction: true,
-      // scrollToElement: true,
-      nextLabel: 'Next \u2192',
-      prevLabel: '\u2190 Back',
+      nextLabel: 'Next →',
+      prevLabel: '← Back',
       doneLabel: 'Done',
+      scrollToElement: false,
     });
 
     intro.onbeforechange?.(async (target: { index?: number }) => {
-      const nextIndex = target?.index ?? -1;
-      const step = steps[nextIndex];
-      if (!step) return;
+      const index = target?.index ?? -1;
+      const step = steps[index];
 
-      await waitForElement(`#${step.elementId}`);
+      if (!step) return;
 
       if (step.onBefore) {
         await step.onBefore();
+      }
 
-        // For the mobile layout, keep `mobileTab` in sync.
-        if (!isDesktop()) {
-          if (step.elementId === 'home-report-section') setMobileTab('Reports');
-          if (step.elementId === 'home-your-reports')
-            setMobileTab('Your Reports');
-          if (step.elementId === 'home-claim-section') setMobileTab('Claims');
-          if (step.elementId === 'home-your-claims')
-            setMobileTab('Your Claims');
+      if (!isDesktop()) {
+        const current = getCurrentTab();
+
+        if (current === 'Your Reports' || current === 'Submit Reports') {
+          setMobileTab('Reports');
+        }
+
+        if (current === 'Your Claims' || current === 'Submit Claims') {
+          setMobileTab('Claims');
         }
       }
+
+      await waitForElement(`#${step.elementId}`);
     });
 
     intro.onexit?.(() => {
@@ -307,16 +298,15 @@ export function useHomeIntroTutorial(params: {
     introRef.current = intro;
     setRunning(true);
 
-    // Wait for the first target (#home-nav) and the current tab target to exist before starting.
-    await waitForElement('#home-nav', 4000);
+    await waitForElement('#home-nav');
 
-    const tabStep = steps[1];
-    if (tabStep?.elementId) {
-      await waitForElement(`#${tabStep.elementId}`, 4000);
-    }
-
-    intro.start();
-  }, [getStepsForCurrentTab, isDesktop, running, setMobileTab]);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        intro.refresh();
+        intro.start();
+      });
+    });
+  }, [getCurrentTab, getStepsForCurrentTab, isDesktop, running, setMobileTab]);
 
   return {
     running,

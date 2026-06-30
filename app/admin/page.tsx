@@ -539,54 +539,166 @@ export default function Home() {
     setFilterSearchQuery('');
   };
 
-  const { startTutorial } = useTutorial([
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6 > p:first-child',
-      intro:
-        'Welcome to the Analytics Dashboard. This is your central hub for monitoring all Lost & Found activity.',
-      position: 'bottom',
-    },
-    {
-      element: '.grid.grid-cols-4.gap-5',
-      intro:
-        'These stat cards give you a quick overview: total items, return rate, pending reports, open claims, and more.',
-      position: 'top',
-    },
-    {
-      element: '#analytics-charts',
-      intro:
-        'Visual charts help you understand item claims, location distribution, and submission trends at a glance.',
-      position: 'top',
-    },
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(3) .grid',
-      intro:
-        'The Items by Location section shows which areas have the most lost-and-found activity.',
-      position: 'top',
-    },
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(4)',
-      intro:
-        'Common item types are derived from descriptions, helping you spot patterns.',
-      position: 'top',
-    },
-    {
-      element:
-        '.bg-white.rounded-lg.border.border-gray-300.shadow-md.px-8.py-6:nth-of-type(5)',
-      intro:
-        'The submission trend chart shows how many reports have been filed over the last 30 days.',
-      position: 'top',
-    },
-    {
-      element: '.bg-indigo-500.w-fit.h-full',
-      intro:
-        'Use the sidebar to navigate between Analytics, Items, Reports, Claims, and Locations management.',
-      position: 'right',
-    },
-  ]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tutorials: Record<string, any[]> = {
+    Analytics: [
+      {
+        element: '#admin-sidenav',
+        intro:
+          'Use the sidebar to navigate between Analytics, Items, Reports, Claims, and Locations management.',
+        position: 'right',
+      },
+      {
+        element: '#analytics-header',
+        intro:
+          'Welcome to the Analytics Dashboard. This is your central hub for monitoring all Lost & Found activity.',
+        position: 'top',
+      },
+    ],
+
+    'All Items': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#all-items-list',
+        intro:
+          'This panel contains all lost-and-found items. You can search and filter items here.',
+        position: 'right',
+      },
+      {
+        element: '#all-items-detail',
+        intro:
+          'Selecting an item displays its complete information, photos, and management options.',
+        position: 'left',
+      },
+    ],
+
+    'Pending Reports': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#pending-reports-list',
+        intro: 'These are reports that still require administrator review.',
+        position: 'right',
+      },
+      {
+        element: '#pending-reports-detail',
+        intro:
+          'Select a report to review its information and approve or reject it.',
+        position: 'left',
+      },
+    ],
+
+    'Approved Reports': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#approved-reports-list',
+        intro: 'These reports have already been approved.',
+        position: 'right',
+      },
+      {
+        element: '#approved-reports-detail',
+        intro: 'Select a report to view its information and attached photos.',
+        position: 'left',
+      },
+    ],
+
+    'Declined Reports': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#declined-reports-list',
+        intro: 'These reports were declined by an administrator.',
+        position: 'right',
+      },
+      {
+        element: '#declined-reports-detail',
+        intro:
+          'Select a report to review its information and rejection details.',
+        position: 'left',
+      },
+    ],
+
+    'Pending Claims': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#pending-claims-list',
+        intro: 'These ownership claims still need administrator review.',
+        position: 'right',
+      },
+      {
+        element: '#pending-claims-detail',
+        intro:
+          'Review claimant information here and approve or delete the claim.',
+        position: 'left',
+      },
+    ],
+
+    'Approved Claims': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#approved-claims-list',
+        intro: 'This panel contains claims that have already been approved.',
+        position: 'right',
+      },
+      {
+        element: '#approved-claims-detail',
+        intro: 'Select a claim to view its approval information.',
+        position: 'left',
+      },
+    ],
+
+    'All Locations': [
+      {
+        element: '#admin-sidenav',
+        intro: 'Use the sidebar to switch between administration pages.',
+        position: 'right',
+      },
+      {
+        element: '#locations-list',
+        intro:
+          'This panel contains all storage locations and allows searching and filtering.',
+        position: 'right',
+      },
+      {
+        element: '#locations-detail',
+        intro:
+          'Select a location to view and edit information about where items are stored.',
+        position: 'left',
+      },
+    ],
+  };
+
+  const { startTutorial } = useTutorial([]);
+
+  const startPageTutorial = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        startTutorial(tutorials[currentPage] ?? []);
+      });
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -744,7 +856,10 @@ export default function Home() {
 
           {/* Desktop Starts here */}
           <div className={`hidden lg:flex bg-grid text-black h-full w-full`}>
-            <div className='bg-indigo-500 w-fit h-full min-h-screen'>
+            <div
+              id='admin-sidenav'
+              className='bg-indigo-500 w-fit h-full min-h-screen'
+            >
               <SideNav
                 current={currentPage}
                 setCurrent={handleCurrentPageChange}
@@ -753,7 +868,10 @@ export default function Home() {
             </div>
 
             {currentPage === 'Analytics' && (
-              <div className='w-full h-full overflow-auto p-10'>
+              <div
+                id='analytics-header'
+                className='w-full h-full overflow-auto p-10'
+              >
                 {analyticsLoading || !analytics ? (
                   <div className='flex items-center justify-center h-64 text-gray-400 text-sm'>
                     Loading analytics…
@@ -923,69 +1041,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Submission trend */}
-                    <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
-                      <p className='text-lg font-bold text-black mb-1'>
-                        Submission Trend
-                      </p>
-                      <p className='text-xs text-gray-400 mb-6'>
-                        Reports submitted per day over the last 30 days
-                      </p>
-                      {analytics.submissionTrend.length === 0 ? (
-                        <p className='text-sm text-gray-400'>
-                          No submissions in the last 30 days
-                        </p>
-                      ) : (
-                        (() => {
-                          const maxCount = Math.max(
-                            ...analytics.submissionTrend.map((d) => d.count),
-                          );
-                          return (
-                            <div className='flex items-end gap-1 h-32'>
-                              {analytics.submissionTrend.map(
-                                ({ date, count }) => (
-                                  <div
-                                    key={date}
-                                    className='flex-1 flex flex-col items-center gap-1 group relative'
-                                  >
-                                    <div
-                                      className='w-full bg-indigo-400 hover:bg-indigo-500 rounded-t transition-all'
-                                      style={{
-                                        height: `${Math.max(4, Math.round((count / maxCount) * 100))}%`,
-                                      }}
-                                    />
-                                    <div className='absolute bottom-full mb-1 hidden group-hover:flex bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10'>
-                                      {dayjs(date).format('MMM D')}: {count}
-                                    </div>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          );
-                        })()
-                      )}
-                      <div className='flex justify-between mt-2 text-xs text-gray-400'>
-                        <span>
-                          {analytics.submissionTrend[0]
-                            ? dayjs(analytics.submissionTrend[0].date).format(
-                                'MMM D',
-                              )
-                            : ''}
-                        </span>
-                        <span>
-                          {analytics.submissionTrend[
-                            analytics.submissionTrend.length - 1
-                          ]
-                            ? dayjs(
-                                analytics.submissionTrend[
-                                  analytics.submissionTrend.length - 1
-                                ].date,
-                              ).format('MMM D')
-                            : ''}
-                        </span>
-                      </div>
-                    </div>
-
                     {/* Lookouts summary */}
                     <div className='bg-white rounded-lg border border-gray-300 shadow-md px-8 py-6'>
                       <p className='text-lg font-bold text-black mb-4'>
@@ -1023,7 +1078,10 @@ export default function Home() {
 
             {currentPage === 'All Items' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+                <div
+                  id='all-items-list'
+                  className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'
+                >
                   <div className='flex space-x-2'>
                     <button
                       type='button'
@@ -1122,7 +1180,10 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='all-items-detail'
+                  className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedItem ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1328,7 +1389,10 @@ export default function Home() {
 
             {currentPage === 'Pending Reports' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+                <div
+                  id='pending-reports-list'
+                  className='w-[240px] shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'
+                >
                   {pendingSubmissions.length ? (
                     pendingSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1363,7 +1427,10 @@ export default function Home() {
                     <div className='font-semibold'>No pending reports</div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='pending-reports-detail'
+                  className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedPending ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1583,7 +1650,10 @@ export default function Home() {
 
             {currentPage === 'Pending Claims' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-60 shrink-0 flex flex-col space-y-4 overflow-y-auto'>
+                <div
+                  id='pending-claims-list'
+                  className='w-60 shrink-0 flex flex-col space-y-4 overflow-y-auto'
+                >
                   {pendingClaims.length ? (
                     pendingClaims.map((c: IClaimForm, i) => {
                       return (
@@ -1617,7 +1687,10 @@ export default function Home() {
                     <div className='font-semibold'>No pending claims</div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='pending-claims-detail'
+                  className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedPendingClaim ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1734,7 +1807,10 @@ export default function Home() {
 
             {currentPage === 'Approved Reports' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-60 shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+                <div
+                  id='approved-reports-list'
+                  className='w-60 shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'
+                >
                   {approvedSubmissions.length ? (
                     approvedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1768,7 +1844,10 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='approved-reports-detail'
+                  className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedApproved && (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1857,7 +1936,10 @@ export default function Home() {
 
             {currentPage === 'Declined Reports' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-\[calc\(\(100\%-\(2_*_)\)\/_6\)\] shrink-0 flex flex-col space-y-4 overflow-y-auto'>
+                <div
+                  id='declined-reports-list'
+                  className='w-\[calc\(\(100\%-\(2_*_)\)\/_6\)\] shrink-0 flex flex-col space-y-4 overflow-y-auto'
+                >
                   {rejectedSubmissions.length ? (
                     rejectedSubmissions.map((v: ISubmission, i) => {
                       return (
@@ -1891,7 +1973,10 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='declined-reports-detail'
+                  className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedRejected && (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -1969,7 +2054,10 @@ export default function Home() {
 
             {currentPage === 'Approved Claims' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='w-60 shrink-0 flex flex-col space-y-4 overflow-auto'>
+                <div
+                  id='approved-claims-list'
+                  className='w-60 shrink-0 flex flex-col space-y-4 overflow-auto'
+                >
                   {approvedClaims.length ? (
                     approvedClaims.map((c: IClaimForm, i) => {
                       return (
@@ -2003,7 +2091,10 @@ export default function Home() {
                     <div className='font-semibold'>No approved claims</div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='approved-claims-detail'
+                  className='w-full h-full bg-white overflow-y-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedApprovedClaim ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -2100,7 +2191,10 @@ export default function Home() {
 
             {currentPage === 'All Locations' && (
               <div className='flex w-full h-full p-10 gap-10'>
-                <div className='shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'>
+                <div
+                  id='locations-list'
+                  className='shrink-0 flex flex-col space-y-4 overflow-y-auto text-black'
+                >
                   <div className='mb-4'>
                     <button
                       onClick={() => setShowAllLocationsFilterModal(true)}
@@ -2142,7 +2236,10 @@ export default function Home() {
                     </div>
                   )}
                 </div>
-                <div className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'>
+                <div
+                  id='locations-detail'
+                  className='w-full h-full bg-white overflow-auto rounded-lg border border-gray-300 shadow-md'
+                >
                   {selectedLocation ? (
                     <>
                       <div className='border-b border-gray-300 h-fit'>
@@ -4023,7 +4120,7 @@ export default function Home() {
 
       {/* Tutorial button */}
       <button
-        onClick={startTutorial}
+        onClick={startPageTutorial}
         className='fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full bg-indigo-500 text-white font-bold text-lg shadow-lg hover:bg-indigo-600 transition-colors flex items-center justify-center cursor-pointer'
         title='Take a tour'
       >
